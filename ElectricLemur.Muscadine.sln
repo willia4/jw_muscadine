@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30114.105
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{5D46CC13-0ABA-4C7C-B4AD-21A04294009C}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "ElectricLemur.Muscadine.Site", "src\ElectricLemur.Muscadine.Site\ElectricLemur.Muscadine.Site.fsproj", "{53FF7631-0CF2-486F-8A2A-ADE305CB267A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ElectricLemur.Muscadine.MongoDriver", "src\ElectricLemur.Muscadine.MongoDriver\ElectricLemur.Muscadine.MongoDriver.csproj", "{B8C0D4FD-3C90-4242-8F49-BB904AA59231}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{53FF7631-0CF2-486F-8A2A-ADE305CB267A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{53FF7631-0CF2-486F-8A2A-ADE305CB267A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{53FF7631-0CF2-486F-8A2A-ADE305CB267A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{53FF7631-0CF2-486F-8A2A-ADE305CB267A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B8C0D4FD-3C90-4242-8F49-BB904AA59231}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B8C0D4FD-3C90-4242-8F49-BB904AA59231}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B8C0D4FD-3C90-4242-8F49-BB904AA59231}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B8C0D4FD-3C90-4242-8F49-BB904AA59231}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{53FF7631-0CF2-486F-8A2A-ADE305CB267A} = {5D46CC13-0ABA-4C7C-B4AD-21A04294009C}
+		{B8C0D4FD-3C90-4242-8F49-BB904AA59231} = {5D46CC13-0ABA-4C7C-B4AD-21A04294009C}
+	EndGlobalSection
+EndGlobal
