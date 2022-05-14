@@ -10,7 +10,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="5e706e6e-c429-48e6-964a-5fcce5d8df19" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/ElectricLemur.Muscadine.MongoDriver/ElectricLemur.Muscadine.MongoDriver.csproj" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.idea.ElectricLemur.Muscadine/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.ElectricLemur.Muscadine/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/ElectricLemur.Muscadine.Site/Database.fs" beforeDir="false" afterPath="$PROJECT_DIR$/src/ElectricLemur.Muscadine.Site/Database.fs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/ElectricLemur.Muscadine.Site/ElectricLemur.Muscadine.Site.fsproj" beforeDir="false" afterPath="$PROJECT_DIR$/src/ElectricLemur.Muscadine.Site/ElectricLemur.Muscadine.Site.fsproj" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -41,7 +43,9 @@
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/2314e877e9ca6da9c5aa589e3020e7ab811721145aaf93aea44e8625a279c/BsonExtensionMethods.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/32388bbcf2a67be4e48562988977977f9e905c7cbebf838c7f23f8df29bd/FilterDefinition.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/3d226920f1e56a1c6a6847d429f9315691fa656d82581f21c5882b47f57a193/MongoCredential.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/3ea95343b9387b73062a9b61b7538f826c54ce3529632b4472ba4494044d23/AsyncTaskMethodBuilderT.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/42794acf9c224fece37166245d579235973727b16c1931c5ccd329df39ad78/ConfigurationBinder.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/4482f15acbb02cda9459c9bd5b1695d52b687db3b416a4b094a852d634d492eb/list.fs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/5592459daee911b0fbdd4d38786638941dc3745b9512977cdd1e69fa9feca4f/BsonSerializerRegistry.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/5ab551d3828e732dc1f08dc9f02ba5e1fdfc2272687cc741d58189852ca708d/SortDefinition.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/6a217be970b9794c15966494d96ff0b01347ef9dc0774f13a5457b09bc1a0/Builders.cs" root0="SKIP_HIGHLIGHTING" />
@@ -112,7 +116,7 @@
       <workItem from="1652051296914" duration="1176000" />
       <workItem from="1652469369140" duration="3058000" />
       <workItem from="1652474489782" duration="1768000" />
-      <workItem from="1652476741689" duration="4701000" />
+      <workItem from="1652476741689" duration="10968000" />
     </task>
     <servers />
   </component>
@@ -136,20 +140,6 @@
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
-        <line-breakpoint enabled="true" type="DotNet Breakpoints">
-          <url>file://$PROJECT_DIR$/src/ElectricLemur.Muscadine.Site/Program.fs</url>
-          <line>55</line>
-          <properties documentPath="C:\Users\willia4\code\jw_muscadine\src\ElectricLemur.Muscadine.Site\Program.fs" initialLine="55" containingFunctionPresentation="" isMultiMethodBreakpoint="true">
-            <option name="multiMethodBreakpoint" value="true" />
-            <startOffsets>
-              <option value="1351" />
-            </startOffsets>
-            <endOffsets>
-              <option value="1363" />
-            </endOffsets>
-          </properties>
-          <option name="timeStamp" value="1" />
-        </line-breakpoint>
         <line-breakpoint enabled="true" type="DotNet Breakpoints">
           <url>file://$PROJECT_DIR$/src/ElectricLemur.Muscadine.MongoDriver/Mongo.cs</url>
           <line>74</line>
@@ -177,17 +167,18 @@
           <option name="timeStamp" value="5" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="DotNet Breakpoints">
-          <url>file://$PROJECT_DIR$/src/ElectricLemur.Muscadine.MongoDriver/Mongo.cs</url>
-          <line>57</line>
-          <properties documentPath="C:\Users\willia4\code\jw_muscadine\src\ElectricLemur.Muscadine.MongoDriver\Mongo.cs" initialLine="57" containingFunctionPresentation="method 'GetDocumentsAsync'">
+          <url>file://$PROJECT_DIR$/src/ElectricLemur.Muscadine.Site/Database.fs</url>
+          <line>66</line>
+          <properties documentPath="C:\Users\willia4\code\jw_muscadine\src\ElectricLemur.Muscadine.Site\Database.fs" initialLine="66" containingFunctionPresentation="" isMultiMethodBreakpoint="true">
+            <option name="multiMethodBreakpoint" value="true" />
             <startOffsets>
-              <option value="1885" />
+              <option value="2672" />
             </startOffsets>
             <endOffsets>
-              <option value="1900" />
+              <option value="2711" />
             </endOffsets>
           </properties>
-          <option name="timeStamp" value="11" />
+          <option name="timeStamp" value="13" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
