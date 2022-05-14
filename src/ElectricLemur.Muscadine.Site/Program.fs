@@ -101,40 +101,42 @@ let configureCors (builder : CorsPolicyBuilder) =
        .AllowAnyHeader()
        |> ignore
 
-let configureApp (app : IApplicationBuilder) =
-    let env = app.ApplicationServices.GetService<IWebHostEnvironment>()
-    (match env.IsDevelopment() with
-    | true  ->
-        app.UseDeveloperExceptionPage()
-    | false ->
-        app .UseGiraffeErrorHandler(errorHandler)
-            .UseHttpsRedirection())
-        .UseCors(configureCors)
-        .UseStaticFiles()
-        .UseGiraffe(webApp)
-
-let configureServices (services : IServiceCollection) =
-    services.AddCors()    |> ignore
-    services.AddGiraffe() |> ignore
-
-let configureLogging (builder : ILoggingBuilder) =
-    builder.AddConsole()
-           .AddDebug() |> ignore
 
 [<EntryPoint>]
 let main args =
     let contentRoot = Directory.GetCurrentDirectory()
     let webRoot     = Path.Combine(contentRoot, "WebRoot")
-    Host.CreateDefaultBuilder(args)
-        .ConfigureWebHostDefaults(
-            fun webHostBuilder ->
-                webHostBuilder
-                    .UseContentRoot(contentRoot)
-                    .UseWebRoot(webRoot)
-                    .Configure(Action<IApplicationBuilder> configureApp)
-                    .ConfigureServices(configureServices)
-                    .ConfigureLogging(configureLogging)
-                    |> ignore)
-        .Build()
-        .Run()
+    let builder = WebApplication.CreateBuilder(
+        let options = new WebApplicationOptions()
+        options.ContentRootPath <- contentRoot
+        options.WebRootPath <- webRoot
+        options)
+
+    builder.Logging
+        .AddConsole()
+        .AddDebug() |> ignore
+
+    builder.Services
+        .AddCors()
+        .AddWebOptimizer(fun pipeline ->
+            pipeline.CompileScssFiles(
+                let options = new WebOptimizer.Sass.WebOptimazerScssOptions()
+                options.MinifyCss <- false
+                options) |> ignore
+        )
+        .AddGiraffe() |> ignore
+
+    let app = builder.Build()
+    (match app.Environment.IsDevelopment() with
+    | true ->
+        app.UseDeveloperExceptionPage()
+    | false ->
+        app.UseGiraffeErrorHandler(errorHandler)
+            .UseHttpsRedirection())
+        .UseCors(configureCors)
+        .UseWebOptimizer()
+        .UseStaticFiles()
+        .UseGiraffe(webApp)
+        
+    app.Run()
     0
