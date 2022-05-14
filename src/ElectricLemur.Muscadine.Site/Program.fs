@@ -33,7 +33,7 @@ module Views =
                 title []  [ encodedText "ElectricLemur.Muscadine.Site" ]
                 link [ _rel  "stylesheet"
                        _type "text/css"
-                       _href "/main.css" ]
+                       _href "/css/main.css" ]
             ]
             body [] content
         ]
