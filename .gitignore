@@ -1,0 +1,12 @@
+/src/ElectricLemur.Muscadine.Site/appsettings.Development.json
+**/bin/**
+**/obj/**
+/src/ElectricLemur.Muscadine.Site/WebRoot/js/*.js
+/src/ElectricLemur.Muscadine.Site/WebRoot/js/*.map
+
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+.vs/

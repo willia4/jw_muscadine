@@ -1,0 +1,14 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "msbuild",
+			"problemMatcher": [
+				"$msCompile"
+			],
+			"group": "build",
+			"label": "Build: ElectricLemur.Muscadine.Site.fsproj",
+			"detail": "Build the ElectricLemur.Muscadine.Site.fsproj project using dotnet build"
+		}
+	]
+}
