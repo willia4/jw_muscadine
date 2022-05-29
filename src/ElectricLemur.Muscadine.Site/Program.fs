@@ -50,6 +50,38 @@ module Views =
             p [] [ encodedText model.Text ]
         ] |> layout
 
+    let underConstruction =
+        html [] [
+            head [] [
+                meta [ (_httpEquiv "Content-Type"); (_content "text/html; charset=utf-8") ]
+                title [] [ encodedText "James Williams" ]
+                link [ (_rel "stylesheet"); (_type "text/css"); (_href "/css/index.scss") ]
+            ]
+
+            body [] [
+                h1 [ _class "page-title" ] [ encodedText "James Williams" ]
+                blockquote [] [ encodedText "The future is always all around us, waiting, in moments of transitions, 
+                                             to be born in moments of revelation. No one knows the shape of that future 
+                                             or where it will take us. We know only that it is always born in pain. " ]
+                figcaption [] [ 
+                    encodedText "G'kar " 
+                    cite [] [ encodedText "Babylon 5, Season 3 " ]
+                ]
+
+                blockquote [] [
+                    encodedText "Strange fascination, fascinating me "
+                    br []
+                    br []
+                    encodedText "Ah, changes are taking the pace I'm going through. "
+                ]
+
+                figcaption [] [ 
+                    encodedText "David Bowie " 
+                    cite [] [ encodedText "Changes " ]
+                ]
+            ]
+        ]
+
 // ---------------------------------
 // Web app
 // ---------------------------------
@@ -80,8 +112,9 @@ let webApp =
         choose [
             GET >=>
                 choose [
-                    route "/" >=> indexHandler "world"
-                    routef "/hello/%s" indexHandler
+                    //route "/" >=> indexHandler "world"
+                    //routef "/hello/%s" indexHandler
+                    route "/" >=> htmlView Views.underConstruction
                     route "/admin/login" >=> Login.getHandler
                     route "/admin/logout" >=> Login.logoutHandler "/admin/login"
                     route "/admin/status" >=> Login.requiresAdmin >=> Login.statusHandler

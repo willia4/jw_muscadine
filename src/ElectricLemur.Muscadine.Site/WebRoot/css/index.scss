@@ -1,0 +1,39 @@
+﻿
+h1 {
+    &.page-title {
+        text-align: center;
+        font-family: Futura, Verdana, Helvetica, Arial, sans-serif;
+        font-size: 500%;
+        font-weight: lighter;
+    }
+}
+
+blockquote {
+    margin: auto;
+    max-width: 500px;
+    background-color: lightgray;
+    padding: 20px;
+    font-size: 110%;
+    border-radius: 10px;
+
+    &::before {
+        content: "“";
+        font-family: Futura;
+        font-size: 200%;
+    }
+}
+
+figcaption {
+    margin: auto;
+    margin-bottom: 50px;
+    text-align: right;
+    max-width: 500px;
+    padding: 15px;
+    display: block;
+    font-size: 150%;
+    font-family: Georgia, 'Times New Roman', Times, serif;
+
+    &::before {
+        content: "— ";
+    }
+}
