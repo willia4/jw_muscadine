@@ -49,7 +49,7 @@ jobs:
           ssh root@v4.electriclemur.com -i ~/.ssh/id "docker rm -f jw_muscadine 2> /dev/null 1> /dev/null"
 
           CMD=""
-          CMD+="docker run -d --name jw_muscadine --restart=always "
+          CMD+="docker run --pull always -d --name jw_muscadine --restart=always "
           CMD+="-e 'ADMIN__EMAIL=${{ secrets.ADMIN__EMAIL }}' "
           CMD+="-e 'ADMIN__PASSWORD=${{ secrets.ADMIN__PASSWORD }}' "
           CMD+="--label 'traefik.enable=true' "
