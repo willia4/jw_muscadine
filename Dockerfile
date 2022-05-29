@@ -18,4 +18,6 @@ WORKDIR /app
 COPY --from=build /app ./
 COPY src/ElectricLemur.Muscadine.Site/WebRoot/. ./WebRoot/
 
+EXPOSE 80
+
 ENTRYPOINT ["dotnet", "ElectricLemur.Muscadine.Site.App.dll"]
