@@ -17,6 +17,7 @@ FROM mcr.microsoft.com/dotnet/aspnet:6.0-bullseye-slim
 WORKDIR /app
 COPY --from=build /app ./
 COPY src/ElectricLemur.Muscadine.Site/WebRoot/. ./WebRoot/
+COPY src/ElectricLemur.Muscadine.Site/appsettings.json ./
 
 EXPOSE 80
 
