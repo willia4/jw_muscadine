@@ -28,4 +28,42 @@ jobs:
           file: ./Dockerfile
           push: true
           tags: ${{ secrets.DOCKER_HUB_USERNAME }}/jw_muscadine:latest
+
+      - name: Install SSH Key And Test Connection
+        run: |
+          mkdir -p ~/.ssh/
+          install -m 600 -D /dev/null ~/.ssh/id
+          echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id
           
+          SSH_HOST_PUBLIC_KEY=$(ssh-keyscan -t ed25519 v4.electriclemur.com 2> /dev/null)
+          echo "$SSH_HOST_PUBLIC_KEY" >> ~/.ssh/known_hosts
+
+          SSH_HOST_PUBLIC_KEY=$(echo "$SSH_HOST_PUBLIC_KEY" | sed 's/^[a-z0-9\.]* //g')
+          echo "{SSH_HOST_PUBLIC_KEY}={${SSH_HOST_PUBLIC_KEY}}" >> $GITHUB_ENV
+
+          SSH_HOST=$(ssh root@v4.electriclemur.com -i ~/.ssh/id "hostname")
+          test "$SSH_HOST" = "lemur-web01"
+
+      - name: Restart container
+        run: |
+          ssh root@v4.electriclemur.com -i ~/.ssh/id "docker rm -f jw_muscadine 2> /dev/null 1> /dev/null"
+
+          CMD=""
+          CMD+="docker run -d --name jw_muscadine --restart=always "
+          CMD+="-e 'ADMIN__EMAIL=${{ secrets.ADMIN__EMAIL }}' "
+          CMD+="-e 'ADMIN__PASSWORD=${{ secrets.ADMIN__PASSWORD }}' "
+          CMD+="--label 'traefik.enable=true' "
+          CMD+="--label 'traefik.http.routers.jw_index.entrypoints=websecure' "
+          CMD+="--label 'traefik.http.routers.jw_index.rule=Host(\`jameswilliams.me\`)' "
+          CMD+="--label 'traefik.http.routers.jw_index.tls=true' "
+          CMD+="--label 'traefik.http.routers.jw_index.tls.certresolver=le' "
+
+          CMD+="--label 'traefik.http.routers.jw_index_redirect.entrypoints=web' "
+          CMD+="--label 'traefik.http.routers.jw_index_redirect.rule=Host(\`jameswilliams.me\`)' "
+          CMD+="--label 'traefik.http.routers.jw_index_redirect.middlewares=jw_index_redirect' "
+          CMD+="--label 'traefik.http.middlewares.jw_index_redirect.redirectscheme.scheme=https' "
+
+          CMD+="willia4/jw_muscadine:latest "
+
+          ssh root@v4.electriclemur.com -i ~/.ssh/id "$CMD"
+
