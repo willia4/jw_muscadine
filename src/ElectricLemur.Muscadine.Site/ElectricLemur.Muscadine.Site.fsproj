@@ -18,6 +18,7 @@
   </ItemGroup>
   <ItemGroup>
     <TypeScriptCompile Include="WebRoot\js\test.ts" />
+    <Compile Include="Login.fs" />
     <Compile Include="Util.fs" />
     <Compile Include="Database.fs" />
     <Compile Include="Program.fs" />
@@ -29,5 +30,4 @@
   <ItemGroup>
     <ProjectReference Include="..\ElectricLemur.Muscadine.MongoDriver\ElectricLemur.Muscadine.MongoDriver.csproj" />
   </ItemGroup>
-  <ItemGroup />
 </Project>

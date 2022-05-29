@@ -6,6 +6,9 @@ open Microsoft.AspNetCore.Http
 open Microsoft.AspNetCore.Builder
 open Microsoft.AspNetCore.Cors.Infrastructure
 open Microsoft.AspNetCore.Hosting
+open Microsoft.AspNetCore.Authentication.Cookies
+open Microsoft.AspNetCore.Identity
+open Microsoft.Extensions.Configuration
 open Microsoft.Extensions.Hosting
 open Microsoft.Extensions.Logging
 open Microsoft.Extensions.DependencyInjection
@@ -71,14 +74,23 @@ let indexHandler2 (name : string) =
         let view      = Views.index model
         htmlView view next ctx
 
+
 let webApp =
-    choose [
-        GET >=>
-            choose [
-                route "/" >=> indexHandler "world"
-                routef "/hello/%s" indexHandler
-            ]
-        setStatusCode 404 >=> text "Not Found" ]
+    fun (next: HttpFunc) (ctx: HttpContext) ->
+        choose [
+            GET >=>
+                choose [
+                    route "/" >=> indexHandler "world"
+                    routef "/hello/%s" indexHandler
+                    route "/admin/login" >=> Login.getHandler
+                    route "/admin/logout" >=> Login.logoutHandler "/admin/login"
+                    route "/admin/status" >=> Login.requiresAdmin >=> Login.statusHandler
+                ]
+            POST >=>
+                choose [
+                    route "/admin/login" >=> Login.postHandler "/admin/login" (Login.defaultCredentialValidator (Login.getExpectedAdminCredentials ctx))
+                ]
+            setStatusCode 404 >=> text "Not Found" ] next ctx
 
 // ---------------------------------
 // Error handler
@@ -126,6 +138,14 @@ let main args =
         )
         .AddGiraffe() |> ignore
 
+    builder.Services
+        .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+        .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, fun options ->
+            options.ExpireTimeSpan <- TimeSpan.FromDays(15)
+            options.SlidingExpiration <- true
+            options.AccessDeniedPath <- "/Forbidden"
+        ) |> ignore
+
     let app = builder.Build()
     (match app.Environment.IsDevelopment() with
     | true ->
@@ -136,6 +156,7 @@ let main args =
         .UseCors(configureCors)
         .UseWebOptimizer()
         .UseStaticFiles()
+        .UseAuthentication()
         .UseGiraffe(webApp)
         
     app.Run()
