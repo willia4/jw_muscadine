@@ -30,7 +30,4 @@
   <ItemGroup>
     <None Include="WebRoot\css\index.scss" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\ElectricLemur.Muscadine.MongoDriver\ElectricLemur.Muscadine.MongoDriver.csproj" />
-  </ItemGroup>
 </Project>
