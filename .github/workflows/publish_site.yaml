@@ -65,7 +65,7 @@ jobs:
           CMD+="--label 'traefik.http.routers.jw_index_redirect.rule=Host(\`jameswilliams.me\`)' "
           CMD+="--label 'traefik.http.routers.jw_index_redirect.middlewares=jw_index_redirect' "
           CMD+="--label 'traefik.http.middlewares.jw_index_redirect.redirectscheme.scheme=https' "
-
+          CMD+="--link mongo "
           CMD+="willia4/jw_muscadine:latest "
 
           ssh root@v4.electriclemur.com -i ~/.ssh/id "$CMD"
