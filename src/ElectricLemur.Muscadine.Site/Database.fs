@@ -49,6 +49,9 @@ module private Mongo =
     let private jObjectToJson (o: JObject) = Newtonsoft.Json.JsonConvert.SerializeObject(o) |> JsonString.from
     let private jObjectToBson = jObjectToJson >> jsonToBson
 
+    let countDocuments (db: MongoDatabase) = task {
+        return! db.Collection.CountDocumentsAsync(FilterDefinition<BsonDocument>.Empty)
+    }
 
     let getDocuments (db: MongoDatabase) = task {
         use! cursor = db.Collection
@@ -96,6 +99,11 @@ let private toJObject o = JObject.Parse(Newtonsoft.Json.JsonConvert.SerializeObj
 
 let private JObjectToADocument (o: JObject) =
     { _id = o.Value<string>("_id"); SomeData = o.Value<string>("SomeData")}
+
+let getDocumentCount (ctx: HttpContext) = task {
+    let! db = Mongo.openDatabase ctx
+    return! Mongo.countDocuments db
+}
 
 let foo (ctx: HttpContext) = task {
     let! db = Mongo.openDatabase ctx

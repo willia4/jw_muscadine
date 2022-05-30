@@ -106,6 +106,11 @@ let indexHandler2 (name : string) =
         let view      = Views.index model
         htmlView view next ctx
 
+let checkDatabaseHandler =
+    fun next ctx -> task {
+        let! result = Database.getDocumentCount ctx
+        return! text $"%d{result}" next ctx
+    }
 
 let webApp =
     fun (next: HttpFunc) (ctx: HttpContext) ->
@@ -118,6 +123,7 @@ let webApp =
                     route "/admin/login" >=> Login.getHandler
                     route "/admin/logout" >=> Login.logoutHandler "/admin/login"
                     route "/admin/status" >=> Login.requiresAdmin >=> Login.statusHandler
+                    route "/admin/check-database" >=> Login.requiresAdmin >=> checkDatabaseHandler
                 ]
             POST >=>
                 choose [
