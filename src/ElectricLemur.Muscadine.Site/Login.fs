@@ -117,15 +117,10 @@ let getHandler =
 
 let postHandler loginRoute (credentialValidator: string option -> string option -> bool) =
     fun (next: HttpFunc) (ctx: HttpContext) -> task {
+        let safeGetString = Util.getFormString ctx
 
-        let safeGetValue key = 
-            if ctx.Request.Form.ContainsKey(key) then
-                Some (ctx.Request.Form.[key].ToString())
-            else
-                None
-        
-        let email = safeGetValue "email"
-        let password = safeGetValue "password"
+        let email = safeGetString "email"
+        let password = safeGetString "password"
         let valid = credentialValidator email password
 
         if valid then
@@ -155,14 +150,8 @@ let logoutHandler loginRoute =
         return! redirectTo false loginRoute next ctx
     }
 
-let statusHandler = 
-    fun (next: HttpFunc) (ctx: HttpContext) ->
-        let user = ctx.User
-        let role = match user.FindFirst(ClaimTypes.Role) with
-                   | null -> "No Role"
-                   | claim -> claim.Value
 
-        text role next ctx
+let isAdmin (ctx: HttpContext) = ctx.User.IsInRole("Admin")
 
 let requiresAdmin =
     fun next ctx ->

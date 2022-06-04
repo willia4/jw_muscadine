@@ -5,6 +5,12 @@
     <EnableDefaultContentItems>false</EnableDefaultContentItems>
     <TypeScriptCompileBlocked>false</TypeScriptCompileBlocked>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <NoWarn>3391</NoWarn>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <NoWarn>3391</NoWarn>
+  </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Giraffe" Version="6.0.*" />
     <PackageReference Include="Giraffe.ViewEngine" Version="1.3.*" />
@@ -18,9 +24,11 @@
   </ItemGroup>
   <ItemGroup>
     <TypeScriptCompile Include="WebRoot\js\test.ts" />
-    <Compile Include="Login.fs" />
     <Compile Include="Util.fs" />
+    <Compile Include="Login.fs" />
+    <Compile Include="Models.fs" />
     <Compile Include="Database.fs" />
+    <Compile Include="Admin.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
   <ItemGroup>
@@ -28,6 +36,7 @@
     <Content Include="appsettings.Development.json" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="WebRoot\css\admin.scss" />
     <None Include="WebRoot\css\index.scss" />
   </ItemGroup>
 </Project>

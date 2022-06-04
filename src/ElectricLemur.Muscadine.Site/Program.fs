@@ -86,19 +86,6 @@ module Views =
 // Web app
 // ---------------------------------
 
-let indexHandler (name : string) =
-    fun (next: HttpFunc) (ctx: HttpContext) -> task {
-        let! documentId = Database.foo ctx
-        let! joined = Database.bar ctx
-        let! found = Database.baz ctx
-        let greetings = sprintf "Hello %s, from async Giraffe with some id %s and commas: %s \n\n Found: %s!" name documentId joined found
-        let model     = { Text = greetings }
-        let view      = Views.index model
-        
-        return! htmlView view next ctx
-
-    }
-
 let indexHandler2 (name : string) =
     fun (next: HttpFunc) (ctx: HttpContext) ->
         let greetings = sprintf "Hello %s, from Giraffe!" name
@@ -106,11 +93,6 @@ let indexHandler2 (name : string) =
         let view      = Views.index model
         htmlView view next ctx
 
-let checkDatabaseHandler =
-    fun next ctx -> task {
-        let! result = Database.getDocumentCount ctx
-        return! text $"%d{result}" next ctx
-    }
 
 let webApp =
     fun (next: HttpFunc) (ctx: HttpContext) ->
@@ -122,12 +104,20 @@ let webApp =
                     route "/" >=> htmlView Views.underConstruction
                     route "/admin/login" >=> Login.getHandler
                     route "/admin/logout" >=> Login.logoutHandler "/admin/login"
-                    route "/admin/status" >=> Login.requiresAdmin >=> Login.statusHandler
-                    route "/admin/check-database" >=> Login.requiresAdmin >=> checkDatabaseHandler
+                    route "/admin/status" >=> Login.requiresAdmin >=> Admin.statusHandler
+                    route "/admin/check-database" >=> Login.requiresAdmin >=> Admin.checkDatabaseHandler
+
+                    route "/admin/" >=> redirectTo true "/admin"
+                    route "/admin" >=> Login.requiresAdmin >=> Admin.indexHandler
+                    route "/admin/category/_new" >=> Login.requiresAdmin >=> Admin.addCategoryGetHandler
+                    routef "/admin/category/%s" (fun id -> Login.requiresAdmin >=> Admin.editCategoryGetHandler id)
                 ]
             POST >=>
                 choose [
                     route "/admin/login" >=> Login.postHandler "/admin/login" (Login.defaultCredentialValidator (Login.getExpectedAdminCredentials ctx))
+                    route "/admin/category/_new" >=> Login.requiresAdmin >=> Admin.addCategoryPostHandler
+                    routef "/admin/category/%s" (fun id -> Login.requiresAdmin >=> Admin.editCategoryPostHandler id)
+                    routef "/admin/category/%s/_delete" (fun id -> Login.requiresAdmin >=> Admin.deleteCategoryPostHandler id)
                 ]
             setStatusCode 404 >=> text "Not Found" ] next ctx
 

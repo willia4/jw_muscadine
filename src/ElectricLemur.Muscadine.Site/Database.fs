@@ -5,6 +5,7 @@ open Microsoft.Extensions.Configuration
 open Giraffe
 open System.Threading.Tasks
 open Newtonsoft.Json.Linq
+open Models
 
 type ADocument = { _id: string; SomeData: string }
 
@@ -17,6 +18,28 @@ module private Mongo =
     open MongoDB.Driver
     open MongoDB.Bson
     
+    let id = "_id"
+    let documentType = "documentType"
+
+    module Filters = 
+        let byMap (m: Map<string, BsonValue>) = 
+            let filter = new BsonDocument()
+            m |> Map.iter (fun k v -> filter.[k] <- v)
+            filter
+
+        let empty = byMap Map.empty
+
+        let by k v = byMap (Map [(k, v)])
+
+        let byDocumentType (typeName: string) = by "documentType" typeName
+
+        let byId (id: string) = by "_id" id
+    
+    module Sort =
+        let empty = Filters.empty
+        let byId = Filters.by "_id" 1
+        let by k = Filters.by k 1
+
     type MongoSettings = { Hostname: string; Database: string; Collection: string; Username: string; Password: string }
     type MongoDatabase = { Client: IMongoClient; Database: IMongoDatabase; Collection: IMongoCollection<BsonDocument> }
     let getSettings (ctx: HttpContext) =
@@ -49,14 +72,14 @@ module private Mongo =
     let private jObjectToJson (o: JObject) = Newtonsoft.Json.JsonConvert.SerializeObject(o) |> JsonString.from
     let private jObjectToBson = jObjectToJson >> jsonToBson
 
-    let countDocuments (db: MongoDatabase) = task {
-        return! db.Collection.CountDocumentsAsync(FilterDefinition<BsonDocument>.Empty)
+    let countDocuments (filter: BsonDocument) (db: MongoDatabase) = task {
+        return! db.Collection.CountDocumentsAsync(filter)
     }
 
-    let getDocuments (db: MongoDatabase) = task {
+    let getDocuments (filter: BsonDocument) (sort: BsonDocument) (db: MongoDatabase) = task {
         use! cursor = db.Collection
-                        .Find(FilterDefinition<BsonDocument>.Empty)
-                        .Sort("{_id: 1}")
+                        .Find(filter)
+                        .Sort(sort)
                         .ToCursorAsync()
 
         let acc = new System.Collections.Generic.List<JObject>()
@@ -73,58 +96,86 @@ module private Mongo =
         return r
     }
     
-    let getDocument (db: MongoDatabase) (id: string) = task {
-        let mutable filter = new BsonDocument()
-        filter.["_id"] <- id
-        
-        let! item = db.Collection.Find(filter).FirstOrDefaultAsync()
+    let getDocument (id: string) (db: MongoDatabase) = task {
+        let! item = db.Collection.Find(Filters.byId id).FirstOrDefaultAsync()
         return match item with
                 | null -> None
                 | _ -> item |> bsonToJObject |> Some
     }
     
-    let insertDocument (db: MongoDatabase) document = task {
-        let mutable bson =  jObjectToBson document
+    let insertDocument document (db: MongoDatabase) = task {
+        let bson =  jObjectToBson document
         let id =
-            if bson.Contains("_id") && not (bson.["_id"].IsBsonNull) then
-                bson.["_id"].AsString
+            if bson.Contains(id) && not (bson.[id].IsBsonNull) then
+                bson.[id].AsString
             else
-                bson.["_id"] <- System.Guid.NewGuid().ToString()
-                bson.["_id"].AsString
+                bson.[id] <- System.Guid.NewGuid().ToString()
+                bson.[id].AsString
         do! db.Collection.InsertOneAsync(bson)
         return id
     }
 
-let private toJObject o = JObject.Parse(Newtonsoft.Json.JsonConvert.SerializeObject(o))
+    let upsertDocument document (db: MongoDatabase) = task {
+        let bson = jObjectToBson document
+        
+        let foundId = 
+            match bson.Contains(id) && not (bson.[id].IsBsonNull) with
+            | true -> Some bson.[id].AsString
+            | false -> None
+        
+        match foundId with
+        | None -> ()
+        | Some foundId -> 
+            let options = new ReplaceOptions()
+            options.IsUpsert <- true
+            let! res = db.Collection.ReplaceOneAsync(Filters.byId foundId, bson, options)
+            ()
+    }
 
-let private JObjectToADocument (o: JObject) =
-    { _id = o.Value<string>("_id"); SomeData = o.Value<string>("SomeData")}
+    let deleteDocumentById id (db: MongoDatabase) = task {
+        let! res = db.Collection.DeleteOneAsync(Filters.byId id)
+        ()
+    }
 
-let getDocumentCount (ctx: HttpContext) = task {
+
+let getDocumentCount (ctx: HttpContext) (category: string option)= task {
     let! db = Mongo.openDatabase ctx
-    return! Mongo.countDocuments db
+    let filter = 
+        match category with
+        | Some c -> Mongo.Filters.byDocumentType c
+        | None -> Mongo.Filters.empty
+
+    return! Mongo.countDocuments filter db
 }
 
-let foo (ctx: HttpContext) = task {
+let getDocumentsByType documentType (mapper: JObject -> 'a option) ctx = task {
     let! db = Mongo.openDatabase ctx
-    let doc = { _id = null; SomeData = "foo bar baz" }
-    return! doc |> toJObject |> Mongo.insertDocument db
-    
+    let! documents = db |> Mongo.getDocuments (Mongo.Filters.byDocumentType documentType) (Mongo.Sort.by "dateAdded")
+
+    return documents
+            |> Seq.map mapper
+            |> Seq.filter Option.isSome
+            |> Seq.map Option.get
 }
 
-let bar (ctx: HttpContext) = task {
+let getDocumentById id ctx = task {
     let! db = Mongo.openDatabase ctx
-    let! docs = Mongo.getDocuments(db)
-    let s = System.String.Join(", ", docs |> Seq.map JObjectToADocument |> Seq.map (fun d -> d.SomeData ))
-    return s
+    return! db |> Mongo.getDocument id
 }
 
-let baz ctx = task {
+let getCategories ctx = getDocumentsByType "category"
+
+let insertDocument ctx (document: JObject) = task {
     let! db = Mongo.openDatabase ctx
-    let! docs = Mongo.getDocuments db
-    let first = docs |> Seq.head |> JObjectToADocument
-    let! doc = first._id |> Mongo.getDocument db
-    return match doc with
-            | Some x -> (x |> JObjectToADocument).SomeData
-            | None -> "Not Found"
+    return! Mongo.insertDocument document db
+}
+
+let upsertDocument ctx (document: JObject) = task {
+    let! db = Mongo.openDatabase ctx
+    return! Mongo.upsertDocument document db
+}
+
+let deleteDocument ctx id = task {
+    let! db = Mongo.openDatabase ctx
+    do! Mongo.deleteDocumentById id db
 }
