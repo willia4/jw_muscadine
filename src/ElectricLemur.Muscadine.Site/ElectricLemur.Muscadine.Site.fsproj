@@ -36,7 +36,11 @@
     <Content Include="appsettings.Development.json" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="tsconfig.json" />
     <None Include="WebRoot\css\admin.scss" />
     <None Include="WebRoot\css\index.scss" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="wwwroot\" />
   </ItemGroup>
 </Project>

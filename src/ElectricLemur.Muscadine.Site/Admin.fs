@@ -13,6 +13,7 @@ module Views =
             head [] [
                 title [] [ encodedText pageTitle ]
                 link [ (_rel "stylesheet"); (_type "text/css"); (_href "/css/admin.scss") ]
+                script [ _src "/js/admin.js" ] []
             ]
             body [] [
                 div [ _class "site-title" ] [
@@ -59,9 +60,11 @@ module Views =
                         td [] [encodedText c.LongName ]
                         td [] [encodedText c.Description ]
                         td [] [
-                            form [ _method "POST"; _action $"/admin/category/{c.Id}/_delete" ] [
-                                input [ _type "submit"; _value "Delete" ]
-                            ]
+                            button [ _class "delete-button"
+                                     attr "data-id" (c.Id.ToString()) 
+                                     attr "data-name" c.ShortName 
+                                     attr "data-url" $"/admin/category/{c.Id}" ]
+                                   [ encodedText "Delete" ]
                         ]
                 ])
         ] |> layout "Admin"
@@ -196,7 +199,7 @@ let editCrudPostHandler<'a>
 let deleteCrudPostHandler: string -> HttpHandler =
     fun id next ctx -> task {
         do! Database.deleteDocument ctx id
-        return! redirectTo false "/admin" next ctx
+        return! setStatusCode 200 next ctx
 }
 
 type CrudHandlers<'a> = {
