@@ -117,6 +117,7 @@ let webApp =
                     route "/admin/login" >=> Login.postHandler "/admin/login" (Login.defaultCredentialValidator (Login.getExpectedAdminCredentials ctx))
                     route "/admin/category/_new" >=> Login.requiresAdmin >=> Admin.addCategoryPostHandler
                     routef "/admin/category/%s" (fun id -> Login.requiresAdmin >=> Admin.editCategoryPostHandler id)
+                    routef "/admin/category/%s/_delete" (fun id -> Login.requiresAdmin >=> Admin.deleteCategoryPostHandler id)
                 ]
             DELETE >=>
                 choose [

@@ -52,7 +52,7 @@ module Views =
                 categories 
                 "Categories" 
                 "/admin/category" 
-                [ "Short Name"; "Long Name"; "Description"; "" ]
+                [ "Short Name"; "Long Name"; "Description"; ""; "" ]
                 (fun c -> 
                     let makeUrl (c: Category) = $"/admin/category/{c.Id}"
                     [
@@ -60,11 +60,16 @@ module Views =
                         td [] [encodedText c.LongName ]
                         td [] [encodedText c.Description ]
                         td [] [
+                            form [ _method "POST"; _action $"/admin/category/{c.Id}/_delete" ] [
+                                input [ _type "submit"; _value "(Working) Delete" ]
+                            ]
+                        ]
+                        td [] [
                             button [ _class "delete-button"
                                      attr "data-id" (c.Id.ToString()) 
                                      attr "data-name" c.ShortName 
                                      attr "data-url" $"/admin/category/{c.Id}" ]
-                                   [ encodedText "Delete" ]
+                                   [ encodedText "(Broken) Delete" ]
                         ]
                 ])
         ] |> layout "Admin"
