@@ -55,7 +55,7 @@ module Views =
             head [] [
                 meta [ (_httpEquiv "Content-Type"); (_content "text/html; charset=utf-8") ]
                 title [] [ encodedText "James Williams" ]
-                link [ (_rel "stylesheet"); (_type "text/css"); (_href "/css/index.scss") ]
+                link [ (_rel "stylesheet"); (_type "text/css"); (_href "/css/index.css") ]
             ]
 
             body [] [
@@ -117,7 +117,6 @@ let webApp =
                     route "/admin/login" >=> Login.postHandler "/admin/login" (Login.defaultCredentialValidator (Login.getExpectedAdminCredentials ctx))
                     route "/admin/category/_new" >=> Login.requiresAdmin >=> Admin.addCategoryPostHandler
                     routef "/admin/category/%s" (fun id -> Login.requiresAdmin >=> Admin.editCategoryPostHandler id)
-                    routef "/admin/category/%s/_delete" (fun id -> Login.requiresAdmin >=> Admin.deleteCategoryPostHandler id)
                 ]
             DELETE >=>
                 choose [
@@ -150,7 +149,7 @@ let configureCors (builder : CorsPolicyBuilder) =
 [<EntryPoint>]
 let main args =
     let contentRoot = Directory.GetCurrentDirectory()
-    let webRoot     = Path.Combine(contentRoot, "WebRoot")
+    let webRoot     = Path.Combine(contentRoot, "wwwroot")
     let builder = WebApplication.CreateBuilder(
         let options = new WebApplicationOptions()
         options.ContentRootPath <- contentRoot
@@ -163,12 +162,6 @@ let main args =
 
     builder.Services
         .AddCors()
-        .AddWebOptimizer(fun pipeline ->
-            pipeline.CompileScssFiles(
-                let options = new WebOptimizer.Sass.WebOptimazerScssOptions()
-                options.MinifyCss <- false
-                options) |> ignore
-        )
         .AddGiraffe() |> ignore
 
     builder.Services
@@ -187,7 +180,6 @@ let main args =
         app.UseGiraffeErrorHandler(errorHandler)
             .UseHttpsRedirection())
         .UseCors(configureCors)
-        .UseWebOptimizer()
         .UseStaticFiles()
         .UseAuthentication()
         .UseGiraffe(webApp)

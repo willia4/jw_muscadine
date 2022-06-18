@@ -1,11 +1,8 @@
-﻿
-h1 {
-    &.page-title {
-        text-align: center;
-        font-family: Futura, Verdana, Helvetica, Arial, sans-serif;
-        font-size: 500%;
-        font-weight: lighter;
-    }
+﻿h1.page-title {
+    text-align: center;
+    font-family: Futura, Verdana, Helvetica, Arial, sans-serif;
+    font-size: 500%;
+    font-weight: lighter;
 }
 
 blockquote {
@@ -15,12 +12,12 @@ blockquote {
     padding: 20px;
     font-size: 110%;
     border-radius: 10px;
+}
 
-    &::before {
-        content: "“";
-        font-family: Futura;
-        font-size: 200%;
-    }
+blockquote::before {
+    content: "“";
+    font-family: Futura;
+    font-size: 200%;
 }
 
 figcaption {
@@ -32,8 +29,8 @@ figcaption {
     display: block;
     font-size: 150%;
     font-family: Georgia, 'Times New Roman', Times, serif;
+}
 
-    &::before {
-        content: "— ";
-    }
+figcaption::before {
+    content: "— ";
 }

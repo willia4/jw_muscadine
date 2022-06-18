@@ -1,8 +1,5 @@
 FROM mcr.microsoft.com/dotnet/sdk:6.0-bullseye-slim AS build
 
-RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
-    apt-get install -y nodejs
-
 WORKDIR /source
 
 COPY *.sln .
@@ -16,8 +13,6 @@ RUN dotnet publish -c release -o /app --no-restore
 FROM mcr.microsoft.com/dotnet/aspnet:6.0-bullseye-slim
 WORKDIR /app
 COPY --from=build /app ./
-COPY src/ElectricLemur.Muscadine.Site/WebRoot/. ./WebRoot/
-COPY src/ElectricLemur.Muscadine.Site/appsettings.json ./
 
 EXPOSE 80
 

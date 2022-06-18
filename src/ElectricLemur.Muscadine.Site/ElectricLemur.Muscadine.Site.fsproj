@@ -14,16 +14,9 @@
   <ItemGroup>
     <PackageReference Include="Giraffe" Version="6.0.*" />
     <PackageReference Include="Giraffe.ViewEngine" Version="1.3.*" />
-    <PackageReference Include="LigerShark.WebOptimizer.Core" Version="3.0.357" />
-    <PackageReference Include="LigerShark.WebOptimizer.Sass" Version="3.0.84" />
-    <PackageReference Include="Microsoft.TypeScript.MSBuild" Version="4.7.1-rc">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
     <PackageReference Include="MongoDB.Driver" Version="2.15.1" />
   </ItemGroup>
   <ItemGroup>
-    <TypeScriptCompile Include="WebRoot\js\test.ts" />
     <Compile Include="Util.fs" />
     <Compile Include="Login.fs" />
     <Compile Include="Models.fs" />
@@ -32,15 +25,20 @@
     <Compile Include="Program.fs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="appsettings.json" />
+    <Content Include="appsettings.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="appsettings.Development.json" />
+    <Content Include="wwwroot\css\admin.css">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="wwwroot\css\index.css">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="tsconfig.json" />
-    <None Include="WebRoot\css\admin.scss" />
-    <None Include="WebRoot\css\index.scss" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="wwwroot\" />
+    <None Include="wwwroot\js\admin.js">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 </Project>

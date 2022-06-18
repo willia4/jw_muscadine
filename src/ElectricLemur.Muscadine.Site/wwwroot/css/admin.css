@@ -1,0 +1,81 @@
+﻿body {
+    background-color: #efefef;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+}
+
+.site-title {
+    text-align: center;
+    display: block;
+    width: 100%;
+    font-size: 36pt;
+    font-weight: bold;
+    padding-bottom: 30px;
+}
+
+.body-content {
+    padding-left: 30px;
+    padding-right: 30px;
+    padding-bottom: 15px;
+}
+
+.body-content .page-title {
+    font-size: 25pt;
+    padding-bottom: 15px;
+}
+
+.body-content form {
+    margin-left: 15px;
+}
+
+.body-content form label {
+    font-weight: bold;
+    padding-right: 30px;
+}
+
+.body-content form td {
+    padding-bottom: 10px;
+}
+
+.body-content form td.form-label {}
+
+.body-content form td.form-input {
+    width: 70%;
+    text-align: right;
+}
+
+.body-content form input[type="text"] {
+    width: 100%;
+}
+
+.body-content form input[type="submit"] {
+    min-width: 100px;
+    height: 100px;
+}
+
+.body-content .section-header {}
+
+.body-content .section-header a {
+    margin: 5px;
+}
+
+.body-content .section-header span {
+    font-weight: bold;
+    font-size: 20pt;
+}
+
+.body-content table.section-table {
+    min-width: 50%;
+}
+
+.body-content table.section-table th {
+    font-weight: bold;
+    border-width: 1px;
+    border-style: solid;
+}
+
+.body-content table.section-table td {
+    padding-left: 5px;
+    padding-right: 5px;
+    border-width: 1px;
+    border-style: solid;
+}
