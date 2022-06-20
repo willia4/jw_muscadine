@@ -45,19 +45,14 @@ let getFormDataStrings (ctx: HttpContext) (keys: string seq) =
     safeMapBuilder (getFormString ctx) keys
 
 let getJObjectStrings (obj: Newtonsoft.Json.Linq.JObject) (keys: string seq) =
-    let getter key = 
-        try
-            let s = obj.Value<string>(key)
-            if s = null then None else Some s
-        with
-        | _ -> None
-    safeMapBuilder getter keys
+    safeMapBuilder (JObj.getter<string> obj) keys
 
 let getMapStrings (m: Map<string, string>) (keys: string seq) = 
     safeMapBuilder (fun k -> Map.tryFind k m) keys
 
 let listPrepend (a: 'a list) (b: 'a list) = List.append b a
 
+let newGuid() = System.Guid.NewGuid()
 
 let guidFromString (s: string) = 
     match System.Guid.TryParse(s) with

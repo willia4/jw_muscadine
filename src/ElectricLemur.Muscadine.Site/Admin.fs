@@ -177,7 +177,8 @@ let editCrudGetHandler<'a>
 let editCrudPostHandler<'a>
     (toJObject: 'a -> JObject) 
     (formKeysAndLabels: (string * string) seq)
-    (fromFormData: Map<string, string> -> 'a option): string -> HttpHandler =
+    (fromFormData: Map<string, string> -> 'a option)
+    (validator: 'a -> ValidForSave): string -> HttpHandler =
         fun id next ctx -> task {
             let data = 
                 formKeysAndLabels
@@ -185,13 +186,17 @@ let editCrudPostHandler<'a>
                 |> Util.getFormDataStrings ctx 
                 |> Option.map fromFormData
                 |> Option.flatten
-                |> Option.map toJObject
 
             match data with
             | Some data -> 
-                data.["_id"] <- id
-                do! Database.upsertDocument ctx data
-                return! redirectTo false $"/admin/category/%s{id}" next ctx
+                match validator data with
+                | Valid ->
+                    let data = toJObject data
+                    data.["_id"] <- id
+                    do! Database.upsertDocument ctx data
+                    return! redirectTo false $"/admin/category/%s{id}" next ctx
+                | Invalid reason ->
+                    return! (setStatusCode 400 >=> text reason) next ctx
             | None -> 
                 return! (setStatusCode 400 >=> text "Invalid form data") next ctx
         }
@@ -216,12 +221,13 @@ let getCrudHandlers<'a>
     (fromJObject: JObject -> 'a option) 
     (toJObject: 'a -> JObject) 
     (formKeysAndLabels: (string * string) seq)
-    (fromFormData: Map<string, string> -> 'a option) = {
+    (fromFormData: Map<string, string> -> 'a option) 
+    (validator: 'a -> ValidForSave)= {
         add_getHandler = addCrudGetHandler heading formKeysAndLabels;
         add_postHandler = addCrudPostHandler toJObject formKeysAndLabels fromFormData;
         lister = Database.getDocumentsByType "category" fromJObject;
         edit_getHandler = editCrudGetHandler heading formKeysAndLabels;
-        edit_postHandler = editCrudPostHandler toJObject formKeysAndLabels fromFormData;
+        edit_postHandler = editCrudPostHandler toJObject formKeysAndLabels fromFormData validator;
         delete_postHandler = deleteCrudPostHandler;
     }
 
@@ -234,10 +240,11 @@ let categoryCrudHandlers: CrudHandlers<Category> =
             (Category.Keys.shortName, "Short Name")
             (Category.Keys.longName, "Long Name")
             (Category.Keys.description, "Description")
+            (Category.Keys.slug, "Slug")
         ]
         (fun formData -> 
             
-            let values = Util.getMapStrings formData [ Category.Keys.shortName; Category.Keys.longName; Category.Keys.description ]
+            let values = Util.getMapStrings formData [ Category.Keys.shortName; Category.Keys.longName; Category.Keys.description; Category.Keys.slug ]
             match values with
             | None -> None
             | Some values -> Some {
@@ -246,8 +253,10 @@ let categoryCrudHandlers: CrudHandlers<Category> =
                 ShortName = values.[Category.Keys.shortName]
                 LongName = values.[Category.Keys.longName]
                 Description = values.[Category.Keys.description]
+                Slug = values.[Category.Keys.slug]
             }
         )
+        Category.validateForSave
 
 let addCategoryGetHandler: HttpHandler = categoryCrudHandlers.add_getHandler
 let addCategoryPostHandler: HttpHandler = categoryCrudHandlers.add_postHandler

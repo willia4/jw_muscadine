@@ -17,6 +17,7 @@
     <PackageReference Include="MongoDB.Driver" Version="2.15.1" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="JObj.fs" />
     <Compile Include="Util.fs" />
     <Compile Include="Login.fs" />
     <Compile Include="Models.fs" />

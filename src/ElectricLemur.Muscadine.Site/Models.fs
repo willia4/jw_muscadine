@@ -1,6 +1,19 @@
 ﻿module Models
 open Newtonsoft.Json.Linq
 
+type ValidForSave =
+    | Valid
+    | Invalid of string
+
+let checkValid checker reason res =
+    match res with
+    | Invalid reason -> Invalid reason
+    | Valid -> 
+        if checker then 
+            Valid
+        else 
+            Invalid reason
+
 type Category = 
     {
         DateAdded: System.DateTimeOffset;
@@ -8,6 +21,7 @@ type Category =
         ShortName: string;
         LongName: string;
         Description: string;
+        Slug: string;
     }
 
 module Category =
@@ -18,6 +32,7 @@ module Category =
         let shortName = "shortName"
         let longName = "longName"
         let description = "description"
+        let slug = "slug";
 
     let FromJObject (j: JObject) =
         let values = Util.getJObjectStrings j [ 
@@ -31,11 +46,12 @@ module Category =
         match values with
         | None -> None
         | Some values -> Some {
-            Id = Util.guidFromString values.[Keys.id] |> Option.defaultValue (System.Guid.NewGuid());
-            DateAdded = Util.dateTimeOffsetFromString values.[Keys.dateAdded] |> Option.defaultValue (System.DateTimeOffset.UtcNow);
-            ShortName = values.[Keys.shortName]
-            LongName = values.[Keys.longName]
-            Description = values.[Keys.description]
+            Id = values |> Map.find Keys.id |> Util.guidFromString |> Option.defaultValue (Util.newGuid ())
+            DateAdded = values |> Map.find Keys.dateAdded |> Util.dateTimeOffsetFromString |> Option.defaultValue (System.DateTimeOffset.UtcNow)
+            ShortName = values |> Map.find Keys.shortName
+            LongName = values |> Map.find Keys.longName
+            Description = values |> Map.find Keys.description
+            Slug = j |> JObj.stringValue Keys.slug |> Option.defaultValue ""
         }
 
     let ToJObject category =
@@ -46,4 +62,9 @@ module Category =
         doc.[Keys.shortName] <- category.ShortName
         doc.[Keys.longName] <- category.LongName
         doc.[Keys.description] <- category.Description
+        doc.[Keys.slug] <- category.Slug
         doc
+
+    let validateForSave category =
+        ValidForSave.Valid
+        |> checkValid (category.Slug |> System.String.IsNullOrWhiteSpace |> not) "Invalid slug"
