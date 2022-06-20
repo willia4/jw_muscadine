@@ -104,23 +104,23 @@ let webApp =
                     route "/" >=> htmlView Views.underConstruction
                     route "/admin/login" >=> Login.getHandler
                     route "/admin/logout" >=> Login.logoutHandler "/admin/login"
-                    route "/admin/status" >=> Login.requiresAdmin >=> Admin.statusHandler
-                    route "/admin/check-database" >=> Login.requiresAdmin >=> Admin.checkDatabaseHandler
+                    route "/admin/status" >=> Login.requiresAdminRedirect "/admin/status" >=> Admin.statusHandler
+                    route "/admin/check-database" >=> Login.requiresAdminRedirect "/admin/check-database" >=> Admin.checkDatabaseHandler
 
                     route "/admin/" >=> redirectTo true "/admin"
-                    route "/admin" >=> Login.requiresAdmin >=> Admin.indexHandler
-                    route "/admin/category/_new" >=> Login.requiresAdmin >=> Admin.addCategoryGetHandler
-                    routef "/admin/category/%s" (fun id -> Login.requiresAdmin >=> Admin.editCategoryGetHandler id)
+                    route "/admin" >=> Login.requiresAdminRedirect "/admin" >=> Admin.indexHandler
+                    route "/admin/category/_new" >=> Login.requiresAdminRedirect "/admin/category/_new" >=> Admin.addCategoryGetHandler
+                    routef "/admin/category/%s" (fun id -> Login.requiresAdminRedirect $"/admin/category/%s{id} ">=> Admin.editCategoryGetHandler id)
                 ]
             POST >=>
                 choose [
-                    route "/admin/login" >=> Login.postHandler "/admin/login" (Login.defaultCredentialValidator (Login.getExpectedAdminCredentials ctx))
-                    route "/admin/category/_new" >=> Login.requiresAdmin >=> Admin.addCategoryPostHandler
-                    routef "/admin/category/%s" (fun id -> Login.requiresAdmin >=> Admin.editCategoryPostHandler id)
+                    route "/admin/login" >=> Login.postHandler "/admin/login" "/admin" (Login.defaultCredentialValidator (Login.getExpectedAdminCredentials ctx))
+                    route "/admin/category/_new" >=> Login.requiresAdminRedirect "/admin/category/_new" >=> Admin.addCategoryPostHandler
+                    routef "/admin/category/%s" (fun id -> Login.requiresAdminRedirect $"/admin/category/%s{id}" >=> Admin.editCategoryPostHandler id)
                 ]
             DELETE >=>
                 choose [
-                    routef "/admin/category/%s" (fun id -> Login.requiresAdmin >=> Admin.deleteCategoryPostHandler id)
+                    routef "/admin/category/%s" (fun id -> Login.requiresAdminAPICall >=> Admin.deleteCategoryPostHandler id)
                 ]
             setStatusCode 404 >=> text "Not Found" ] next ctx
 

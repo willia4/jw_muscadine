@@ -19,7 +19,9 @@ open Giraffe
 module private LoginViews =
     open Giraffe.ViewEngine
 
-    let loginForm (errorMessage: string option) =
+    let loginForm (errorMessage: string option) (redirect: string option)=
+        let emptyDiv = div [ _style "display: none"] []
+
         html [] [
             head [] [
                 title [] [ encodedText "Login" ]
@@ -40,7 +42,11 @@ module private LoginViews =
                         _method "post" ] [
                             match errorMessage with
                             | Some errorMessage -> div [ _id "error" ] [ encodedText errorMessage ]
-                            | None -> div [] []
+                            | None -> emptyDiv
+                            
+                            match redirect with
+                            | Some redirect ->  input [ _type "hidden"; _id "redirect"; _name "redirect"; _value redirect ]
+                            | None -> emptyDiv
 
                             table [ ] [
                                 tr [] [
@@ -104,7 +110,28 @@ let defaultCredentialValidator (expected: string * string) email password =
         
     | None -> false
 
+let getQueryStringKey key (ctx: HttpContext) =
+    if ctx.Request.Query.ContainsKey(key) then 
+        Some (ctx.Request.Query.[key].ToString())
+    else
+        None
 
+let private redirectIsValid (redirect: string option) =
+    let validPatterns = [
+        "^/admin$"
+        "^/admin/status$"
+        "^/admin/check-database$"
+        "^/admin/category/[A-Za-z0-9-]*/?$"
+        "^/admin/category/_new$"
+    ]
+
+    match redirect with 
+    | Some redirect -> 
+        validPatterns 
+        |> List.tryFind (fun pattern -> System.Text.RegularExpressions.Regex.IsMatch(redirect, pattern)) 
+        |> Option.isSome
+    | None -> true
+        
 let getHandler =
     fun next (ctx: HttpContext) ->
         let errorMessage = 
@@ -112,10 +139,14 @@ let getHandler =
                 Some "Invalid username or password"
             else
                 None
+        let redirect = getQueryStringKey "redirect" ctx
+            
+        if redirectIsValid redirect then
+            htmlView (LoginViews.loginForm errorMessage redirect) next ctx
+        else
+            RequestErrors.BAD_REQUEST "Invalid redirect" next ctx
 
-        htmlView (LoginViews.loginForm errorMessage) next ctx
-
-let postHandler loginRoute (credentialValidator: string option -> string option -> bool) =
+let postHandler loginRoute adminRoute (credentialValidator: string option -> string option -> bool) =
     fun (next: HttpFunc) (ctx: HttpContext) -> task {
         let safeGetString = Util.getFormString ctx
 
@@ -123,25 +154,30 @@ let postHandler loginRoute (credentialValidator: string option -> string option 
         let password = safeGetString "password"
         let valid = credentialValidator email password
 
-        if valid then
-            let claims = [ 
-                (new Claim(ClaimTypes.Email, (email |> Option.defaultValue "")))
-                (new Claim(ClaimTypes.Role, "Admin"))
-            ]
-            let identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme)
-            let claimsPrincipal = new ClaimsPrincipal(identity)
+        let redirect = safeGetString "redirect" |> Option.defaultValue adminRoute
 
-            let authProperties = new AuthenticationProperties()
-            authProperties.AllowRefresh <- true
-            authProperties.IsPersistent <- true
-            authProperties.IssuedUtc <- System.DateTimeOffset.UtcNow
-            authProperties.RedirectUri <- $"%s{loginRoute}?valid"
+        if redirectIsValid (Some redirect) then
+            if valid then
+                let claims = [ 
+                    (new Claim(ClaimTypes.Email, (email |> Option.defaultValue "")))
+                    (new Claim(ClaimTypes.Role, "Admin"))
+                ]
+                let identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme)
+                let claimsPrincipal = new ClaimsPrincipal(identity)
 
-            do! ctx.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claimsPrincipal, authProperties)
+                let authProperties = new AuthenticationProperties()
+                authProperties.AllowRefresh <- true
+                authProperties.IsPersistent <- true
+                authProperties.IssuedUtc <- System.DateTimeOffset.UtcNow
+                authProperties.RedirectUri <- $"%s{loginRoute}?valid"
 
-            return! redirectTo false $"%s{loginRoute}?valid" next ctx
-        else
-            return! redirectTo false $"%s{loginRoute}?error" next ctx
+                do! ctx.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claimsPrincipal, authProperties)
+
+                return! redirectTo false redirect next ctx
+            else
+                return! redirectTo false $"%s{loginRoute}?error" next ctx
+        else 
+            return! RequestErrors.BAD_REQUEST "Invalid redirect" next ctx
     }
 
 let logoutHandler loginRoute = 
@@ -153,6 +189,9 @@ let logoutHandler loginRoute =
 
 let isAdmin (ctx: HttpContext) = ctx.User.IsInRole("Admin")
 
-let requiresAdmin =
-    fun next ctx ->
-        requiresRole "Admin" (RequestErrors.FORBIDDEN "Access denied") next ctx
+let requiresAdminRedirect redirect =
+    fun next ctx -> requiresRole "Admin" (redirectTo false $"/admin/login?redirect=%s{redirect}") next ctx
+
+let requiresAdminAPICall = 
+    fun next ctx -> requiresRole "Admin" (RequestErrors.FORBIDDEN "Access denied") next ctx
+           
