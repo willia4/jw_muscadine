@@ -6,6 +6,7 @@ open System.Security.Claims
 open ElectricLemur.Muscadine.Site
 open Newtonsoft.Json.Linq;
 open Models;
+open System.Threading.Tasks
 
 module Views =
     let layout (pageTitle: string) (content: XmlNode list) = 
@@ -52,13 +53,14 @@ module Views =
                 categories 
                 "Categories" 
                 "/admin/category" 
-                [ "Short Name"; "Long Name"; "Description"; "" ]
+                [ "Short Name"; "Long Name"; "Description"; "Slug"; "" ]
                 (fun c -> 
                     let makeUrl (c: Category) = $"/admin/category/{c.Id}"
                     [
                         td [] [ a [ _href (makeUrl c)] [ encodedText c.ShortName ]]
-                        td [] [encodedText c.LongName ]
-                        td [] [encodedText c.Description ]
+                        td [] [ encodedText c.LongName ]
+                        td [] [ encodedText c.Description ]
+                        td [] [ encodedText c.Slug ]
                         td [] [
                             button [ _class "delete-button"
                                      attr "data-id" (c.Id.ToString()) 
@@ -127,7 +129,7 @@ let statusHandler: HttpHandler =
 let checkDatabaseHandler: HttpHandler =
     fun next ctx -> task {
         let! documentCount = Database.getDocumentCount ctx None
-        let! categoryCount = Database.getDocumentCount ctx (Some "category")
+        let! categoryCount = Database.getDocumentCount ctx (Some Category.documentType)
 
         let result = $"Database results\n\nTotal documents: %d{documentCount}\nCategories: %d{categoryCount}"
         return! text result next ctx
@@ -144,20 +146,26 @@ let addCrudGetHandler<'a>
 let addCrudPostHandler<'a>
     (toJObject: 'a -> JObject) 
     (formKeysAndLabels: (string * string) seq)
-    (fromFormData: Map<string, string> -> 'a option): HttpHandler =
+    (fromFormData: string option -> Map<string, string> -> 'a option)
+    (validator: HttpContext -> 'a -> Task<ValidForSave>): HttpHandler =
         fun next ctx -> task {
             let data = 
                 formKeysAndLabels
                 |> Seq.map fst
                 |> Util.getFormDataStrings ctx 
-                |> Option.map fromFormData
+                |> Option.map (fromFormData None)
                 |> Option.flatten
-                |> Option.map toJObject
 
             match data with
             | Some data -> 
-                let! id = Database.insertDocument ctx data
-                return! redirectTo false $"/admin/category/%s{id}" next ctx
+                let! valid = validator ctx data
+                match valid with
+                | Valid ->
+                    let data = toJObject data
+                    let! id = Database.insertDocument ctx data
+                    return! redirectTo false $"/admin/category/%s{id}" next ctx
+                | Invalid reason ->
+                    return! (setStatusCode 400 >=> text reason) next ctx
             | None -> 
                 return! (setStatusCode 400 >=> text "Invalid form data") next ctx
         }
@@ -177,19 +185,20 @@ let editCrudGetHandler<'a>
 let editCrudPostHandler<'a>
     (toJObject: 'a -> JObject) 
     (formKeysAndLabels: (string * string) seq)
-    (fromFormData: Map<string, string> -> 'a option)
-    (validator: 'a -> ValidForSave): string -> HttpHandler =
+    (fromFormData: string option -> Map<string, string> -> 'a option)
+    (validator: HttpContext -> 'a -> Task<ValidForSave>): string -> HttpHandler =
         fun id next ctx -> task {
             let data = 
                 formKeysAndLabels
                 |> Seq.map fst
                 |> Util.getFormDataStrings ctx 
-                |> Option.map fromFormData
+                |> Option.map (fromFormData (Some id))
                 |> Option.flatten
 
             match data with
-            | Some data -> 
-                match validator data with
+            | Some data ->
+                let! valid = validator ctx data
+                match valid with
                 | Valid ->
                     let data = toJObject data
                     data.["_id"] <- id
@@ -221,11 +230,11 @@ let getCrudHandlers<'a>
     (fromJObject: JObject -> 'a option) 
     (toJObject: 'a -> JObject) 
     (formKeysAndLabels: (string * string) seq)
-    (fromFormData: Map<string, string> -> 'a option) 
-    (validator: 'a -> ValidForSave)= {
+    (fromFormData: string option -> Map<string, string> -> 'a option) 
+    (validator: HttpContext -> 'a -> Task<ValidForSave>)= {
         add_getHandler = addCrudGetHandler heading formKeysAndLabels;
-        add_postHandler = addCrudPostHandler toJObject formKeysAndLabels fromFormData;
-        lister = Database.getDocumentsByType "category" fromJObject;
+        add_postHandler = addCrudPostHandler toJObject formKeysAndLabels fromFormData validator;
+        lister = Database.getDocumentsByType Category.documentType fromJObject;
         edit_getHandler = editCrudGetHandler heading formKeysAndLabels;
         edit_postHandler = editCrudPostHandler toJObject formKeysAndLabels fromFormData validator;
         delete_postHandler = deleteCrudPostHandler;
@@ -242,13 +251,16 @@ let categoryCrudHandlers: CrudHandlers<Category> =
             (Category.Keys.description, "Description")
             (Category.Keys.slug, "Slug")
         ]
-        (fun formData -> 
+        (fun id formData -> 
             
             let values = Util.getMapStrings formData [ Category.Keys.shortName; Category.Keys.longName; Category.Keys.description; Category.Keys.slug ]
             match values with
             | None -> None
             | Some values -> Some {
-                Id = System.Guid.NewGuid()
+                Id = match id with 
+                     | Some id -> Util.guidFromString id |> Option.defaultValue (System.Guid.NewGuid())
+                     | None -> System.Guid.NewGuid()
+
                 DateAdded = System.DateTimeOffset.UtcNow
                 ShortName = values.[Category.Keys.shortName]
                 LongName = values.[Category.Keys.longName]
@@ -256,7 +268,7 @@ let categoryCrudHandlers: CrudHandlers<Category> =
                 Slug = values.[Category.Keys.slug]
             }
         )
-        Category.validateForSave
+        (Category.validateForSave (Database.checkUniqueness Category.documentType))
 
 let addCategoryGetHandler: HttpHandler = categoryCrudHandlers.add_getHandler
 let addCategoryPostHandler: HttpHandler = categoryCrudHandlers.add_postHandler

@@ -1,5 +1,7 @@
 ﻿module Models
 open Newtonsoft.Json.Linq
+open System.Threading.Tasks
+open Microsoft.AspNetCore.Http
 
 type ValidForSave =
     | Valid
@@ -13,6 +15,17 @@ let checkValid checker reason res =
             Valid
         else 
             Invalid reason
+
+let checkValidAsync (checker: Task<bool>) reason res = task {
+    match res with
+    | Invalid reason -> return Invalid reason
+    | Valid -> 
+        let! isValid = checker
+        if isValid then 
+            return Valid
+        else 
+            return Invalid reason
+}
 
 type Category = 
     {
@@ -33,6 +46,8 @@ module Category =
         let longName = "longName"
         let description = "description"
         let slug = "slug";
+
+    let documentType = "category"
 
     let FromJObject (j: JObject) =
         let values = Util.getJObjectStrings j [ 
@@ -57,7 +72,7 @@ module Category =
     let ToJObject category =
         let doc = new JObject()
         doc.[Keys.id] <- category.Id.ToString()
-        doc.[Keys.documentType] <- "category"
+        doc.[Keys.documentType] <- documentType
         doc.[Keys.dateAdded] <- category.DateAdded.ToString("o")
         doc.[Keys.shortName] <- category.ShortName
         doc.[Keys.longName] <- category.LongName
@@ -65,6 +80,15 @@ module Category =
         doc.[Keys.slug] <- category.Slug
         doc
 
-    let validateForSave category =
-        ValidForSave.Valid
-        |> checkValid (category.Slug |> System.String.IsNullOrWhiteSpace |> not) "Invalid slug"
+    let validateForSave (uniquenessChecker: string -> string -> string -> HttpContext -> Task<bool>) ctx category = task {
+        let valid = 
+            ValidForSave.Valid
+            |> checkValid (category.Slug |> System.String.IsNullOrWhiteSpace |> not) "Invalid slug"
+        
+        let id = category.Id.ToString()
+        let! valid = valid |> checkValidAsync (uniquenessChecker Keys.slug category.Slug id ctx) "Slug must be unique"
+        let! valid = valid |> checkValidAsync (uniquenessChecker Keys.shortName category.ShortName id ctx) "Short Name must be unique"
+        let! valid = valid |> checkValidAsync (uniquenessChecker Keys.longName category.LongName id ctx) "Long Name must be unique"
+        return valid
+    }
+        

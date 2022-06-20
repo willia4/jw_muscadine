@@ -22,23 +22,48 @@ module private Mongo =
     let documentType = "documentType"
 
     module Filters = 
-        let byMap (m: Map<string, BsonValue>) = 
+        type FilterBuilder = {
+            EqualTo: seq<string * BsonValue>;
+            NotEqualTo: seq<string * BsonValue>;
+        }
+
+        let build filterBuilder = 
             let filter = new BsonDocument()
-            m |> Map.iter (fun k v -> filter.[k] <- v)
+            
+            filterBuilder.EqualTo 
+            |> Seq.iter (fun (k, v) -> 
+                filter.[k] <- v)
+
+            filterBuilder.NotEqualTo
+            |> Seq.iter(fun (k, v) ->
+                filter.[k] <- new BsonDocument("$ne", v))
+
             filter
 
-        let empty = byMap Map.empty
+        let addEquals k v current =
+            { current with EqualTo = (Seq.append current.EqualTo [ (k, v) ]) }
 
-        let by k v = byMap (Map [(k, v)])
+        let addNotEquals k v current =
+            { current with NotEqualTo = (Seq.append current.NotEqualTo [ k, v ]) }
 
-        let byDocumentType (typeName: string) = by "documentType" typeName
+        let empty = { EqualTo = Seq.empty; NotEqualTo = Seq.empty }
 
-        let byId (id: string) = by "_id" id
+        let byMap (m: Map<string, BsonValue>) current =
+            m 
+            |> Map.toSeq
+            |> Seq.fold (fun c (k, v) -> addEquals k v c) current
+            
+        let by = addEquals
+        let byDocumentType (typeName: string) current = by "documentType" typeName current
+        let byId (id: string) current = by "_id" id current
+        let notId (id: string) current = addNotEquals "_id" id current
+
     
     module Sort =
         let empty = Filters.empty
-        let byId = Filters.by "_id" 1
-        let by k = Filters.by k 1
+        let byId current = Filters.by "_id" 1 current
+        let by k current = Filters.by k 1 current
+        let build = Filters.build
 
     type MongoSettings = { Hostname: string; Database: string; Collection: string; Username: string; Password: string }
     type MongoDatabase = { Client: IMongoClient; Database: IMongoDatabase; Collection: IMongoCollection<BsonDocument> }
@@ -97,7 +122,8 @@ module private Mongo =
     }
     
     let getDocument (id: string) (db: MongoDatabase) = task {
-        let! item = db.Collection.Find(Filters.byId id).FirstOrDefaultAsync()
+        let filter = Filters.empty |> Filters.byId id |> Filters.build
+        let! item = db.Collection.Find(filter).FirstOrDefaultAsync()
         return match item with
                 | null -> None
                 | _ -> item |> bsonToJObject |> Some
@@ -128,12 +154,14 @@ module private Mongo =
         | Some foundId -> 
             let options = new ReplaceOptions()
             options.IsUpsert <- true
-            let! res = db.Collection.ReplaceOneAsync(Filters.byId foundId, bson, options)
+            let filter = Filters.empty |> Filters.byId foundId |> Filters.build
+            let! res = db.Collection.ReplaceOneAsync(filter, bson, options)
             ()
     }
 
     let deleteDocumentById id (db: MongoDatabase) = task {
-        let! res = db.Collection.DeleteOneAsync(Filters.byId id)
+        let filter = Filters.empty |> Filters.byId id |> Filters.build
+        let! res = db.Collection.DeleteOneAsync(filter)
         ()
     }
 
@@ -142,15 +170,17 @@ let getDocumentCount (ctx: HttpContext) (category: string option)= task {
     let! db = Mongo.openDatabase ctx
     let filter = 
         match category with
-        | Some c -> Mongo.Filters.byDocumentType c
-        | None -> Mongo.Filters.empty
+        | Some c -> Mongo.Filters.empty |> Mongo.Filters.byDocumentType c |> Mongo.Filters.build
+        | None -> Mongo.Filters.empty |> Mongo.Filters.build
 
     return! Mongo.countDocuments filter db
 }
 
 let getDocumentsByType documentType (mapper: JObject -> 'a option) ctx = task {
     let! db = Mongo.openDatabase ctx
-    let! documents = db |> Mongo.getDocuments (Mongo.Filters.byDocumentType documentType) (Mongo.Sort.by "dateAdded")
+    let filter = Mongo.Filters.empty |> Mongo.Filters.byDocumentType documentType |> Mongo.Filters.build
+    let sort = Mongo.Sort.empty |> Mongo.Sort.by "dateAdded" |> Mongo.Sort.build
+    let! documents = db |> Mongo.getDocuments filter sort
 
     return documents
             |> Seq.map mapper
@@ -163,7 +193,7 @@ let getDocumentById id ctx = task {
     return! db |> Mongo.getDocument id
 }
 
-let getCategories ctx = getDocumentsByType "category"
+let getCategories ctx = getDocumentsByType Category.documentType
 
 let insertDocument ctx (document: JObject) = task {
     let! db = Mongo.openDatabase ctx
@@ -178,4 +208,20 @@ let upsertDocument ctx (document: JObject) = task {
 let deleteDocument ctx id = task {
     let! db = Mongo.openDatabase ctx
     do! Mongo.deleteDocumentById id db
+}
+
+let checkUniqueness documentType fieldName (fieldValue: string) allowedId ctx = task {
+    let! db = Mongo.openDatabase ctx
+    let filter = 
+        Mongo.Filters.empty
+        |> Mongo.Filters.byDocumentType documentType
+        |> Mongo.Filters.addEquals fieldName fieldValue
+        |> Mongo.Filters.notId allowedId
+        |> Mongo.Filters.build
+    let sort = Mongo.Sort.empty |> Mongo.Filters.build
+
+    //let! documentCount = db |> Mongo.countDocuments filter
+    let! documents = db |> Mongo.getDocuments filter sort 
+    let documentCount = Seq.length documents
+    return (documentCount = 0)
 }
