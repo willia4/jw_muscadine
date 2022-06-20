@@ -1,6 +1,9 @@
 module Util
 open Microsoft.AspNetCore.Http
 
+let flip f a b = f b a
+let flip3 f a b c = f c b a
+
 let appendSeqToList (a: 'a list) (b: 'a seq) =
     let rec m acc remaining =
         if (remaining |> Seq.isEmpty) then
@@ -18,7 +21,7 @@ let unwrapListOfOptions(s: List<option<'a>>) =
 
 let getFormString (ctx: HttpContext) (key: string) =
     if ctx.Request.Form.ContainsKey(key) then
-        Some (ctx.Request.Form.[key].ToString())
+        Some (string ctx.Request.Form.[key])
     else
         None
 
@@ -45,14 +48,15 @@ let getFormDataStrings (ctx: HttpContext) (keys: string seq) =
     safeMapBuilder (getFormString ctx) keys
 
 let getJObjectStrings (obj: Newtonsoft.Json.Linq.JObject) (keys: string seq) =
-    safeMapBuilder (JObj.getter<string> obj) keys
+    let k = id keys
+    safeMapBuilder (flip JObj.getter<string> obj) keys
 
 let getMapStrings (m: Map<string, string>) (keys: string seq) = 
     safeMapBuilder (fun k -> Map.tryFind k m) keys
 
 let listPrepend (a: 'a list) (b: 'a list) = List.append b a
 
-let newGuid() = System.Guid.NewGuid()
+let newGuid () = System.Guid.NewGuid()
 
 let guidFromString (s: string) = 
     match System.Guid.TryParse(s) with

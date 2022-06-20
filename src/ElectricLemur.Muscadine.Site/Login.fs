@@ -112,7 +112,7 @@ let defaultCredentialValidator (expected: string * string) email password =
 
 let getQueryStringKey key (ctx: HttpContext) =
     if ctx.Request.Query.ContainsKey(key) then 
-        Some (ctx.Request.Query.[key].ToString())
+        Some (string ctx.Request.Query.[key])
     else
         None
 

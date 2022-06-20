@@ -2,18 +2,19 @@
 open Newtonsoft.Json
 open Newtonsoft.Json.Linq
 
-let getter<'a when 'a: null> (obj: JObject) (key: string)  =
+let getter<'a> (key: string) (obj: JObject) =
     try
-        match obj.Value<'a>(key) with
+        let v = obj.Value<'a>(key)
+        match box v with
         | null -> None
-        | v -> Some v
+        | w -> Some v
     with
     | _ -> None
 
 let requiredGetter<'a when 'a: null> (obj: JObject) (key: string) =
-    match getter<'a> obj key with
+    match getter<'a> key obj with
     | Some v -> v
     | None -> raise (System.InvalidOperationException($"Required key %s{key} not present in JObject"))
 
-let stringValue (key: string) (obj: JObject) = getter<System.String> obj key
-let requiredStringValue (key: string) (obj: JObject) = requiredGetter<System.String> obj key
+let stringValue (key: string) (obj: JObject) = getter<string> key obj
+let requiredStringValue (key: string) (obj: JObject) = requiredGetter<string> obj key

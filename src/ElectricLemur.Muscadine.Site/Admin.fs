@@ -63,7 +63,7 @@ module Views =
                         td [] [ encodedText c.Slug ]
                         td [] [
                             button [ _class "delete-button"
-                                     attr "data-id" (c.Id.ToString()) 
+                                     attr "data-id" (string c.Id) 
                                      attr "data-name" c.ShortName 
                                      attr "data-url" $"/admin/category/{c.Id}" ]
                                    [ encodedText "Delete" ]

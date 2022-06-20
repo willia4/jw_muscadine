@@ -71,7 +71,7 @@ module Category =
 
     let ToJObject category =
         let doc = new JObject()
-        doc.[Keys.id] <- category.Id.ToString()
+        doc.[Keys.id] <- string category.Id
         doc.[Keys.documentType] <- documentType
         doc.[Keys.dateAdded] <- category.DateAdded.ToString("o")
         doc.[Keys.shortName] <- category.ShortName
@@ -83,9 +83,9 @@ module Category =
     let validateForSave (uniquenessChecker: string -> string -> string -> HttpContext -> Task<bool>) ctx category = task {
         let valid = 
             ValidForSave.Valid
-            |> checkValid (category.Slug |> System.String.IsNullOrWhiteSpace |> not) "Invalid slug"
+            |> checkValid (category.Slug |> (System.String.IsNullOrWhiteSpace >> not)) "Invalid slug"
         
-        let id = category.Id.ToString()
+        let id = string category.Id
         let! valid = valid |> checkValidAsync (uniquenessChecker Keys.slug category.Slug id ctx) "Slug must be unique"
         let! valid = valid |> checkValidAsync (uniquenessChecker Keys.shortName category.ShortName id ctx) "Short Name must be unique"
         let! valid = valid |> checkValidAsync (uniquenessChecker Keys.longName category.LongName id ctx) "Long Name must be unique"

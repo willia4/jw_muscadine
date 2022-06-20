@@ -135,7 +135,7 @@ module private Mongo =
             if bson.Contains(id) && not (bson.[id].IsBsonNull) then
                 bson.[id].AsString
             else
-                bson.[id] <- System.Guid.NewGuid().ToString()
+                bson.[id] <- System.Guid.NewGuid() |> string
                 bson.[id].AsString
         do! db.Collection.InsertOneAsync(bson)
         return id
