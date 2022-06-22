@@ -7,15 +7,40 @@ type FieldRequirement =
     | Required
     | NotRequired
 
+type FieldType =
+    | Text
+    | Boolean
+
 type Field = {
     Key: string
     Label: string
     Required: FieldRequirement
+    Type: FieldType
 }
 
-let getKeys (fields: Field seq) = 
-    let getKeys requiredType = fields |> Seq.filter (fun f -> f.Required = requiredType) |> Seq.map (fun f -> f.Key)
-    ((getKeys Required), (getKeys NotRequired))
+type IncludeFields =
+    | IncludeDatabaseFields
+    | ExcludeDatabaseFields
+
+module DatabaseFields =
+    let dateAdded = "dateAdded"
+    let id = "_id"
+
+let getKeys (fields: Field seq) includeDatabaseFields = 
+    let getKeys requiredType = 
+        fields 
+        |> Seq.filter (fun f -> f.Required = requiredType) 
+        |> Seq.map (fun f -> f.Key)
+
+    let required = getKeys Required
+    let optional = getKeys NotRequired
+
+    let required = 
+        match includeDatabaseFields with
+        | IncludeDatabaseFields -> Util.seqPrepend [ DatabaseFields.id; DatabaseFields.dateAdded ] required
+        | ExcludeDatabaseFields -> required
+
+    (required, optional)
 
 type ValidForSave =
     | Valid
@@ -49,36 +74,34 @@ type Category =
         LongName: string;
         Description: string;
         Slug: string;
+        HasCoverImage: bool;
     }
 
 module Category =
     module Keys =
-        let id = "_id"
+        let id = DatabaseFields.id
+        let dateAdded = DatabaseFields.dateAdded
         let documentType = "documentType"
-        let dateAdded = "dateAdded"
         let shortName = "shortName"
         let longName = "longName"
         let description = "description"
-        let slug = "slug";
+        let slug = "slug"
+        let hasCoverImage = "hasCoverImage"
 
     let fields = ([
-        { Key = Keys.shortName; Label = "Short Name"; Required = Required }
-        { Key = Keys.longName; Label = "Long Name"; Required = Required }
-        { Key = Keys.description; Label = "Description"; Required = Required }
-        { Key = Keys.slug; Label = "Slug"; Required = Required }
+        { Key = Keys.shortName; Label = "Short Name"; Required = Required; Type = Text }
+        { Key = Keys.longName; Label = "Long Name"; Required = Required; Type = Text }
+        { Key = Keys.description; Label = "Description"; Required = Required; Type = Text }
+        { Key = Keys.slug; Label = "Slug"; Required = Required; Type = Text }
+        { Key = Keys.hasCoverImage; Label = "Has Cover Image"; Required = NotRequired; Type = Boolean }
     ] |> List.toSeq)
 
     let documentType = "category"
 
     let fromJObject (j: JObject) =
-        let values = (Util.getJObjectStrings j [ 
-            Keys.id
-            Keys.dateAdded
-            Keys.shortName
-            Keys.longName
-            Keys.description
-            Keys.slug
-        ] Seq.empty)
+        let (requiredFields, optionalFields) = getKeys fields IncludeDatabaseFields
+
+        let values = Util.getJObjectStrings j requiredFields optionalFields
 
         match values with
         | None -> None
@@ -89,6 +112,7 @@ module Category =
             LongName = values |> Map.find Keys.longName |> Option.get
             Description = values |> Map.find Keys.description |> Option.get
             Slug = values |> Map.find Keys.slug |> Option.get
+            HasCoverImage = values |> Map.find Keys.hasCoverImage |> Option.defaultValue "false" |> Util.boolFromString |> Option.defaultValue false
         }
 
     let toJObject category =
@@ -100,6 +124,7 @@ module Category =
         doc.[Keys.longName] <- category.LongName
         doc.[Keys.description] <- category.Description
         doc.[Keys.slug] <- category.Slug
+        doc.[Keys.hasCoverImage] <- string category.HasCoverImage
         doc
 
     let validateForSave (uniquenessChecker: string -> string -> string -> HttpContext -> Task<bool>) ctx category = task {

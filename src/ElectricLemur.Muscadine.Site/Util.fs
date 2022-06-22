@@ -67,6 +67,19 @@ let getMapStrings (m: Map<string, string option>) (requiredKeys: string seq) (op
     safeMapBuilder (fun k -> Map.tryFind k m |> Option.flatten) requiredKeys optionalKeys
 
 let listPrepend (a: 'a list) (b: 'a list) = List.append b a
+let seqPrepend (a: 'a seq) (b: 'a seq) = Seq.append b a
+
+let appendToListIf p item l =
+    if p then
+        List.append l [ item ]
+    else
+        l
+
+let appendToSeqIf p item s =
+    if p then
+        Seq.append s [ item ]
+    else
+        s
 
 let newGuid () = System.Guid.NewGuid()
 
@@ -80,3 +93,10 @@ let dateTimeOffsetFromString (s: string) =
     | true, d -> Some d
     | false, _ -> None
 
+let boolFromString (s: string) =
+    match s with
+    | "on" -> Some true
+    | _ -> 
+        match System.Boolean.TryParse(s) with
+        | true, v -> Some v
+        | false, _ -> None

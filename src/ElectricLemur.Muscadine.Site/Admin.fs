@@ -77,24 +77,36 @@ module Views =
         let formName = typeName.ToLowerInvariant().Replace(" ", "-")
         let formName = $"%s{formVerb.ToLowerInvariant()}-%s{formName}"
 
-        let tableRow key caption autofocus =
+        let tableRow field autofocus =
+            let addAutofocus = Util.appendToListIf autofocus _autofocus
+
             let value = 
                 formData 
-                |> Option.map (fun formData -> formData |> Map.tryFind key)
+                |> Option.map (fun formData -> formData |> Map.tryFind field.Key)
                 |> Option.flatten
                 |> Option.defaultValue None
 
             tr [] [
                 td [ _class "form-label" ] [
-                    label [ _for key ] [ encodedText caption ]
+                    label [ _for field.Key ] [ encodedText field.Label ]
                 ]
                 td [ _class "form-input" ] [
-                    input (List.append [
-                        _type "text"
-                        _id key
-                        _name key
-                        _value (value |> Option.defaultValue "")
-                    ] (if autofocus then [ _autofocus ] else []))
+                    match field.Type with
+                    | Text -> 
+                        input ([
+                            _type "text"
+                            _id field.Key
+                            _name field.Key
+                            _value (value |> Option.defaultValue "")
+                        ] |> addAutofocus)
+                    | Boolean ->
+                        let v = value |> Option.defaultValue "false" |> Util.boolFromString |> Option.defaultValue false
+                        input ([
+                            _type "checkbox"
+                            _id field.Key
+                            _name field.Key
+                        ] |> addAutofocus 
+                          |> Util.appendToListIf v _checked)
                 ]
             ]
 
@@ -104,7 +116,7 @@ module Views =
                 table [] (List.append 
                         (fields 
                          |> Seq.indexed 
-                         |> Seq.map (fun (i, f) -> tableRow f.Key f.Label (i = 0)) 
+                         |> Seq.map (fun (i, f) -> tableRow f (i = 0)) 
                          |> Seq.toList)
                 
                     [
@@ -147,7 +159,7 @@ let addCrudPostHandler<'a>
     (fromFormData: string option -> Map<string, string option> -> 'a option)
     (validator: HttpContext -> 'a -> Task<ValidForSave>): HttpHandler =
         fun next ctx -> task {
-            let (requiredKeys, optionalKeys) = Models.getKeys formFields
+            let (requiredKeys, optionalKeys) = Models.getKeys formFields ExcludeDatabaseFields
 
             let data = 
                 Util.getFormDataStrings ctx requiredKeys optionalKeys
@@ -172,7 +184,7 @@ let editCrudGetHandler<'a>
     (heading: string)
     (formFields: Field seq) = 
         fun (id: string) next (ctx: HttpContext) -> task {
-            let (requiredKeys, optionalKeys) = Models.getKeys formFields
+            let (requiredKeys, optionalKeys) = Models.getKeys formFields ExcludeDatabaseFields
 
             let! doc = Database.getDocumentById id ctx
             let formData = 
@@ -188,7 +200,14 @@ let editCrudPostHandler<'a>
     (fromFormData: string option -> Map<string, string option> -> 'a option)
     (validator: HttpContext -> 'a -> Task<ValidForSave>): string -> HttpHandler =
         fun id next ctx -> task {
-            let (requiredKeys, optionalKeys) = Models.getKeys formFields
+            let! existing = Database.getDocumentById id ctx
+            let dateAdded =
+                existing
+                |> Option.map (fun o -> JObj.dateValue Models.DatabaseFields.dateAdded o)
+                |> Option.flatten
+                |> Option.defaultValue (System.DateTimeOffset.UtcNow)
+
+            let (requiredKeys, optionalKeys) = Models.getKeys formFields ExcludeDatabaseFields
 
             let data = 
                 Util.getFormDataStrings ctx requiredKeys optionalKeys
@@ -201,7 +220,9 @@ let editCrudPostHandler<'a>
                 match valid with
                 | Valid ->
                     let data = toJObject data
-                    data.["_id"] <- id
+                    data.[Models.DatabaseFields.id] <- id
+                    data.[Models.DatabaseFields.dateAdded] <- dateAdded.ToString("o")
+
                     do! Database.upsertDocument ctx data
                     return! redirectTo false $"/admin/category/%s{id}" next ctx
                 | Invalid reason ->
@@ -248,7 +269,8 @@ let categoryCrudHandlers: CrudHandlers<Category> =
         Category.fields
         (fun id formData -> 
             
-            let values = Util.getMapStrings formData [ Category.Keys.shortName; Category.Keys.longName; Category.Keys.description; Category.Keys.slug ] []
+            let (requiredKeys, optionalKeys) = Models.getKeys Category.fields ExcludeDatabaseFields
+            let values = Util.getMapStrings formData requiredKeys optionalKeys
             match values with
             | None -> None
             | Some values -> Some {
@@ -261,6 +283,7 @@ let categoryCrudHandlers: CrudHandlers<Category> =
                 LongName = values.[Category.Keys.longName] |> Option.get
                 Description = values.[Category.Keys.description] |> Option.get
                 Slug = values.[Category.Keys.slug] |> Option.get
+                HasCoverImage = values |> Map.tryFind Category.Keys.hasCoverImage |> Option.flatten |> Option.isSome
             }
         )
         (Category.validateForSave (Database.checkUniqueness Category.documentType))
