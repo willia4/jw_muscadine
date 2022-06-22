@@ -50,23 +50,24 @@ module Category =
     let documentType = "category"
 
     let FromJObject (j: JObject) =
-        let values = Util.getJObjectStrings j [ 
+        let values = (Util.getJObjectStrings j [ 
             Keys.id
             Keys.dateAdded
             Keys.shortName
             Keys.longName
             Keys.description
-        ]
+            Keys.slug
+        ] Seq.empty)
 
         match values with
         | None -> None
         | Some values -> Some {
-            Id = values |> Map.find Keys.id |> Util.guidFromString |> Option.defaultValue (Util.newGuid ())
-            DateAdded = values |> Map.find Keys.dateAdded |> Util.dateTimeOffsetFromString |> Option.defaultValue (System.DateTimeOffset.UtcNow)
-            ShortName = values |> Map.find Keys.shortName
-            LongName = values |> Map.find Keys.longName
-            Description = values |> Map.find Keys.description
-            Slug = j |> JObj.stringValue Keys.slug |> Option.defaultValue ""
+            Id = values |> Map.find Keys.id |> Option.get |> Util.guidFromString |> Option.defaultValue (Util.newGuid ())
+            DateAdded = values |> Map.find Keys.dateAdded |> Option.get |> Util.dateTimeOffsetFromString |> Option.defaultValue (System.DateTimeOffset.UtcNow)
+            ShortName = values |> Map.find Keys.shortName |> Option.get
+            LongName = values |> Map.find Keys.longName |> Option.get
+            Description = values |> Map.find Keys.description |> Option.get
+            Slug = values |> Map.find Keys.slug |> Option.get
         }
 
     let ToJObject category =

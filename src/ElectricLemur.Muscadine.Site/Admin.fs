@@ -8,6 +8,16 @@ open Newtonsoft.Json.Linq;
 open Models;
 open System.Threading.Tasks
 
+type FieldRequirement =
+    | Required
+    | NotRequired
+
+type Field = {
+    Key: string
+    Label: string
+    Required: FieldRequirement
+}
+
 module Views =
     let layout (pageTitle: string) (content: XmlNode list) = 
         html [] [
@@ -71,7 +81,7 @@ module Views =
                 ])
         ] |> layout "Admin"
 
-    let dataForm typeName (formKeys: (string * string) seq) (formData: Map<string, string> option) =
+    let dataForm typeName (fields: Field seq) (formData: Map<string, string option> option) =
         let formVerb = if Option.isSome formData then "Edit" else "Add"
         let pageTitle = $"%s{formVerb} %s{typeName}"
         let formName = typeName.ToLowerInvariant().Replace(" ", "-")
@@ -82,7 +92,7 @@ module Views =
                 formData 
                 |> Option.map (fun formData -> formData |> Map.tryFind key)
                 |> Option.flatten
-                |> Option.defaultValue ""
+                |> Option.defaultValue None
 
             tr [] [
                 td [ _class "form-label" ] [
@@ -93,7 +103,7 @@ module Views =
                         _type "text"
                         _id key
                         _name key
-                        _value value
+                        _value (value |> Option.defaultValue "")
                     ] (if autofocus then [ _autofocus ] else []))
                 ]
             ]
@@ -102,9 +112,9 @@ module Views =
             div [ _class "page-title" ] [ encodedText $"%s{formVerb} %s{typeName}" ]
             form [ _name formName; _method "post" ] [
                 table [] (List.append 
-                        (formKeys 
+                        (fields 
                          |> Seq.indexed 
-                         |> Seq.map (fun (i, (k, v)) -> tableRow k v (i = 0)) 
+                         |> Seq.map (fun (i, f) -> tableRow f.Key f.Label (i = 0)) 
                          |> Seq.toList)
                 
                     [
@@ -135,24 +145,25 @@ let checkDatabaseHandler: HttpHandler =
         return! text result next ctx
     }
 
-
-
+let getKeys (fields: Field seq) = 
+    (fields |> Seq.filter (fun f -> f.Required = Required) |> Seq.map (fun f -> f.Key), 
+     fields |> Seq.filter (fun f -> f.Required = NotRequired) |> Seq.map (fun f -> f.Key))
 let addCrudGetHandler<'a> 
     (heading: string)
-    (formKeysAndLabels: (string * string) seq): HttpHandler
+    (fields: Field seq): HttpHandler
     =
-        htmlView (Views.dataForm heading formKeysAndLabels None)
+        htmlView (Views.dataForm heading fields None)
 
 let addCrudPostHandler<'a>
     (toJObject: 'a -> JObject) 
-    (formKeysAndLabels: (string * string) seq)
-    (fromFormData: string option -> Map<string, string> -> 'a option)
+    (formFields: Field seq)
+    (fromFormData: string option -> Map<string, string option> -> 'a option)
     (validator: HttpContext -> 'a -> Task<ValidForSave>): HttpHandler =
         fun next ctx -> task {
+            let (requiredKeys, optionalKeys) = getKeys formFields
+
             let data = 
-                formKeysAndLabels
-                |> Seq.map fst
-                |> Util.getFormDataStrings ctx 
+                Util.getFormDataStrings ctx requiredKeys optionalKeys
                 |> Option.map (fromFormData None)
                 |> Option.flatten
 
@@ -172,26 +183,28 @@ let addCrudPostHandler<'a>
 
 let editCrudGetHandler<'a>
     (heading: string)
-    (formKeysAndLabels: (string * string) seq) = 
+    (formFields: Field seq) = 
         fun (id: string) next (ctx: HttpContext) -> task {
+            let (requiredKeys, optionalKeys) = getKeys formFields
+
             let! doc = Database.getDocumentById id ctx
             let formData = 
                 match doc with
                 | None -> None
-                | Some doc -> Util.getJObjectStrings doc (formKeysAndLabels |> Seq.map fst)
-            return! htmlView (Views.dataForm heading formKeysAndLabels formData) next ctx
+                | Some doc -> Util.getJObjectStrings doc requiredKeys optionalKeys
+            return! htmlView (Views.dataForm heading formFields formData) next ctx
     } 
     
 let editCrudPostHandler<'a>
     (toJObject: 'a -> JObject) 
-    (formKeysAndLabels: (string * string) seq)
-    (fromFormData: string option -> Map<string, string> -> 'a option)
+    (formFields: Field seq)
+    (fromFormData: string option -> Map<string, string option> -> 'a option)
     (validator: HttpContext -> 'a -> Task<ValidForSave>): string -> HttpHandler =
         fun id next ctx -> task {
+            let (requiredKeys, optionalKeys) = getKeys formFields
+
             let data = 
-                formKeysAndLabels
-                |> Seq.map fst
-                |> Util.getFormDataStrings ctx 
+                Util.getFormDataStrings ctx requiredKeys optionalKeys
                 |> Option.map (fromFormData (Some id))
                 |> Option.flatten
 
@@ -225,18 +238,18 @@ type CrudHandlers<'a> = {
     delete_postHandler: string -> HttpHandler;
 }
 
-let getCrudHandlers<'a>
+let private getCrudHandlers<'a>
     (heading: string)
     (fromJObject: JObject -> 'a option) 
     (toJObject: 'a -> JObject) 
-    (formKeysAndLabels: (string * string) seq)
-    (fromFormData: string option -> Map<string, string> -> 'a option) 
+    (formFields: Field seq)
+    (fromFormData: string option -> Map<string, string option> -> 'a option) 
     (validator: HttpContext -> 'a -> Task<ValidForSave>)= {
-        add_getHandler = addCrudGetHandler heading formKeysAndLabels;
-        add_postHandler = addCrudPostHandler toJObject formKeysAndLabels fromFormData validator;
+        add_getHandler = addCrudGetHandler heading formFields;
+        add_postHandler = addCrudPostHandler toJObject formFields fromFormData validator;
         lister = Database.getDocumentsByType Category.documentType fromJObject;
-        edit_getHandler = editCrudGetHandler heading formKeysAndLabels;
-        edit_postHandler = editCrudPostHandler toJObject formKeysAndLabels fromFormData validator;
+        edit_getHandler = editCrudGetHandler heading formFields;
+        edit_postHandler = editCrudPostHandler toJObject formFields fromFormData validator;
         delete_postHandler = deleteCrudPostHandler;
     }
 
@@ -246,14 +259,14 @@ let categoryCrudHandlers: CrudHandlers<Category> =
         Category.FromJObject 
         Category.ToJObject 
         [
-            (Category.Keys.shortName, "Short Name")
-            (Category.Keys.longName, "Long Name")
-            (Category.Keys.description, "Description")
-            (Category.Keys.slug, "Slug")
+            { Key = Category.Keys.shortName; Label = "Short Name"; Required = Required }
+            { Key = Category.Keys.longName; Label = "Long Name"; Required = Required }
+            { Key = Category.Keys.description; Label = "Description"; Required = Required }
+            { Key = Category.Keys.slug; Label = "Slug"; Required = Required }
         ]
         (fun id formData -> 
             
-            let values = Util.getMapStrings formData [ Category.Keys.shortName; Category.Keys.longName; Category.Keys.description; Category.Keys.slug ]
+            let values = Util.getMapStrings formData [ Category.Keys.shortName; Category.Keys.longName; Category.Keys.description; Category.Keys.slug ] []
             match values with
             | None -> None
             | Some values -> Some {
@@ -262,10 +275,10 @@ let categoryCrudHandlers: CrudHandlers<Category> =
                      | None -> System.Guid.NewGuid()
 
                 DateAdded = System.DateTimeOffset.UtcNow
-                ShortName = values.[Category.Keys.shortName]
-                LongName = values.[Category.Keys.longName]
-                Description = values.[Category.Keys.description]
-                Slug = values.[Category.Keys.slug]
+                ShortName = values.[Category.Keys.shortName] |> Option.get
+                LongName = values.[Category.Keys.longName] |> Option.get
+                Description = values.[Category.Keys.description] |> Option.get
+                Slug = values.[Category.Keys.slug] |> Option.get
             }
         )
         (Category.validateForSave (Database.checkUniqueness Category.documentType))

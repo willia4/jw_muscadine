@@ -27,9 +27,10 @@ let getFormString (ctx: HttpContext) (key: string) =
 
 
 /// Returns an optional map with the form data contained in the context for the given keys
-/// If any key is missing from the form data, the returned value will be None
-let safeMapBuilder (getter: string -> string option) (keys: string seq) = 
-    let rec f (keys: string list) (acc: Option<Map<string, string>>) =
+/// If any required key is missing from the form data, the returned value will be None
+/// If any optional key is missing from the form data, the map element for that key will be None
+let safeMapBuilder (getter: string -> string option) (requiredKeys: string seq) (optionalKeys: string seq) =
+    let rec requiredKeysMap (keys: string list) (acc: Option<Map<string, string option>>) =
         match keys with 
         | [] -> acc
         | key::rest ->
@@ -40,19 +41,30 @@ let safeMapBuilder (getter: string -> string option) (keys: string seq) =
                 match data with
                 | None -> None
                 | Some v ->
-                    f rest (Some (acc |> Map.add key v))
+                    requiredKeysMap rest (Some (acc |> Map.add key (Some v)))
 
-    f (Seq.toList keys) (Some Map.empty)
+    let m = requiredKeysMap (Seq.toList requiredKeys) (Some Map.empty)
 
-let getFormDataStrings (ctx: HttpContext) (keys: string seq) = 
-    safeMapBuilder (getFormString ctx) keys
+    let rec optionalKeysMap (keys: string list) (acc: Option<Map<string, string option>>) =
+        match keys with
+        | [] -> acc
+        | key::rest ->
+            match acc with
+            | None -> None
+            | Some acc ->
+                let data = getter key
+                optionalKeysMap rest (Some (acc |> Map.add key data))
+    
+    optionalKeysMap (Seq.toList optionalKeys) m
 
-let getJObjectStrings (obj: Newtonsoft.Json.Linq.JObject) (keys: string seq) =
-    let k = id keys
-    safeMapBuilder (flip JObj.getter<string> obj) keys
+let getFormDataStrings (ctx: HttpContext) (requiredKeys: string seq) (optionalKeys: string seq) = 
+    safeMapBuilder (getFormString ctx) requiredKeys optionalKeys
 
-let getMapStrings (m: Map<string, string>) (keys: string seq) = 
-    safeMapBuilder (fun k -> Map.tryFind k m) keys
+let getJObjectStrings (obj: Newtonsoft.Json.Linq.JObject) (requiredKeys: string seq) (optionalKeys: string seq) =
+    safeMapBuilder (flip JObj.getter<string> obj) requiredKeys optionalKeys
+
+let getMapStrings (m: Map<string, string option>) (requiredKeys: string seq) (optionalKeys: string seq) = 
+    safeMapBuilder (fun k -> Map.tryFind k m |> Option.flatten) requiredKeys optionalKeys
 
 let listPrepend (a: 'a list) (b: 'a list) = List.append b a
 
