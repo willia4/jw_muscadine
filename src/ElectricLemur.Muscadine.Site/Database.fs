@@ -210,6 +210,13 @@ module private Mongo =
     }
 
 
+let getAllDocuments (ctx: HttpContext) = task {
+    let! db = Mongo.openDatabase ctx
+    let filter = Mongo.Filters.empty |> Mongo.Filters.build
+    let sort = Mongo.Sort.empty |> Mongo.Sort.build
+    return! Mongo.getDocuments filter sort db
+}
+
 let getDocumentCount (ctx: HttpContext) (category: string option)= task {
     let! db = Mongo.openDatabase ctx
     let filter = 

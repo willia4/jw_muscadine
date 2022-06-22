@@ -22,6 +22,7 @@
     <Compile Include="Login.fs" />
     <Compile Include="Models.fs" />
     <Compile Include="Database.fs" />
+    <Compile Include="Debug.fs" />
     <Compile Include="Admin.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>

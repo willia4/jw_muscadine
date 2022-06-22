@@ -111,6 +111,8 @@ let webApp =
                     route "/admin" >=> Login.requiresAdminRedirect "/admin" >=> Admin.indexHandler
                     route "/admin/category/_new" >=> Login.requiresAdminRedirect "/admin/category/_new" >=> Admin.addCategoryGetHandler
                     routef "/admin/category/%s" (fun id -> Login.requiresAdminRedirect $"/admin/category/%s{id} ">=> Admin.editCategoryGetHandler id)
+
+                    route "/debug/all" >=> Login.requiresAdminRedirect "/debug/all" >=> Debug.allDocumentsHandler
                 ]
             POST >=>
                 choose [
