@@ -6,6 +6,7 @@ open Giraffe
 open System.Threading.Tasks
 open Newtonsoft.Json.Linq
 open Models
+open System
 
 type ADocument = { _id: string; SomeData: string }
 
@@ -67,7 +68,7 @@ module private Mongo =
 
     type MongoSettings = { Hostname: string; Database: string; Collection: string; Username: string; Password: string }
     type MongoDatabase = { Client: IMongoClient; Database: IMongoDatabase; Collection: IMongoCollection<BsonDocument> }
-    let getSettings (ctx: HttpContext) =
+    let private getSettings (ctx: HttpContext) =
         let config = ctx.GetService<IConfiguration>().GetSection("Mongo")
         {
             Hostname = config.GetValue<string>("hostname", "localhost")
@@ -77,7 +78,7 @@ module private Mongo =
             Password = config.GetValue<string>("password")
         }
     
-    let openDatabaseForSettings (settings: MongoSettings) =
+    let private openDatabaseForSettings (settings: MongoSettings) =
         let connectionString = $"mongodb://%s{settings.Username}:%s{settings.Password}@%s{settings.Hostname}"
         let client = new MongoClient(connectionString)
         let database = client.GetDatabase(settings.Database)
@@ -86,7 +87,50 @@ module private Mongo =
         let r = { Client = client; Database = database; Collection = collection }
         Task.FromResult(r)
     
-    let openDatabase: HttpContext -> Task<MongoDatabase> = getSettings >> openDatabaseForSettings
+    type private IndexDirection = 
+        | Ascending
+        | Descending
+
+    [<Flags>]
+    type IndexOptions =
+        | None = 0
+        | Unique = 1
+
+    let rec private createIndex db (keys: (string * IndexDirection) seq) (options: IndexOptions)= task {
+        let keyDefinition = new BsonDocument()
+        keys |> Seq.iter (fun (k, dir) ->
+            keyDefinition.[k] <- match dir with 
+                                 | Ascending -> 1
+                                 | Descending -> -1
+        )
+
+        let opt = new CreateIndexOptions()
+        opt.Unique <- (options &&& IndexOptions.Unique = IndexOptions.Unique)
+
+        let m = new CreateIndexModel<BsonDocument>(keyDefinition, opt)
+        let c = db.Collection
+
+        try
+            let! _ = c.Indexes.CreateOneAsync(m)
+            return ()
+        with
+        | :? MongoDB.Driver.MongoCommandException as ex when ex.Code = 86 -> // code 86 is "index exists with a different definition" so delete it and try again
+            let indexName = ex.Command.["indexes"].AsBsonArray[0].AsBsonDocument["name"].AsString
+            do! c.Indexes.DropOneAsync(indexName)
+            return! createIndex db keys options
+    }
+
+    let private initDatabase db = task {
+        //do! createIndex db [ ("documentType", Ascending) ] IndexOptions.None
+        //do! createIndex db [ ("slug", Ascending); ("documentType", Ascending) ] IndexOptions.Unique
+        return db
+    }
+
+    let openDatabase (ctx: HttpContext): Task<MongoDatabase> = task {
+        let! db = openDatabaseForSettings (getSettings ctx)
+        
+        return! initDatabase db
+    }
 
     let private bsonToJson (bson: BsonDocument) = bson.ToJson() |> JsonString.from
     let private jsonToJObject (json: JsonString) = JObject.Parse(json |> JsonString.value)
