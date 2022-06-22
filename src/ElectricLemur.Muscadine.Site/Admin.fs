@@ -8,16 +8,6 @@ open Newtonsoft.Json.Linq;
 open Models;
 open System.Threading.Tasks
 
-type FieldRequirement =
-    | Required
-    | NotRequired
-
-type Field = {
-    Key: string
-    Label: string
-    Required: FieldRequirement
-}
-
 module Views =
     let layout (pageTitle: string) (content: XmlNode list) = 
         html [] [
@@ -145,9 +135,6 @@ let checkDatabaseHandler: HttpHandler =
         return! text result next ctx
     }
 
-let getKeys (fields: Field seq) = 
-    (fields |> Seq.filter (fun f -> f.Required = Required) |> Seq.map (fun f -> f.Key), 
-     fields |> Seq.filter (fun f -> f.Required = NotRequired) |> Seq.map (fun f -> f.Key))
 let addCrudGetHandler<'a> 
     (heading: string)
     (fields: Field seq): HttpHandler
@@ -160,7 +147,7 @@ let addCrudPostHandler<'a>
     (fromFormData: string option -> Map<string, string option> -> 'a option)
     (validator: HttpContext -> 'a -> Task<ValidForSave>): HttpHandler =
         fun next ctx -> task {
-            let (requiredKeys, optionalKeys) = getKeys formFields
+            let (requiredKeys, optionalKeys) = Models.getKeys formFields
 
             let data = 
                 Util.getFormDataStrings ctx requiredKeys optionalKeys
@@ -185,7 +172,7 @@ let editCrudGetHandler<'a>
     (heading: string)
     (formFields: Field seq) = 
         fun (id: string) next (ctx: HttpContext) -> task {
-            let (requiredKeys, optionalKeys) = getKeys formFields
+            let (requiredKeys, optionalKeys) = Models.getKeys formFields
 
             let! doc = Database.getDocumentById id ctx
             let formData = 
@@ -201,7 +188,7 @@ let editCrudPostHandler<'a>
     (fromFormData: string option -> Map<string, string option> -> 'a option)
     (validator: HttpContext -> 'a -> Task<ValidForSave>): string -> HttpHandler =
         fun id next ctx -> task {
-            let (requiredKeys, optionalKeys) = getKeys formFields
+            let (requiredKeys, optionalKeys) = Models.getKeys formFields
 
             let data = 
                 Util.getFormDataStrings ctx requiredKeys optionalKeys
@@ -235,7 +222,7 @@ type CrudHandlers<'a> = {
     lister: HttpContext -> System.Threading.Tasks.Task<'a seq>
     edit_getHandler: string -> HttpHandler;
     edit_postHandler: string -> HttpHandler;
-    delete_postHandler: string -> HttpHandler;
+    delete_handler: string -> HttpHandler;
 }
 
 let private getCrudHandlers<'a>
@@ -250,20 +237,15 @@ let private getCrudHandlers<'a>
         lister = Database.getDocumentsByType Category.documentType fromJObject;
         edit_getHandler = editCrudGetHandler heading formFields;
         edit_postHandler = editCrudPostHandler toJObject formFields fromFormData validator;
-        delete_postHandler = deleteCrudPostHandler;
+        delete_handler = deleteCrudPostHandler;
     }
 
 let categoryCrudHandlers: CrudHandlers<Category> = 
     getCrudHandlers
         "Category" 
-        Category.FromJObject 
-        Category.ToJObject 
-        [
-            { Key = Category.Keys.shortName; Label = "Short Name"; Required = Required }
-            { Key = Category.Keys.longName; Label = "Long Name"; Required = Required }
-            { Key = Category.Keys.description; Label = "Description"; Required = Required }
-            { Key = Category.Keys.slug; Label = "Slug"; Required = Required }
-        ]
+        Category.fromJObject 
+        Category.toJObject 
+        Category.fields
         (fun id formData -> 
             
             let values = Util.getMapStrings formData [ Category.Keys.shortName; Category.Keys.longName; Category.Keys.description; Category.Keys.slug ] []
@@ -283,13 +265,13 @@ let categoryCrudHandlers: CrudHandlers<Category> =
         )
         (Category.validateForSave (Database.checkUniqueness Category.documentType))
 
-let addCategoryGetHandler: HttpHandler = categoryCrudHandlers.add_getHandler
-let addCategoryPostHandler: HttpHandler = categoryCrudHandlers.add_postHandler
+//let addCategoryGetHandler: HttpHandler = categoryCrudHandlers.add_getHandler
+//let addCategoryPostHandler: HttpHandler = categoryCrudHandlers.add_postHandler
 
-let editCategoryGetHandler: string -> HttpHandler = categoryCrudHandlers.edit_getHandler
-let editCategoryPostHandler: string -> HttpHandler = categoryCrudHandlers.edit_postHandler
+//let editCategoryGetHandler: string -> HttpHandler = categoryCrudHandlers.edit_getHandler
+//let editCategoryPostHandler: string -> HttpHandler = categoryCrudHandlers.edit_postHandler
 
-let deleteCategoryPostHandler: string -> HttpHandler = categoryCrudHandlers.delete_postHandler
+//let deleteCategoryPostHandler: string -> HttpHandler = categoryCrudHandlers.delete_postHandler
 
 let indexHandler: HttpHandler = 
     fun next ctx -> task {

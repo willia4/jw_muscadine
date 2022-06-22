@@ -109,20 +109,20 @@ let webApp =
 
                     route "/admin/" >=> redirectTo true "/admin"
                     route "/admin" >=> Login.requiresAdminRedirect "/admin" >=> Admin.indexHandler
-                    route "/admin/category/_new" >=> Login.requiresAdminRedirect "/admin/category/_new" >=> Admin.addCategoryGetHandler
-                    routef "/admin/category/%s" (fun id -> Login.requiresAdminRedirect $"/admin/category/%s{id} ">=> Admin.editCategoryGetHandler id)
+                    route "/admin/category/_new" >=> Login.requiresAdminRedirect "/admin/category/_new" >=> Admin.categoryCrudHandlers.add_getHandler
+                    routef "/admin/category/%s" (fun id -> Login.requiresAdminRedirect $"/admin/category/%s{id} ">=> Admin.categoryCrudHandlers.edit_getHandler id)
 
                     route "/debug/all" >=> Login.requiresAdminRedirect "/debug/all" >=> Debug.allDocumentsHandler
                 ]
             POST >=>
                 choose [
                     route "/admin/login" >=> Login.postHandler "/admin/login" "/admin" (Login.defaultCredentialValidator (Login.getExpectedAdminCredentials ctx))
-                    route "/admin/category/_new" >=> Login.requiresAdminRedirect "/admin/category/_new" >=> Admin.addCategoryPostHandler
-                    routef "/admin/category/%s" (fun id -> Login.requiresAdminRedirect $"/admin/category/%s{id}" >=> Admin.editCategoryPostHandler id)
+                    route "/admin/category/_new" >=> Login.requiresAdminRedirect "/admin/category/_new" >=> Admin.categoryCrudHandlers.add_postHandler
+                    routef "/admin/category/%s" (fun id -> Login.requiresAdminRedirect $"/admin/category/%s{id}" >=> Admin.categoryCrudHandlers.edit_postHandler id)
                 ]
             DELETE >=>
                 choose [
-                    routef "/admin/category/%s" (fun id -> Login.requiresAdminAPICall >=> Admin.deleteCategoryPostHandler id)
+                    routef "/admin/category/%s" (fun id -> Login.requiresAdminAPICall >=> Admin.categoryCrudHandlers.delete_handler id)
                 ]
             setStatusCode 404 >=> text "Not Found" ] next ctx
 

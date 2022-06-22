@@ -3,6 +3,20 @@ open Newtonsoft.Json.Linq
 open System.Threading.Tasks
 open Microsoft.AspNetCore.Http
 
+type FieldRequirement =
+    | Required
+    | NotRequired
+
+type Field = {
+    Key: string
+    Label: string
+    Required: FieldRequirement
+}
+
+let getKeys (fields: Field seq) = 
+    let getKeys requiredType = fields |> Seq.filter (fun f -> f.Required = requiredType) |> Seq.map (fun f -> f.Key)
+    ((getKeys Required), (getKeys NotRequired))
+
 type ValidForSave =
     | Valid
     | Invalid of string
@@ -47,9 +61,16 @@ module Category =
         let description = "description"
         let slug = "slug";
 
+    let fields = ([
+        { Key = Keys.shortName; Label = "Short Name"; Required = Required }
+        { Key = Keys.longName; Label = "Long Name"; Required = Required }
+        { Key = Keys.description; Label = "Description"; Required = Required }
+        { Key = Keys.slug; Label = "Slug"; Required = Required }
+    ] |> List.toSeq)
+
     let documentType = "category"
 
-    let FromJObject (j: JObject) =
+    let fromJObject (j: JObject) =
         let values = (Util.getJObjectStrings j [ 
             Keys.id
             Keys.dateAdded
@@ -70,7 +91,7 @@ module Category =
             Slug = values |> Map.find Keys.slug |> Option.get
         }
 
-    let ToJObject category =
+    let toJObject category =
         let doc = new JObject()
         doc.[Keys.id] <- string category.Id
         doc.[Keys.documentType] <- documentType
