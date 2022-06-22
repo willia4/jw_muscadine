@@ -121,8 +121,8 @@ module private Mongo =
     }
 
     let private initDatabase db = task {
-        //do! createIndex db [ ("documentType", Ascending) ] IndexOptions.None
-        //do! createIndex db [ ("slug", Ascending); ("documentType", Ascending) ] IndexOptions.Unique
+        do! createIndex db [ ("documentType", Ascending) ] IndexOptions.None
+        do! createIndex db [ ("slug", Ascending); ("documentType", Ascending) ] IndexOptions.Unique
         return db
     }
 
