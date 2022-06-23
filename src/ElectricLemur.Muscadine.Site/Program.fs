@@ -113,6 +113,7 @@ let webApp =
                     routef "/admin/category/%s" (fun id -> Login.requiresAdminRedirect $"/admin/category/%s{id} ">=> Admin.categoryCrudHandlers.edit_getHandler id)
 
                     route "/debug/all" >=> Login.requiresAdminRedirect "/debug/all" >=> Debug.allDocumentsHandler
+                    route "/debug/reset" >=> Login.requiresAdminAPICall >=> Debug.resetDatabase
                 ]
             POST >=>
                 choose [
@@ -123,6 +124,7 @@ let webApp =
             DELETE >=>
                 choose [
                     routef "/admin/category/%s" (fun id -> Login.requiresAdminAPICall >=> Admin.categoryCrudHandlers.delete_handler id)
+                    route "/debug/reset" >=> Login.requiresAdminAPICall >=> Debug.resetDatabaseDeleteHandler
                 ]
             setStatusCode 404 >=> text "Not Found" ] next ctx
 
