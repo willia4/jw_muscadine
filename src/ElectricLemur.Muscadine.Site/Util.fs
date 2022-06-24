@@ -61,7 +61,7 @@ let getFormDataStrings (ctx: HttpContext) (requiredKeys: string seq) (optionalKe
     safeMapBuilder (getFormString ctx) requiredKeys optionalKeys
 
 let getJObjectStrings (obj: Newtonsoft.Json.Linq.JObject) (requiredKeys: string seq) (optionalKeys: string seq) =
-    safeMapBuilder (flip JObj.getter<string> obj) requiredKeys optionalKeys
+    safeMapBuilder (JObj.getter<string> obj) requiredKeys optionalKeys
 
 let getMapStrings (m: Map<string, string option>) (requiredKeys: string seq) (optionalKeys: string seq) = 
     safeMapBuilder (fun k -> Map.tryFind k m |> Option.flatten) requiredKeys optionalKeys

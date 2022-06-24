@@ -5,7 +5,7 @@ open Microsoft.AspNetCore.Http
 open System.Security.Claims
 open ElectricLemur.Muscadine.Site
 open Newtonsoft.Json.Linq;
-open Models;
+open Game;
 open System.Threading.Tasks
 
 module Views =
@@ -47,86 +47,28 @@ module Views =
 
         ]
 
-    let index (categories: Category seq) =
+    let index (games: seq<Game>) =
         [
             makeIndexSection 
-                categories 
-                "Categories" 
-                "/admin/category" 
-                [ "Short Name"; "Long Name"; "Description"; "Slug"; "" ]
-                (fun c -> 
-                    let makeUrl (c: Category) = $"/admin/category/{c.Id}"
+                games 
+                "Games" 
+                "/admin/game" 
+                [ "Short Name"; "Description"; "Slug"; "" ]
+                (fun g -> 
+                    let makeUrl (g: Game) = $"/admin/game/{g.Id}"
                     [
-                        td [] [ a [ _href (makeUrl c)] [ encodedText c.ShortName ]]
-                        td [] [ encodedText c.LongName ]
-                        td [] [ encodedText c.Description ]
-                        td [] [ encodedText c.Slug ]
+                        td [] [ a [ _href (makeUrl g)] [ encodedText g.Name ]]
+                        td [] [ encodedText g.Description ]
+                        td [] [ encodedText g.Slug ]
                         td [] [
                             button [ _class "delete-button"
-                                     attr "data-id" (string c.Id) 
-                                     attr "data-name" c.ShortName 
-                                     attr "data-url" $"/admin/category/{c.Id}" ]
+                                     attr "data-id" (string g.Id) 
+                                     attr "data-name" g.Name 
+                                     attr "data-url" $"/admin/game/{g.Id}" ]
                                    [ encodedText "Delete" ]
                         ]
                 ])
         ] |> layout "Admin"
-
-    let dataForm typeName (fields: Field seq) (formData: Map<string, string option> option) =
-        let formVerb = if Option.isSome formData then "Edit" else "Add"
-        let pageTitle = $"%s{formVerb} %s{typeName}"
-        let formName = typeName.ToLowerInvariant().Replace(" ", "-")
-        let formName = $"%s{formVerb.ToLowerInvariant()}-%s{formName}"
-
-        let tableRow field autofocus =
-            let addAutofocus = Util.appendToListIf autofocus _autofocus
-
-            let value = 
-                formData 
-                |> Option.map (fun formData -> formData |> Map.tryFind field.Key)
-                |> Option.flatten
-                |> Option.defaultValue None
-
-            tr [] [
-                td [ _class "form-label" ] [
-                    label [ _for field.Key ] [ encodedText field.Label ]
-                ]
-                td [ _class "form-input" ] [
-                    match field.Type with
-                    | Text -> 
-                        input ([
-                            _type "text"
-                            _id field.Key
-                            _name field.Key
-                            _value (value |> Option.defaultValue "")
-                        ] |> addAutofocus)
-                    | Boolean ->
-                        let v = value |> Option.defaultValue "false" |> Util.boolFromString |> Option.defaultValue false
-                        input ([
-                            _type "checkbox"
-                            _id field.Key
-                            _name field.Key
-                        ] |> addAutofocus 
-                          |> Util.appendToListIf v _checked)
-                ]
-            ]
-
-        [
-            div [ _class "page-title" ] [ encodedText $"%s{formVerb} %s{typeName}" ]
-            form [ _name formName; _method "post" ] [
-                table [] (List.append 
-                        (fields 
-                         |> Seq.indexed 
-                         |> Seq.map (fun (i, f) -> tableRow f (i = 0)) 
-                         |> Seq.toList)
-                
-                    [
-                        tr [] [
-                                td [ _class "form-label "] []
-                                td [ _class "form-input" ] [ input [ _type "submit"; _value "Save" ] ]
-                            ]
-                    ])
-            ]
-        ] |> layout pageTitle
 
 let statusHandler: HttpHandler = 
     fun (next: HttpFunc) (ctx: HttpContext) ->
@@ -141,163 +83,14 @@ let statusHandler: HttpHandler =
 let checkDatabaseHandler: HttpHandler =
     fun next ctx -> task {
         let! documentCount = Database.getDocumentCount ctx None
-        let! categoryCount = Database.getDocumentCount ctx (Some Category.documentType)
+        let! gameCount = Database.getDocumentCount ctx (Some Game.documentType)
 
-        let result = $"Database results\n\nTotal documents: %d{documentCount}\nCategories: %d{categoryCount}"
+        let result = $"Database results\n\nTotal documents: %d{documentCount}\Games: %d{gameCount}"
         return! text result next ctx
     }
 
-let addCrudGetHandler<'a> 
-    (heading: string)
-    (fields: Field seq): HttpHandler
-    =
-        htmlView (Views.dataForm heading fields None)
-
-let addCrudPostHandler<'a>
-    (toJObject: 'a -> JObject) 
-    (formFields: Field seq)
-    (fromFormData: string option -> Map<string, string option> -> 'a option)
-    (validator: HttpContext -> 'a -> Task<ValidForSave>): HttpHandler =
-        fun next ctx -> task {
-            let (requiredKeys, optionalKeys) = Models.getKeys formFields ExcludeDatabaseFields
-
-            let data = 
-                Util.getFormDataStrings ctx requiredKeys optionalKeys
-                |> Option.map (fromFormData None)
-                |> Option.flatten
-
-            match data with
-            | Some data -> 
-                let! valid = validator ctx data
-                match valid with
-                | Valid ->
-                    let data = toJObject data
-                    let! id = Database.insertDocument ctx data
-                    return! redirectTo false $"/admin/category/%s{id}" next ctx
-                | Invalid reason ->
-                    return! (setStatusCode 400 >=> text reason) next ctx
-            | None -> 
-                return! (setStatusCode 400 >=> text "Invalid form data") next ctx
-        }
-
-let editCrudGetHandler<'a>
-    (heading: string)
-    (formFields: Field seq) = 
-        fun (id: string) next (ctx: HttpContext) -> task {
-            let (requiredKeys, optionalKeys) = Models.getKeys formFields ExcludeDatabaseFields
-
-            let! doc = Database.getDocumentById id ctx
-            let formData = 
-                match doc with
-                | None -> None
-                | Some doc -> Util.getJObjectStrings doc requiredKeys optionalKeys
-            return! htmlView (Views.dataForm heading formFields formData) next ctx
-    } 
-    
-let editCrudPostHandler<'a>
-    (toJObject: 'a -> JObject) 
-    (formFields: Field seq)
-    (fromFormData: string option -> Map<string, string option> -> 'a option)
-    (validator: HttpContext -> 'a -> Task<ValidForSave>): string -> HttpHandler =
-        fun id next ctx -> task {
-            let! existing = Database.getDocumentById id ctx
-            let dateAdded =
-                existing
-                |> Option.map (fun o -> JObj.dateValue Models.DatabaseFields.dateAdded o)
-                |> Option.flatten
-                |> Option.defaultValue (System.DateTimeOffset.UtcNow)
-
-            let (requiredKeys, optionalKeys) = Models.getKeys formFields ExcludeDatabaseFields
-
-            let data = 
-                Util.getFormDataStrings ctx requiredKeys optionalKeys
-                |> Option.map (fromFormData (Some id))
-                |> Option.flatten
-
-            match data with
-            | Some data ->
-                let! valid = validator ctx data
-                match valid with
-                | Valid ->
-                    let data = toJObject data
-                    data.[Models.DatabaseFields.id] <- id
-                    data.[Models.DatabaseFields.dateAdded] <- dateAdded.ToString("o")
-
-                    do! Database.upsertDocument ctx data
-                    return! redirectTo false $"/admin/category/%s{id}" next ctx
-                | Invalid reason ->
-                    return! (setStatusCode 400 >=> text reason) next ctx
-            | None -> 
-                return! (setStatusCode 400 >=> text "Invalid form data") next ctx
-        }
-
-let deleteCrudPostHandler: string -> HttpHandler =
-    fun id next ctx -> task {
-        do! Database.deleteDocument ctx id
-        return! setStatusCode 200 next ctx
-}
-
-type CrudHandlers<'a> = {
-    add_getHandler: HttpHandler;
-    add_postHandler: HttpHandler;
-    lister: HttpContext -> System.Threading.Tasks.Task<'a seq>
-    edit_getHandler: string -> HttpHandler;
-    edit_postHandler: string -> HttpHandler;
-    delete_handler: string -> HttpHandler;
-}
-
-let private getCrudHandlers<'a>
-    (heading: string)
-    (fromJObject: JObject -> 'a option) 
-    (toJObject: 'a -> JObject) 
-    (formFields: Field seq)
-    (fromFormData: string option -> Map<string, string option> -> 'a option) 
-    (validator: HttpContext -> 'a -> Task<ValidForSave>)= {
-        add_getHandler = addCrudGetHandler heading formFields;
-        add_postHandler = addCrudPostHandler toJObject formFields fromFormData validator;
-        lister = Database.getDocumentsByType Category.documentType fromJObject;
-        edit_getHandler = editCrudGetHandler heading formFields;
-        edit_postHandler = editCrudPostHandler toJObject formFields fromFormData validator;
-        delete_handler = deleteCrudPostHandler;
-    }
-
-let categoryCrudHandlers: CrudHandlers<Category> = 
-    getCrudHandlers
-        "Category" 
-        Category.fromJObject 
-        Category.toJObject 
-        Category.fields
-        (fun id formData -> 
-            
-            let (requiredKeys, optionalKeys) = Models.getKeys Category.fields ExcludeDatabaseFields
-            let values = Util.getMapStrings formData requiredKeys optionalKeys
-            match values with
-            | None -> None
-            | Some values -> Some {
-                Id = match id with 
-                     | Some id -> Util.guidFromString id |> Option.defaultValue (System.Guid.NewGuid())
-                     | None -> System.Guid.NewGuid()
-
-                DateAdded = System.DateTimeOffset.UtcNow
-                ShortName = values.[Category.Keys.shortName] |> Option.get
-                LongName = values.[Category.Keys.longName] |> Option.get
-                Description = values.[Category.Keys.description] |> Option.get
-                Slug = values.[Category.Keys.slug] |> Option.get
-                HasCoverImage = values |> Map.tryFind Category.Keys.hasCoverImage |> Option.flatten |> Option.isSome
-            }
-        )
-        (Category.validateForSave (Database.checkUniqueness Category.documentType))
-
-//let addCategoryGetHandler: HttpHandler = categoryCrudHandlers.add_getHandler
-//let addCategoryPostHandler: HttpHandler = categoryCrudHandlers.add_postHandler
-
-//let editCategoryGetHandler: string -> HttpHandler = categoryCrudHandlers.edit_getHandler
-//let editCategoryPostHandler: string -> HttpHandler = categoryCrudHandlers.edit_postHandler
-
-//let deleteCategoryPostHandler: string -> HttpHandler = categoryCrudHandlers.delete_postHandler
-
 let indexHandler: HttpHandler = 
     fun next ctx -> task {
-        let! categories = categoryCrudHandlers.lister ctx
-        return! htmlView (Views.index categories) next ctx
+        let! games = Game.allGames ctx
+        return! htmlView (Views.index games) next ctx
     }
