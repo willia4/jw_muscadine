@@ -109,8 +109,9 @@ let webApp =
 
                     route "/admin/" >=> redirectTo true "/admin"
                     route "/admin" >=> Login.requiresAdminRedirect "/admin" >=> Admin.indexHandler
-                    route "/admin/category/_new" >=> Login.requiresAdminRedirect "/admin/category/_new" >=> Admin.categoryCrudHandlers.add_getHandler
-                    routef "/admin/category/%s" (fun id -> Login.requiresAdminRedirect $"/admin/category/%s{id} ">=> Admin.categoryCrudHandlers.edit_getHandler id)
+
+                    route "/admin/game/_new" >=> Login.requiresAdminRedirect "/admin/game/_new" >=> Game.addHandler_get
+                    routef "/admin/game/%s" (fun id -> Login.requiresAdminRedirect $"/admin/game/%s{id} ">=> Game.editHandler_get id)
 
                     route "/debug/all" >=> Login.requiresAdminRedirect "/debug/all" >=> Debug.allDocumentsHandler
                     route "/debug/reset" >=> Login.requiresAdminAPICall >=> Debug.resetDatabase
@@ -118,13 +119,14 @@ let webApp =
             POST >=>
                 choose [
                     route "/admin/login" >=> Login.postHandler "/admin/login" "/admin" (Login.defaultCredentialValidator (Login.getExpectedAdminCredentials ctx))
-                    route "/admin/category/_new" >=> Login.requiresAdminRedirect "/admin/category/_new" >=> Admin.categoryCrudHandlers.add_postHandler
-                    routef "/admin/category/%s" (fun id -> Login.requiresAdminRedirect $"/admin/category/%s{id}" >=> Admin.categoryCrudHandlers.edit_postHandler id)
+
+                    route "/admin/game/_new" >=> Login.requiresAdminRedirect "/admin/game/_new" >=> Game.addHandler_post
+                    routef "/admin/game/%s" (fun id -> Login.requiresAdminRedirect $"/admin/game/%s{id}" >=> Game.editHandler_post id)
                 ]
             DELETE >=>
                 choose [
-                    routef "/admin/category/%s" (fun id -> Login.requiresAdminAPICall >=> Admin.categoryCrudHandlers.delete_handler id)
                     route "/debug/reset" >=> Login.requiresAdminAPICall >=> Debug.resetDatabaseDeleteHandler
+                    routef "/admin/game/%s" (fun id -> Login.requiresAdminRedirect $"/admin/game/%s{id}" >=> Game.deleteHandler_delete id)
                 ]
             setStatusCode 404 >=> text "Not Found" ] next ctx
 

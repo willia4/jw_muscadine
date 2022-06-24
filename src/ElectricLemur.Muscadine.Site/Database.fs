@@ -5,7 +5,6 @@ open Microsoft.Extensions.Configuration
 open Giraffe
 open System.Threading.Tasks
 open Newtonsoft.Json.Linq
-open Models
 open System
 
 type ADocument = { _id: string; SomeData: string }
@@ -19,8 +18,8 @@ module private Mongo =
     open MongoDB.Driver
     open MongoDB.Bson
     
-    let id = "_id"
-    let documentType = "documentType"
+    let idField = "_id"
+    let documentTypeField = "_documentType"
 
     module Filters = 
         type FilterBuilder = {
@@ -55,14 +54,14 @@ module private Mongo =
             |> Seq.fold (fun c (k, v) -> addEquals k v c) current
             
         let by = addEquals
-        let byDocumentType (typeName: string) current = by "documentType" typeName current
-        let byId (id: string) current = by "_id" id current
-        let notId (id: string) current = addNotEquals "_id" id current
+        let byDocumentType (typeName: string) current = by documentTypeField typeName current
+        let byId (id: string) current = by idField id current
+        let notId (id: string) current = addNotEquals idField id current
 
     
     module Sort =
         let empty = Filters.empty
-        let byId current = Filters.by "_id" 1 current
+        let byId current = Filters.by idField 1 current
         let by k current = Filters.by k 1 current
         let build = Filters.build
 
@@ -120,9 +119,14 @@ module private Mongo =
             return! createIndex db keys options
     }
 
+    let resetIndexes db = task {
+        let c = db.Collection
+        do! c.Indexes.DropAllAsync()
+    }
+
     let private initDatabase db = task {
-        do! createIndex db [ ("documentType", Ascending) ] IndexOptions.None
-        do! createIndex db [ ("slug", Ascending); ("documentType", Ascending) ] IndexOptions.Unique
+        do! createIndex db [ ("_documentType", Ascending) ] IndexOptions.None
+        do! createIndex db [ ("slug", Ascending); ("_documentType", Ascending) ] IndexOptions.None
         return db
     }
 
@@ -176,11 +180,11 @@ module private Mongo =
     let insertDocument document (db: MongoDatabase) = task {
         let bson =  jObjectToBson document
         let id =
-            if bson.Contains(id) && not (bson.[id].IsBsonNull) then
-                bson.[id].AsString
+            if bson.Contains(idField) && not (bson.[idField].IsBsonNull) then
+                bson.[idField].AsString
             else
-                bson.[id] <- System.Guid.NewGuid() |> string
-                bson.[id].AsString
+                bson.[idField] <- System.Guid.NewGuid() |> string
+                bson.[idField].AsString
         do! db.Collection.InsertOneAsync(bson)
         return id
     }
@@ -189,8 +193,8 @@ module private Mongo =
         let bson = jObjectToBson document
         
         let foundId = 
-            match bson.Contains(id) && not (bson.[id].IsBsonNull) with
-            | true -> Some bson.[id].AsString
+            match bson.Contains(idField) && not (bson.[idField].IsBsonNull) with
+            | true -> Some bson.[idField].AsString
             | false -> None
         
         match foundId with
@@ -244,8 +248,6 @@ let getDocumentById id ctx = task {
     return! db |> Mongo.getDocument id
 }
 
-let getCategories ctx = getDocumentsByType Category.documentType
-
 let insertDocument ctx (document: JObject) = task {
     let! db = Mongo.openDatabase ctx
     return! Mongo.insertDocument document db
@@ -275,4 +277,9 @@ let checkUniqueness documentType fieldName (fieldValue: string) allowedId ctx = 
     let! documents = db |> Mongo.getDocuments filter sort 
     let documentCount = Seq.length documents
     return (documentCount = 0)
+}
+
+let resetIndexes ctx = task {
+    let! db = Mongo.openDatabase ctx
+    do! Mongo.resetIndexes db
 }

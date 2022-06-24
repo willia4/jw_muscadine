@@ -48,5 +48,7 @@ let resetDatabaseDeleteHandler: HttpHandler =
         for id in ids do
             do! Database.deleteDocument ctx id
 
+        do! Database.resetIndexes ctx
+
         return Some ctx
     }
