@@ -23,22 +23,6 @@ type Field = {
     Required: RequiredField;
 }
 
-let layout pageTitle content =
-    html [] [
-        head [] [
-            title [] [ encodedText pageTitle ]
-            link [ (_rel "stylesheet"); (_type "text/css"); (_href "/css/admin.css") ]
-            script [ _src "/js/admin.js" ] []
-        ]
-        body [] [
-            div [ _class "site-title" ] [
-                encodedText "James Williams/"
-                a [ _href "/admin/" ] [encodedText "Admin"]
-            ]
-            div [ _class "body-content" ] content
-        ]
-    ]
-
 module Helpers =
     open Microsoft.FSharp.Reflection
     open Newtonsoft.Json.Linq
@@ -235,7 +219,12 @@ module Helpers =
                 let nones = System.String.Join(", ", (nones |> Seq.map (fun f -> f.Name)))
                 Error $"Unable to convert form data to correct type for [%s{nones}]"
 
-    let modelObjValue (m: 'a) (fieldName: string) = 
+    let modelFieldType<'a> fieldName = 
+        let fields = modelFields<'a>
+        let field = fields |> Seq.find (fun f -> f.Name = fieldName)
+        (field.FieldType, field.Required)
+
+    let modelObjValue (m: 'a) (fieldName: string) =
         let fieldInfos = FSharpType.GetRecordFields(typedefof<'a>)
         let fieldInfo = fieldInfos |> Array.find (fun i -> i.Name = fieldName)
         FSharpValue.GetRecordField(m, fieldInfo)
@@ -291,3 +280,48 @@ module Helpers =
         | Ok g -> task {
             return! f g
         }
+
+let layout pageTitle content =
+    html [] [
+        head [] [
+            title [] [ encodedText pageTitle ]
+            link [ (_rel "stylesheet"); (_type "text/css"); (_href "/css/admin.css") ]
+            script [ _src "/js/admin.js" ] []
+        ]
+        body [] [
+            div [ _class "site-title" ] [
+                encodedText "James Williams/"
+                a [ _href "/admin/" ] [encodedText "Admin"]
+            ]
+            div [ _class "body-content" ] content
+        ]
+    ]
+
+let makeInputRow label formEl = 
+    tr [] [
+        td [ _class "form-label" ] [ encodedText label ]
+        td [ _class "form-input" ] [ formEl ]
+    ]
+
+let makeTextInputRow model label key value = 
+    let el = input [ 
+        _type "text"
+        _id key
+        _name key
+        _value (value |> Option.defaultValue "")
+    ]
+    makeInputRow label el
+
+let makeInputRowForFormElement (model: 'a option) (label: string) key =
+    let (fieldType, req) = Helpers.modelFieldType<'a> key
+    let label = if req = Required then
+                    if label.EndsWith("*") then label else $"%s{label}*"
+                else
+                    label
+
+    let stringValue key = model |> Option.map (fun m -> Helpers.modelStringValue m key) |> Option.flatten
+
+    match fieldType with
+    | TextField -> makeTextInputRow model label key (stringValue key)
+    | DateTime -> failwith "Unsupported field type, DateTime"
+    | CheckboxField -> failwith "Unsupported field type, CheckboxField" //TODO

@@ -15,26 +15,6 @@ type Game = {
 }
 
 let addEditView (g: Game option) =
-    let modelStringValue fieldName = 
-        match g with
-        | Some g -> Items.Helpers.modelStringValue g fieldName
-        | None -> None
-
-    let makeRow label formEl = 
-        tr [] [
-            td [ _class "form-label" ] [ encodedText label ]
-            td [ _class "form-input" ] [ formEl ]
-        ]
-
-    let makeTextRow label key =
-        let v = modelStringValue key
-        let el = input [ 
-            _type "text"
-            _id key
-            _name key
-            _value (v |> Option.defaultValue "")
-        ]
-        makeRow label el
 
     let pageTitle = match g with
                     | None -> "Add Game" 
@@ -44,9 +24,9 @@ let addEditView (g: Game option) =
         div [ _class "page-title" ] [ encodedText pageTitle ]
         form [ _name "game-form"; _method "post" ] [
                 table [] [
-                    makeTextRow "Name*" "Name"
-                    makeTextRow "Description*" "Description"
-                    makeTextRow "Slug*" "Slug"
+                    Items.makeInputRowForFormElement g "Name" "Name"
+                    Items.makeInputRowForFormElement g "Description" "Description"
+                    Items.makeInputRowForFormElement g "Slug" "Slug"
                     tr [] [
                         td [] []
                         td [] [ input [ _type "submit"; _value "Save" ] ]
