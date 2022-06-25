@@ -43,7 +43,9 @@ jobs:
 
           SSH_HOST=$(ssh root@v4.electriclemur.com -i ~/.ssh/id "hostname")
           test "$SSH_HOST" = "lemur-web01"
-
+      - name: Create data directory
+        run: |
+          ssh root@v4.electriclemur.com -i ~/.ssh/id "mkdir -p /volumes/jw_muscadine/data"
       - name: Restart container
         run: |
           ssh root@v4.electriclemur.com -i ~/.ssh/id "docker rm -f jw_muscadine 2> /dev/null 1> /dev/null"
@@ -65,7 +67,9 @@ jobs:
           CMD+="--label 'traefik.http.routers.jw_index_redirect.rule=Host(\`jameswilliams.me\`)' "
           CMD+="--label 'traefik.http.routers.jw_index_redirect.middlewares=jw_index_redirect' "
           CMD+="--label 'traefik.http.middlewares.jw_index_redirect.redirectscheme.scheme=https' "
+
           CMD+="--link mongo "
+          CMD+="-v /volumes/jw_muscadine/data:/data "
           CMD+="willia4/jw_muscadine:latest "
 
           ssh root@v4.electriclemur.com -i ~/.ssh/id "$CMD"
