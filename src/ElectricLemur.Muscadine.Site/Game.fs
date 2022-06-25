@@ -12,6 +12,7 @@ type Game = {
     Name: string;
     Description: string;
     Slug: string;
+    Completed: bool;
 }
 
 let addEditView (g: Game option) =
@@ -27,6 +28,7 @@ let addEditView (g: Game option) =
                     Items.makeInputRowForFormElement g "Name" "Name"
                     Items.makeInputRowForFormElement g "Description" "Description"
                     Items.makeInputRowForFormElement g "Slug" "Slug"
+                    Items.makeInputRowForFormElement g "Completed" "Completed"
                     tr [] [
                         td [] []
                         td [] [ input [ _type "submit"; _value "Save" ] ]
@@ -37,7 +39,7 @@ let addEditView (g: Game option) =
 
 let validate (id: string) (g: Game) ctx = task {
     let uniquenessChecker = fun fieldName g -> task {
-        let value = Items.Helpers.modelStringValue g fieldName 
+        let value = Items.modelStringValue g fieldName 
         match value with
         | None -> return Ok g
         | Some s -> 
@@ -47,9 +49,9 @@ let validate (id: string) (g: Game) ctx = task {
             | false -> return Error $"%s{fieldName} must be unique"
     }
     
-    let valid = Ok g |> Items.Helpers.validateRequiredFields
-    let! valid = valid |> Items.Helpers.performValidation (uniquenessChecker "Name")
-    let! valid = valid |> Items.Helpers.performValidation (uniquenessChecker "Slug")
+    let valid = Ok g |> Items.validateRequiredFields
+    let! valid = valid |> Items.performValidation (uniquenessChecker "Name")
+    let! valid = valid |> Items.performValidation (uniquenessChecker "Slug")
 
     return valid
 }
@@ -63,12 +65,12 @@ let addHandler_post : HttpHandler =
         let id = string (Util.newGuid ())
         let dateAdded = System.DateTimeOffset.UtcNow
 
-        match Items.Helpers.makeModelFromFormFields<Game> id dateAdded (ctx.Request.Form) with
+        match Items.makeModelFromFormFields<Game> id dateAdded (ctx.Request.Form) with
         | Ok m -> 
             let! validated = validate id m ctx
             match validated with
             | Ok m -> 
-                let data = Items.Helpers.makeJObjectFromModel m documentType
+                let data = Items.makeJObjectFromModel m documentType
                 let! id = Database.insertDocument ctx data
                 return! (redirectTo false $"/admin/game/%s{id}") next ctx
             | Error msg -> 
@@ -80,7 +82,7 @@ let addHandler_post : HttpHandler =
 let editHandler_get id =
     fun next (ctx: HttpContext) -> task {
         let! existing = Database.getDocumentById id ctx
-        let existing = existing |> Option.map Items.Helpers.makeModelFromJObject<Game>
+        let existing = existing |> Option.map Items.makeModelFromJObject<Game>
 
         return! htmlView (addEditView existing) next ctx
     }
@@ -91,13 +93,13 @@ let editHandler_post id : HttpHandler =
         match existing with
         | None -> return! (setStatusCode 404) next ctx
         | Some existing ->
-            let existing = Items.Helpers.makeModelFromJObject<Game> existing
-            match Items.Helpers.makeModelFromFormFields<Game> id existing.DateAdded ctx.Request.Form with
+            let existing = Items.makeModelFromJObject<Game> existing
+            match Items.makeModelFromFormFields<Game> id existing.DateAdded ctx.Request.Form with
             | Ok m ->
                 let! validated = validate id m ctx
                 match validated with
                 | Ok m ->
-                    let data = Items.Helpers.makeJObjectFromModel m documentType
+                    let data = Items.makeJObjectFromModel m documentType
                     do! Database.upsertDocument ctx data
                     return! (redirectTo false $"/admin/game/%s{id}") next ctx
                 | Error msg ->
@@ -113,5 +115,5 @@ let deleteHandler_delete id =
     }
     
 let allGames ctx = 
-    Database.getDocumentsByType documentType (Items.Helpers.makeModelFromJObject<Game> >> Some) ctx
+    Database.getDocumentsByType documentType (Items.makeModelFromJObject<Game> >> Some) ctx
 
