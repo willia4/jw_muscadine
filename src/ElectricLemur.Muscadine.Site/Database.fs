@@ -22,10 +22,13 @@ module private Mongo =
     let documentTypeField = "_documentType"
 
     module Filters = 
-        type FilterBuilder = {
-            EqualTo: seq<string * BsonValue>;
-            NotEqualTo: seq<string * BsonValue>;
-        }
+        type FilterBuilder = 
+            {
+                EqualTo: seq<string * BsonValue>;
+                NotEqualTo: seq<string * BsonValue>;
+            } 
+            override this.ToString() = 
+                ""
 
         let build filterBuilder = 
             let filter = new BsonDocument()
@@ -263,7 +266,7 @@ let deleteDocument ctx id = task {
     do! Mongo.deleteDocumentById id db
 }
 
-let checkUniqueness documentType fieldName (fieldValue: string) allowedId ctx = task {
+let checkUniqueness documentType fieldName (fieldValue: MongoDB.Bson.BsonValue) allowedId ctx = task {
     let! db = Mongo.openDatabase ctx
     let filter = 
         Mongo.Filters.empty

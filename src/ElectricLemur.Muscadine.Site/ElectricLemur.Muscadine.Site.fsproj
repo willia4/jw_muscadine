@@ -17,11 +17,13 @@
     <PackageReference Include="MongoDB.Driver" Version="2.15.1" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="FormFields.fs" />
     <Compile Include="JObj.fs" />
     <Compile Include="Util.fs" />
-    <Compile Include="Items.fs" />
     <Compile Include="Login.fs" />
     <Compile Include="Database.fs" />
+    <Compile Include="Items.fs" />
+    <Compile Include="RequiredFields.fs" />
     <Compile Include="Game.fs" />
     <Compile Include="Debug.fs" />
     <Compile Include="Admin.fs" />
