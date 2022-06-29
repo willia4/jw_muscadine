@@ -79,3 +79,25 @@
     border-width: 1px;
     border-style: solid;
 }
+
+div.image-input {
+    width: 256px;
+    height: 256px;
+    border-style: solid;
+    border-color: gray;
+    border-width: 2px;
+    text-align: center;
+}
+
+div.image-input.dragging {
+    width: 256px;
+    height: 256px;
+    border-style: solid;
+    border-color: blue;
+    border-width: 2px;
+}
+
+div.image-input img {
+    max-height: 256px;
+    aspect-ratio: auto;
+}

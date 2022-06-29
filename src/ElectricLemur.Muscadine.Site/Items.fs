@@ -353,6 +353,28 @@ let makeInputRow label formEl =
         td [ _class "form-input" ] [ formEl ]
     ]
 
+let makeImageInputRow label key value =
+    let src = 
+        match Util.addRootPath "/images" value with 
+        | Some p -> p
+        | None -> ""
+
+    let el = div 
+                [ _class "image-input"
+                  attr "data-image-key" key ]
+                [ 
+                    input [ 
+                        _type "file" 
+                        _style "display: none"
+                        _name key
+                        _id key
+                    ]
+                    img [
+                        _src src
+                    ] 
+                ]
+    makeInputRow label el
+
 let makeTextInputRow label key value = 
     let el = input [ 
         _type "text"
@@ -406,4 +428,18 @@ let uniqueStringFieldValidator ctx documentType allowedId fieldName (getter: 'a 
         match valid with
         | true -> return Ok m
         | false -> return Error $"%s{fieldName} must be unique"
+}
+
+let handleFileUpload ctx documentType id key (existingPath: string option) (modelSetter: string option -> 'a) = task {
+    let files = Util.uploadedFiles ctx
+    let file = files |> List.filter (fun f -> f.Name = key) |> List.tryHead
+
+    let! filePath =
+        match file with
+        | None -> System.Threading.Tasks.Task.FromResult(Ok existingPath)
+        | Some file -> Util.saveFile file documentType key id ctx
+
+    return match filePath with
+           | Error msg -> Error msg
+           | Ok coverImagePath -> Ok (modelSetter coverImagePath)
 }

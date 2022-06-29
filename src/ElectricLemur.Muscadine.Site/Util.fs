@@ -1,5 +1,7 @@
 module Util
 open Microsoft.AspNetCore.Http
+open Microsoft.Extensions.Configuration
+open Giraffe
 
 let flip f a b = f b a
 let flip3 f a b c = f c b a
@@ -25,6 +27,59 @@ let getFormString (ctx: HttpContext) (key: string) =
     else
         None
 
+let addRootPathSeparator (p: string option) = 
+    match p with
+    | None -> None
+    | Some p -> 
+        if p.StartsWith("/") then 
+            Some p 
+        else 
+            Some $"/%s{p}"
+
+let addRootPath (root: string) (p: string option) =
+    let root = addRootPathSeparator (Some root) |> Option.get
+
+    match addRootPathSeparator p with
+    | None -> None
+    | Some p -> 
+        if p.StartsWith(root) then
+            Some p
+        else
+            Some $"%s{root}%s{p}"
+
+let uploadedFiles (ctx: HttpContext) =
+    seq {
+        for f in ctx.Request.Form.Files do
+        yield f
+    } |> Seq.toList
+
+let dataPath (ctx: HttpContext) = ctx.GetService<IConfiguration>().GetValue<string>("DataDirectory")
+
+let saveFile (f: IFormFile) documentType fileType (id: string) ctx = task {
+    let relativePath = 
+        let ext = System.IO.Path.GetExtension(f.FileName)
+        if (System.String.IsNullOrWhiteSpace(ext)) then
+            Error $"File %s{f.FileName} must have an extension"
+        else 
+            let id = id.ToLowerInvariant().Replace("-", "")
+            Ok (System.IO.Path.Join(documentType, fileType, $"%s{id}%s{ext}"))
+
+    match relativePath with
+    | Error msg -> return Error msg
+    | Ok relativePath -> 
+        let fullPath = System.IO.Path.Join((dataPath ctx), relativePath)
+
+        let dir = System.IO.Path.GetDirectoryName(fullPath)
+        if not (System.IO.Directory.Exists(dir)) then
+            System.IO.Directory.CreateDirectory(dir) |> ignore
+
+        try
+            use write = System.IO.File.OpenWrite(fullPath)
+            do! f.CopyToAsync(write)
+            return Ok (Some (relativePath.Replace("\\", "/")))
+        with
+        | ex -> return Error (ex.Message)
+}
 
 /// Returns an optional map with the form data contained in the context for the given keys
 /// If any required key is missing from the form data, the returned value will be None
