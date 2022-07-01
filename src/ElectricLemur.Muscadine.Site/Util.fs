@@ -118,6 +118,27 @@ let saveFileToDataStore (f: IFormFile) documentType (documentId: string) fileKey
                | Error msg -> Error msg
 }
 
+let directoryIsEmpty (fullPath: string) =
+    if System.IO.Directory.Exists(fullPath) then
+        let fileCount = System.IO.Directory.GetFiles(fullPath).Length
+        let dirCount = System.IO.Directory.GetDirectories(fullPath).Length
+
+        (fileCount + dirCount) = 0
+    else
+        false
+
+let deleteRelativePathIfExists (relativePath: string) ctx =
+    try
+        let realPath = joinPath (dataPath ctx) relativePath
+        if System.IO.File.Exists(realPath) then
+            System.IO.File.Delete(realPath)
+
+        let realPath = System.IO.Path.GetDirectoryName(realPath)
+        if directoryIsEmpty realPath then
+            System.IO.Directory.Delete(realPath)
+    with
+    | _ -> ()
+
 /// Returns an optional map with the form data contained in the context for the given keys
 /// If any required key is missing from the form data, the returned value will be None
 /// If any optional key is missing from the form data, the map element for that key will be None

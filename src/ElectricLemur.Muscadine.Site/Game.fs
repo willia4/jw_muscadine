@@ -237,6 +237,20 @@ let editHandler_post id : HttpHandler =
 
 let deleteHandler_delete id =
     fun next ctx -> task {
+        let! existing = Database.getDocumentById id ctx
+        let existing = existing |> Option.map makeModelFromJObject
+        let existingCoverImage = existing |> Option.map (fun e -> e.CoverImagePaths) |> Option.flatten
+
+        match existingCoverImage with
+        | Some existingCoverImage ->
+            Util.deleteRelativePathIfExists existingCoverImage.Original ctx
+            Util.deleteRelativePathIfExists existingCoverImage.Size1024 ctx
+            Util.deleteRelativePathIfExists existingCoverImage.Size512 ctx
+            Util.deleteRelativePathIfExists existingCoverImage.Size256 ctx
+            Util.deleteRelativePathIfExists existingCoverImage.Size128 ctx
+            Util.deleteRelativePathIfExists existingCoverImage.Size64 ctx
+        | None -> ()
+
         do! Database.deleteDocument ctx id
         return! setStatusCode 200 next ctx
     }
