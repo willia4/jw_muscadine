@@ -5,6 +5,8 @@ open SixLabors.ImageSharp
 open SixLabors.ImageSharp.Processing
 open SixLabors.ImageSharp.Formats
 open Util
+open Giraffe
+open ElectricLemur.Muscadine.Site
 
 type ImagePaths = {
     Original: string
@@ -44,7 +46,7 @@ let private resizeImage size (original: byte array) = task {
 
 let saveImageToDataStore (originalFile: IFormFile) documentType (documentId: string) fileKey ctx = task {
     let containerDirectory = 
-        let id = documentId.ToLowerInvariant().Replace("-", "")
+        let id = Id.compressId documentId
         joinPath3 documentType fileKey id
 
     let fullPathFromRelativePath relativePath = joinPath (dataPath ctx) relativePath
@@ -100,3 +102,36 @@ let saveImageToDataStore (originalFile: IFormFile) documentType (documentId: str
 
     return r |> Result.map (fun r -> fst r)
 }
+
+let imageRouter (paths: string seq) =
+     fun next (ctx: HttpContext) -> task {
+        let fullPath = paths |> Seq.head
+        let components = paths |> Seq.skip 1 |> Seq.toArray
+
+        if components.Length <> 4 then
+            return! setStatusCode 401 next ctx
+        else
+            let documentType = components.[0]
+            let imageKey = components.[1]
+            let idOrSlug = components.[2]
+            let fileName = components.[3]
+            
+            let! id = 
+                if not (Id.isId idOrSlug) then task {
+                    let! id = Database.getIdForDocumentTypeAndSlug documentType idOrSlug ctx
+                    return id |> Option.map Id.compressId
+                }
+                else 
+                    Some (idOrSlug |> Id.compressId) |> Util.taskResult
+
+            match id with
+            | Some id ->
+                let path = $"{documentType}/{imageKey}/{id}/{fileName}"
+                let path = path.Replace("/", System.IO.Path.DirectorySeparatorChar.ToString())
+                let path = System.IO.Path.Join((Util.dataPath ctx), path)
+
+                match System.IO.File.Exists(path) with
+                | true -> return! streamFile false path None None next ctx
+                | false -> return! setStatusCode 401 next ctx
+            | None -> return! setStatusCode 401 next ctx
+     }

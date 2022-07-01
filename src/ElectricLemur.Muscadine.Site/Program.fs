@@ -2,6 +2,7 @@ module ElectricLemur.Muscadine.Site.App
 
 open System
 open System.IO
+open System.Linq
 open Microsoft.AspNetCore.Http
 open Microsoft.AspNetCore.Builder
 open Microsoft.AspNetCore.Cors.Infrastructure
@@ -93,17 +94,6 @@ let indexHandler2 (name : string) =
         let view      = Views.index model
         htmlView view next ctx
 
-let imageRouter (paths: string seq) =
-     fun next (ctx: HttpContext) ->
-        let path = paths |> Seq.last
-        let path = path.Replace("/", System.IO.Path.DirectorySeparatorChar.ToString())
-        let path = System.IO.Path.Join((Util.dataPath ctx), path)
-
-        match System.IO.File.Exists(path) with
-        | true -> streamFile false path None None next ctx
-        | false -> setStatusCode 401 next ctx
-    
-
 let webApp =
     fun (next: HttpFunc) (ctx: HttpContext) ->
         choose [
@@ -126,7 +116,7 @@ let webApp =
                     route "/debug/all" >=> Login.requiresAdminRedirect "/debug/all" >=> Debug.allDocumentsHandler
                     route "/debug/reset" >=> Login.requiresAdminAPICall >=> Debug.resetDatabase
 
-                    routexp "/images/(.*)" imageRouter
+                    routexp "/images/(.*?)/(.*?)/(.*?)/(.*)" Image.imageRouter
                 ]
             POST >=>
                 choose [

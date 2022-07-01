@@ -103,7 +103,7 @@ let saveFileToDataStore (f: IFormFile) documentType (documentId: string) fileKey
         match extensionForFormFile f with
         | None -> Error $"File %s{f.FileName} must have an extension"
         | Some ext -> 
-            let id = documentId.ToLowerInvariant().Replace("-", "")
+            let id = Id.compressId documentId
             Ok (joinPath3 documentType fileKey $"%s{id}%s{ext}")
             
 

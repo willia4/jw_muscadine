@@ -130,6 +130,7 @@ module private Mongo =
     let private initDatabase db = task {
         do! createIndex db [ ("_documentType", Ascending) ] IndexOptions.None
         do! createIndex db [ ("slug", Ascending); ("_documentType", Ascending) ] IndexOptions.None
+        do! createIndex db [ ("_documentType", Ascending); ("slug", Ascending) ] IndexOptions.None
         return db
     }
 
@@ -285,4 +286,21 @@ let checkUniqueness documentType fieldName (fieldValue: MongoDB.Bson.BsonValue) 
 let resetIndexes ctx = task {
     let! db = Mongo.openDatabase ctx
     do! Mongo.resetIndexes db
+}
+
+let getIdForDocumentTypeAndSlug documentType slug ctx = task {
+    let! db = Mongo.openDatabase ctx
+    let filter = 
+        Mongo.Filters.empty
+        |> Mongo.Filters.byDocumentType documentType
+        |> Mongo.Filters.addEquals "slug" slug
+        |> Mongo.Filters.build
+    let sort = Mongo.Sort.empty |> Mongo.Filters.build
+
+    let! documents = db |> Mongo.getDocuments filter sort
+
+    return documents
+           |> Seq.tryHead
+           |> Option.map (fun d -> JObj.getter<string> d "_id")
+           |> Option.flatten
 }
