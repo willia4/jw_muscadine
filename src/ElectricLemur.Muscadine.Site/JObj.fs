@@ -31,10 +31,16 @@ let getter<'a> (obj: JObject) (key: string) =
             | _ -> None
         | _ -> 
             try
-                let v = obj.Value<'a>(key)
-                match box v with
-                | null -> None
-                | w -> Some v
+                let item = obj.[key]
+                match item.Type with
+                | t when t = JTokenType.Object -> 
+                    Some (item.ToObject<'a>())
+                    
+                | _ -> 
+                    let v = item.Value<'a>()
+                    match box v with
+                    | null -> None
+                    | _ -> Some v
             with
             | _ -> None
 
@@ -46,6 +52,7 @@ let setValue<'a> (key: string) (v: 'a) (obj: JObject) =
             let stringValue = ((box v) :?> System.DateTimeOffset).ToString("o")
             JToken.op_Implicit(stringValue)
         | t when t = typedefof<bool> -> JToken.op_Implicit((box v) :?> bool)
+        | t when not t.IsPrimitive -> JToken.FromObject(v)
         | _ -> failwith $"Could not convert field %s{key} to a JToken"
     obj.[key] <- tokenValue
     obj

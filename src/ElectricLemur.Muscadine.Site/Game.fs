@@ -17,7 +17,7 @@ type Game = {
     Description: string;
     Slug: string;
     Completed: bool;
-    CoverImagePath: string option;
+    CoverImagePaths: Image.ImagePaths option;
 }
 
 module Fields = 
@@ -63,12 +63,13 @@ module Fields =
         getValueFromContext = (fun ctx -> FormFields.fromContext ctx |> FormFields.boolOptionValue "completed")
         getValueFromJObject = (fun obj -> JObj.getter<bool> obj "completed" |> Option.get) }
     
-    let coverImagePath: OptionalFieldDescriptor<Game, string> = {
+    let coverImagePaths: OptionalFieldDescriptor<Game, Image.ImagePaths> = {
         Key = "coverImage"
         Label = "Cover Image"
-        getValueFromModel = (fun g -> g.CoverImagePath)
+        getValueFromModel = (fun g -> g.CoverImagePaths)
         getValueFromContext = (fun _ -> raise (new NotImplementedException("Cannot get coverImage from form fields")))
-        getValueFromJObject = (fun obj -> JObj.getter<string> obj "coverImage")
+        getValueFromJObject = (fun obj -> JObj.getter<Image.ImagePaths> obj "coverImage"
+        )
     }
 
 let addEditView (g: Game option) =
@@ -85,8 +86,12 @@ let addEditView (g: Game option) =
         let v = g |> Option.map (RequiredFields.modelGetter ff)
         Items.makeCheckboxInputRow (RequiredFields.label ff) (RequiredFields.key ff) v
 
-    let makeImageRow ff =
-        let v = g |> Option.map (OptionalFields.modelGetter ff) |> Option.flatten
+    let makeImageRow (ff: OptionalFields.OptionalFieldDescriptor<Game, Image.ImagePaths>) =
+        let v = g 
+                |> Option.map (OptionalFields.modelGetter ff) 
+                |> Option.flatten
+                |> Option.map (fun paths -> paths.Original)
+
         Items.makeImageInputRow (OptionalFields.label ff) (OptionalFields.key ff) v
 
     Items.layout pageTitle [
@@ -96,7 +101,7 @@ let addEditView (g: Game option) =
                     makeTextRow Fields.name
                     makeTextRow Fields.description  
                     makeTextRow Fields.slug
-                    makeImageRow Fields.coverImagePath
+                    makeImageRow Fields.coverImagePaths
                     makecheckboxRow Fields.completed
                     tr [] [
                         td [] []
@@ -144,7 +149,7 @@ let makeAndValidateModelFromContext (existing: Game option) (ctx: HttpContext): 
             Description =   Fields.description |> getValue
             Slug =          Fields.slug |> getValue
             Completed =     Fields.completed |> getValue
-            CoverImagePath = Fields.coverImagePath |> getOptionalValue
+            CoverImagePaths = Fields.coverImagePaths |> getOptionalValue
         }
         return! validateModel id g ctx
     | Error msg -> return Error msg
@@ -161,7 +166,7 @@ let makeModelFromJObject (obj: JObject) =
         Description =   Fields.description |> getValue
         Slug =          Fields.slug |> getValue
         Completed =     Fields.completed |> getValue
-        CoverImagePath = Fields.coverImagePath |> getOptionalValue
+        CoverImagePaths = Fields.coverImagePaths |> getOptionalValue
     }
 
 let makeJObjectFromModel (g: Game) =
@@ -175,7 +180,7 @@ let makeJObjectFromModel (g: Game) =
     |> RequiredFields.setJObject g Fields.description
     |> RequiredFields.setJObject g Fields.slug
     |> RequiredFields.setJObject g Fields.completed
-    |> OptionalFields.setJObject g Fields.coverImagePath
+    |> OptionalFields.setJObject g Fields.coverImagePaths
 
 
 let addHandler_get =
@@ -188,9 +193,15 @@ let addHandler_post : HttpHandler =
         
         match g with
         | Ok g ->
-            let data = makeJObjectFromModel g
-            let! id = Database.insertDocument ctx data
-            return! (redirectTo false $"/admin/game/%s{id}") next ctx
+            let! coverImageUploadResult =
+                Items.handleImageUpload ctx documentType g.Id Fields.coverImagePaths.Key g.CoverImagePaths (fun newPaths -> { g with CoverImagePaths = newPaths})
+
+            match coverImageUploadResult with
+            | Error msg -> return! (setStatusCode 400 >=> text msg) next ctx
+            | Ok g ->
+                let data = makeJObjectFromModel g
+                let! id = Database.insertDocument ctx data
+                return! (redirectTo false $"/admin/game/%s{id}") next ctx
         | Error msg -> return! (setStatusCode 400 >=> text msg) next ctx
     }
 
@@ -213,7 +224,7 @@ let editHandler_post id : HttpHandler =
             match g with
             | Ok g ->
                 let! coverImageUploadResult = 
-                    Items.handleFileUpload ctx documentType g.Id Fields.coverImagePath.Key g.CoverImagePath (fun newPath -> { g with CoverImagePath = newPath })
+                    Items.handleImageUpload ctx documentType g.Id Fields.coverImagePaths.Key g.CoverImagePaths (fun newPaths -> { g with CoverImagePaths = newPaths})
 
                 match coverImageUploadResult with
                 | Error msg -> return! (setStatusCode 400 >=> text msg) next ctx

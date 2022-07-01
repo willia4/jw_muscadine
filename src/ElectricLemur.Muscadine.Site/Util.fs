@@ -6,6 +6,13 @@ open Giraffe
 let flip f a b = f b a
 let flip3 f a b c = f c b a
 
+let taskResult v = System.Threading.Tasks.Task.FromResult(v)
+
+let mapResultToOption f r = 
+    match r with
+    | Ok v -> Some (f v)
+    | Error _ -> None
+
 let appendSeqToList (a: 'a list) (b: 'a seq) =
     let rec m acc remaining =
         if (remaining |> Seq.isEmpty) then
@@ -55,30 +62,60 @@ let uploadedFiles (ctx: HttpContext) =
 
 let dataPath (ctx: HttpContext) = ctx.GetService<IConfiguration>().GetValue<string>("DataDirectory")
 
-let saveFile (f: IFormFile) documentType fileType (id: string) ctx = task {
+let joinPath (a: string) b = System.IO.Path.Join(a, b)
+let joinPath3 (a: string) b c = System.IO.Path.Join(a, b, c)
+
+let formFileToBytes (formFile: IFormFile) = task {
+    use m = new System.IO.MemoryStream()
+    do! formFile.CopyToAsync(m)
+    return m.ToArray()
+}
+
+let saveFile (filePath: string) (file: byte array) = task {
+    let dir = System.IO.Path.GetDirectoryName(filePath)
+    if not (System.IO.Directory.Exists(dir)) then
+        System.IO.Directory.CreateDirectory(dir) |> ignore
+
+    try
+        use ms = new System.IO.MemoryStream(file)
+
+        use write = System.IO.File.OpenWrite(filePath)
+        do! ms.CopyToAsync(write)
+
+        return Ok filePath
+    with
+    | ex -> return Error (ex.Message)
+}
+let saveFormFile (filePath: string) (file: IFormFile) = task {
+    let! bytes = formFileToBytes file
+    return! saveFile filePath bytes
+}
+
+let extensionForFormFile (f: IFormFile) =
+    let ext = System.IO.Path.GetExtension(f.FileName)
+    if (System.String.IsNullOrWhiteSpace(ext)) then 
+        None
+    else
+        Some ext
+
+let saveFileToDataStore (f: IFormFile) documentType (documentId: string) fileKey ctx = task {
     let relativePath = 
-        let ext = System.IO.Path.GetExtension(f.FileName)
-        if (System.String.IsNullOrWhiteSpace(ext)) then
-            Error $"File %s{f.FileName} must have an extension"
-        else 
-            let id = id.ToLowerInvariant().Replace("-", "")
-            Ok (System.IO.Path.Join(documentType, fileType, $"%s{id}%s{ext}"))
+        match extensionForFormFile f with
+        | None -> Error $"File %s{f.FileName} must have an extension"
+        | Some ext -> 
+            let id = documentId.ToLowerInvariant().Replace("-", "")
+            Ok (joinPath3 documentType fileKey $"%s{id}%s{ext}")
+            
 
     match relativePath with
     | Error msg -> return Error msg
     | Ok relativePath -> 
-        let fullPath = System.IO.Path.Join((dataPath ctx), relativePath)
+        let fullPath = joinPath (dataPath ctx) relativePath
+        let! saveResult = saveFormFile fullPath f
 
-        let dir = System.IO.Path.GetDirectoryName(fullPath)
-        if not (System.IO.Directory.Exists(dir)) then
-            System.IO.Directory.CreateDirectory(dir) |> ignore
-
-        try
-            use write = System.IO.File.OpenWrite(fullPath)
-            do! f.CopyToAsync(write)
-            return Ok (Some (relativePath.Replace("\\", "/")))
-        with
-        | ex -> return Error (ex.Message)
+        return match saveResult with
+               | Ok _ -> Ok (Some (relativePath.Replace("\\", "/")))
+               | Error msg -> Error msg
 }
 
 /// Returns an optional map with the form data contained in the context for the given keys

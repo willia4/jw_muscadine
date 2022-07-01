@@ -353,9 +353,9 @@ let makeInputRow label formEl =
         td [ _class "form-input" ] [ formEl ]
     ]
 
-let makeImageInputRow label key value =
+let makeImageInputRow label key pathToDisplay =
     let src = 
-        match Util.addRootPath "/images" value with 
+        match Util.addRootPath "/images" pathToDisplay with 
         | Some p -> p
         | None -> ""
 
@@ -437,9 +437,23 @@ let handleFileUpload ctx documentType id key (existingPath: string option) (mode
     let! filePath =
         match file with
         | None -> System.Threading.Tasks.Task.FromResult(Ok existingPath)
-        | Some file -> Util.saveFile file documentType key id ctx
+        | Some file -> Util.saveFileToDataStore file documentType id key ctx
 
     return match filePath with
            | Error msg -> Error msg
            | Ok coverImagePath -> Ok (modelSetter coverImagePath)
+}
+
+let handleImageUpload ctx documentType documentId key (existingPath: Image.ImagePaths option) (modelSetter: Image.ImagePaths option -> 'a) = task {
+    let files = Util.uploadedFiles ctx
+    let originalFile = files |> List.filter (fun f -> f.Name = key) |> List.tryHead
+
+    match originalFile with
+    | None -> return Ok (modelSetter existingPath)
+    | Some file -> 
+        let! o = Image.saveImageToDataStore file documentType documentId key ctx
+        return match o with
+               | Error msg -> Error msg
+               | Ok newPaths -> Ok (modelSetter (Some newPaths))
+
 }
