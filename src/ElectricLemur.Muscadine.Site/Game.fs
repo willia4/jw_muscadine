@@ -90,7 +90,7 @@ let addEditView (g: Game option) =
         let v = g 
                 |> Option.map (OptionalFields.modelGetter ff) 
                 |> Option.flatten
-                |> Option.map (fun paths -> paths.Original)
+                |> Option.map (fun paths -> paths.Size512)
 
         Items.makeImageInputRow (OptionalFields.label ff) (OptionalFields.key ff) v
 
