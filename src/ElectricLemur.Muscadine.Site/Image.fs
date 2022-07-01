@@ -16,24 +16,30 @@ type ImagePaths = {
 }
 
 let private loadImageFromBytes (img: byte array) = 
-    let mutable format: IImageFormat = null
-    let img = Image.Load(img, &format)
-    (img, format)
+    try
+        let mutable format: IImageFormat = null
+        let img = Image.Load(img, &format)
+        Ok (img, format)
+    with
+    | ex -> Error (ex.Message)
 
 let private resizeImage size (original: byte array) = task {
-    let (img, format) = loadImageFromBytes original
     
-    if size > 0 then
-        let newWidth = if img.Width >= img.Height then size else 0
-        let newHeight = if img.Height >= img.Width then size else 0
-
-        img.Mutate(fun x -> x.Resize(newWidth, newHeight, KnownResamplers.Lanczos3) |> ignore)
-
-    let outputStream = new System.IO.MemoryStream(img.PixelType.BitsPerPixel * img.Width * img.Height)
+    match loadImageFromBytes original with
+    | Error msg -> return Error msg
+    | Ok (img, format) ->
     
-    do! img.SaveAsync(outputStream, format)
+        if size > 0 then
+            let newWidth = if img.Width >= img.Height then size else 0
+            let newHeight = if img.Height >= img.Width then size else 0
 
-    return outputStream.ToArray()
+            img.Mutate(fun x -> x.Resize(newWidth, newHeight, KnownResamplers.Lanczos3) |> ignore)
+
+        let outputStream = new System.IO.MemoryStream(img.PixelType.BitsPerPixel * img.Width * img.Height)
+    
+        do! img.SaveAsync(outputStream, format)
+
+        return Ok (outputStream.ToArray())
 }
 
 let saveImageToDataStore (originalFile: IFormFile) documentType (documentId: string) fileKey ctx = task {
@@ -54,9 +60,12 @@ let saveImageToDataStore (originalFile: IFormFile) documentType (documentId: str
 
             let! resizedImage = resizeImage size originalBytes
 
-            saveFile fullPathToNew resizedImage |> ignore
+            match resizedImage with
+            | Ok bytes -> 
+                saveFile fullPathToNew bytes |> ignore
             
-            return (Ok (path, originalBytes))
+                return (Ok (path, originalBytes))
+            | Error msg -> return (Error msg)
     }
         
     let ext = match extensionForFormFile originalFile with
