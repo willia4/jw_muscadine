@@ -83,18 +83,6 @@ let saveImageToDataStore (originalFile: IFormFile) documentType (documentId: str
             Size64 = joinPath containerDirectory $"size_64%s{ext}"
         })
 
-    // save the original file
-    //let! paths = match paths with
-    //             | Error msg -> taskResult (Error msg)
-    //             | Ok paths -> task {
-    //                let! bytes = formFileToBytes originalFile
-    //                let! r = saveFile (fullPathFromRelativePath paths.Original) bytes
-
-    //                return match r with
-    //                       | Ok _ -> Ok (paths, bytes)
-    //                       | Error msg -> Error msg
-    //             }
-
     let! r = 
         match paths with
         | Error msg -> taskResult (Error msg)
