@@ -113,6 +113,9 @@ let webApp =
                     route "/admin/game/_new" >=> Login.requiresAdminRedirect "/admin/game/_new" >=> Game.addHandler_get
                     routef "/admin/game/%s" (fun id -> Login.requiresAdminRedirect $"/admin/game/%s{id} ">=> Game.editHandler_get id)
 
+                    route "/admin/book/_new" >=> Login.requiresAdminRedirect "/admin/book/_new" >=> Book.addHandler_get
+                    routef "/admin/book/%s" (fun id -> Login.requiresAdminRedirect $"/admin/book/%s{id} ">=> Book.editHandler_get id)
+
                     route "/debug/all" >=> Login.requiresAdminRedirect "/debug/all" >=> Debug.allDocumentsHandler
                     route "/debug/reset" >=> Login.requiresAdminAPICall >=> Debug.resetDatabase
 
@@ -124,11 +127,14 @@ let webApp =
 
                     route "/admin/game/_new" >=> Login.requiresAdminRedirect "/admin/game/_new" >=> Game.addHandler_post
                     routef "/admin/game/%s" (fun id -> Login.requiresAdminRedirect $"/admin/game/%s{id}" >=> Game.editHandler_post id)
+
+                    route "/admin/book/_new" >=> Login.requiresAdminRedirect "/admin/book/_new" >=> Book.addHandler_post
+                    routef "/admin/book/%s" (fun id -> Login.requiresAdminRedirect $"/admin/book/%s{id}" >=> Book.editHandler_post id)
                 ]
             DELETE >=>
                 choose [
                     route "/debug/reset" >=> Login.requiresAdminAPICall >=> Debug.resetDatabaseDeleteHandler
-                    routef "/admin/game/%s" (fun id -> Login.requiresAdminRedirect $"/admin/game/%s{id}" >=> Game.deleteHandler_delete id)
+                    routef "/admin/book/%s" (fun id -> Login.requiresAdminRedirect $"/admin/book/%s{id}" >=> Book.deleteHandler_delete id)
                 ]
             setStatusCode 404 >=> text "Not Found" ] next ctx
 

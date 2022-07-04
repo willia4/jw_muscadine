@@ -6,6 +6,7 @@ open System.Security.Claims
 open ElectricLemur.Muscadine.Site
 open Newtonsoft.Json.Linq;
 open Game;
+open Book;
 open System.Threading.Tasks
 
 module Views =
@@ -47,7 +48,7 @@ module Views =
 
         ]
 
-    let index (games: seq<Game>) =
+    let index (games: seq<Game>) (books: seq<Book>) =
         [
             makeIndexSection 
                 games 
@@ -68,6 +69,27 @@ module Views =
                                    [ encodedText "Delete" ]
                         ]
                 ])
+
+            makeIndexSection
+                books
+                "Books"
+                "/admin/book"
+                [ "Title"; "Description"; "Slug"; "" ]
+                (fun b -> 
+                    let makeUrl (b: Book) = $"/admin/book/{b.Id}"
+                    [
+                        td [] [ a [ _href (makeUrl b)] [ encodedText b.Title ]]
+                        td [] [ encodedText b.Description ]
+                        td [] [ encodedText b.Slug ]
+                        td [] [
+                            button [ _class "delete-button"
+                                     attr "data-id" (string b.Id) 
+                                     attr "data-name" b.Title 
+                                     attr "data-url" $"/admin/book/{b.Id}" ]
+                                   [ encodedText "Delete" ]
+                        ]
+                ])
+                
         ] |> layout "Admin"
 
 let statusHandler: HttpHandler = 
@@ -91,6 +113,27 @@ let checkDatabaseHandler: HttpHandler =
 
 let indexHandler: HttpHandler = 
     fun next ctx -> task {
-        let! games = Game.allGames ctx
-        return! htmlView (Views.index games) next ctx
+        let gameTask = Game.allGames ctx
+        let bookTask = Book.allBooks ctx
+
+        let tasks = [| 
+            (gameTask :> System.Threading.Tasks.Task)
+            (bookTask :> System.Threading.Tasks.Task)
+        |]
+
+        let all = System.Threading.Tasks.Task.WhenAll(tasks)
+        try
+            do! all
+        with
+        | ex -> ()
+
+        if (all.Status = TaskStatus.RanToCompletion) then
+            let games = gameTask.Result
+            let books = bookTask.Result
+
+            return! htmlView (Views.index games books) next ctx
+        else
+            return! (setStatusCode 500 >> text "Could not load documents") next ctx
+        //let! games = Game.allGames ctx
+        //return! htmlView (Views.index games) next ctx
     }

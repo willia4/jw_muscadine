@@ -125,6 +125,8 @@ let private redirectIsValid (redirect: string option) =
         "^/admin/category/_new$"
         "^/admin/game/_new$"
         "^/admin/game/[A-Za-z0-9-]*/?$"
+        "^/admin/book/_new$"
+        "^/admin/book/[A-Za-z0-9-]*/?$"
         "^/debug/all$"
     ]
 

@@ -23,6 +23,14 @@
     padding-bottom: 15px;
 }
 
+.body-content div.section {
+    margin-bottom: 45px;
+}
+
+.body-content div.section div.section-header {
+    padding-bottom: 10px;
+}
+
 .body-content form {
     margin-left: 15px;
 }

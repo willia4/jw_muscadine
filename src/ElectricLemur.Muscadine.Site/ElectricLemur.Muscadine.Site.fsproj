@@ -29,6 +29,7 @@
     <Compile Include="RequiredFields.fs" />
     <Compile Include="OptionalFields.fs" />
     <Compile Include="Game.fs" />
+    <Compile Include="Book.fs" />
     <Compile Include="Debug.fs" />
     <Compile Include="Admin.fs" />
     <Compile Include="Program.fs" />
