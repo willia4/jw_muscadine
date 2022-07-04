@@ -49,14 +49,17 @@ module Views =
 
         ]
 
-    let index (games: seq<Game>) (books: seq<Book>) (projects: seq<Project>)=
+    let index (games: seq<Game * List<string>> ) (books: seq<Book * List<string>>) (projects: seq<Project * List<string>>)=
+        let makeTagsCell tags = 
+            div [ _class "tags" ] (tags |> List.sort |> List.map (fun t -> div [ _class "tag" ] [encodedText t]))
         [
             makeIndexSection 
                 games 
                 "Games" 
                 "/admin/game" 
-                [ "Cover"; "Short Name"; "Description"; "Slug"; "" ]
+                [ "Cover"; "Short Name"; "Description"; "Slug"; "Tags"; "" ]
                 (fun g -> 
+                    let (g, tags) = g
                     let makeUrl (g: Game) = $"/admin/game/{g.Id}"
                     [
                         td [ _class "icon-cell" ] (
@@ -67,6 +70,7 @@ module Views =
                         td [] [ a [ _href (makeUrl g)] [ encodedText g.Name ]]
                         td [] [ encodedText g.Description ]
                         td [] [ encodedText g.Slug ]
+                        td [ _class "tag-cell" ] [ makeTagsCell tags ]
                         td [ _class "delete-cell" ] [
                             button [ _class "delete-button"
                                      attr "data-id" (string g.Id) 
@@ -80,8 +84,9 @@ module Views =
                 books
                 "Books"
                 "/admin/book"
-                [ "Cover"; "Title"; "Description"; "Slug"; "" ]
+                [ "Cover"; "Title"; "Description"; "Slug"; "Tags"; "" ]
                 (fun b -> 
+                    let (b, tags) = b
                     let makeUrl (b: Book) = $"/admin/book/{b.Id}"
                     [
                         td [ _class "icon-cell" ] (
@@ -92,6 +97,7 @@ module Views =
                         td [] [ a [ _href (makeUrl b)] [ encodedText b.Title ]]
                         td [] [ encodedText b.Description ]
                         td [] [ encodedText b.Slug ]
+                        td [ _class "tag-cell" ] [ makeTagsCell tags ]
                         td [ _class "delete-cell" ] [
                             button [ _class "delete-button"
                                      attr "data-id" (string b.Id) 
@@ -105,8 +111,9 @@ module Views =
                 projects
                 "Projects"
                 "/admin/project"
-                [ "Icon"; "Name"; "Description"; "Slug"; "" ]
+                [ "Icon"; "Name"; "Description"; "Slug"; "Tags"; "" ]
                 (fun p -> 
+                    let (p, tags) = p
                     let makeUrl (p: Project) = $"/admin/project/{p.Id}"
                     [
                         td [ _class "icon-cell" ] (
@@ -117,6 +124,7 @@ module Views =
                         td [] [ a [ _href (makeUrl p)] [ encodedText p.Name ]]
                         td [] [ encodedText p.Description ]
                         td [] [ encodedText p.Slug ]
+                        td [ _class "tag-cell" ] [ makeTagsCell tags ]
                         td [ _class "delete-cell" ] [
                             button [ _class "delete-button"
                                      attr "data-id" (string p.Id) 
@@ -148,26 +156,25 @@ let checkDatabaseHandler: HttpHandler =
 
 let indexHandler: HttpHandler = 
     fun next ctx -> task {
-        let gameTask = Game.allGames ctx
-        let bookTask = Book.allBooks ctx
-        let projectTask = Project.allProjects ctx
+        let! games = Game.allGames ctx
+        let! books = Book.allBooks ctx
+        let! projects = Project.allProjects ctx
 
-        let tasks: System.Threading.Tasks.Task array = [| gameTask; bookTask; projectTask |]
+        let! gameTags = Tag.loadTagsForDocuments Game.documentType (games |> Seq.map (fun x -> x.Id)) ctx
+        let! bookTags = Tag.loadTagsForDocuments Book.documentType (books |> Seq.map (fun x -> x.Id)) ctx
+        let! projectTags = Tag.loadTagsForDocuments Project.documentType (projects |> Seq.map (fun x -> x.Id)) ctx
 
-        let all = System.Threading.Tasks.Task.WhenAll(tasks)
-        try
-            do! all
-        with
-        | ex -> ()
+        let matchItemsToTags (items: seq<'a>) (idGetter: 'a -> string) tags = 
+            items
+            |> Seq.map (fun i -> 
+                let id = idGetter i
+                let tags = tags |> Map.tryFind id |> Option.defaultValue []
+                (i, tags)
+            )
 
-        if (all.Status = TaskStatus.RanToCompletion) then
-            let games = gameTask.Result
-            let books = bookTask.Result
-            let projects = projectTask.Result
+        let games = matchItemsToTags games (fun x -> x.Id) gameTags
+        let books = matchItemsToTags books (fun x -> x.Id) bookTags
+        let projects = matchItemsToTags projects (fun x -> x.Id) projectTags
 
-            return! htmlView (Views.index games books projects) next ctx
-        else
-            return! (setStatusCode 500 >> text "Could not load documents") next ctx
-        //let! games = Game.allGames ctx
-        //return! htmlView (Views.index games) next ctx
+        return! htmlView (Views.index games books projects) next ctx
     }

@@ -37,31 +37,6 @@ let private JObjectToTagAssignment obj =
         Tag = getter "tag"
     }
 
-module private Cache =
-    let private cacheKey = "allDocumentTags"
-    let getCachedTags (ctx: HttpContext) = 
-        let cache = ctx.GetService<IMemoryCache>()
-        match cache.TryGetValue(cacheKey) with
-        | true, v ->
-            Some (v :?> List<string>)
-        | false, _ -> None
-    
-    let setCachedTags (newTags: string list) (ctx: HttpContext) =
-        let cache = ctx.GetService<IMemoryCache>()
-        cache.Set(cacheKey, newTags, System.TimeSpan.FromHours(1))
-
-    let invalidateCachedTags (ctx: HttpContext) =
-        let cache = ctx.GetService<IMemoryCache>()
-        cache.Remove(cacheKey)
-
-    let updateCachedTagsWithNewTags (newTags: string seq) (ctx: HttpContext) =
-        let existingTags = getCachedTags ctx |> function
-                                                | Some tags -> tags
-                                                | None -> []
-        let newTags = Seq.toList newTags
-        let newTags =  List.append existingTags newTags |> List.distinct
-        setCachedTags newTags ctx
-
 let private loadTagAssignmentsForDocuments (itemDocumentType: string) ids ctx = task {
     let loadTagsForChunk (ids: string seq) = task {
         let filter = 
@@ -144,8 +119,6 @@ let setTagsForDocument itemDocumentType itemId (tags: string seq) ctx = task {
         let! _ = Database.insertDocument ctx (tagAssignmentToJObject itemDocumentType i)
         ()
 
-    Cache.updateCachedTagsWithNewTags tags ctx |> ignore
-
     return ()
 }
 
@@ -153,24 +126,17 @@ let clearTagsForDocument itemDocumentType itemId ctx = task {
     let! existing = loadTagAssignmentsForDocument itemDocumentType itemId ctx
     for i in existing do
         do! Database.deleteDocument ctx i.Id
-
-    Cache.invalidateCachedTags ctx
 }
 
-let getExistingTags ctx = 
-    match Cache.getCachedTags ctx with
-    | Some t -> Util.taskResult t
-    | None -> task {
-        let filter = 
-            Database.Filters.empty 
-            |> Database.Filters.addEquals Database.documentTypeField documentType
+let getExistingTags ctx = task {
+    let filter = 
+        Database.Filters.empty 
+        |> Database.Filters.addEquals Database.documentTypeField documentType
             
-        let! tags = Database.getDistinctValues<string> "tag" filter ctx
+    let! tags = Database.getDistinctValues<string> "tag" filter ctx
 
-        Cache.updateCachedTagsWithNewTags tags ctx |> ignore
-
-        return tags |> Seq.toList
-    }
+    return tags |> Seq.toList
+}
 
 
 let getExistingTagsForDocumentType itemDocumentType ctx = task {

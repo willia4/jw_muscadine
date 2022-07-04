@@ -43,6 +43,24 @@
     text-align: center;
 }
 
+.body-content div.section td.tag-cell {
+    padding: 0px;
+    margin: 0px;
+    vertical-align: top;
+    text-align: left;
+}
+
+.body-content div.section td.tag-cell div.tags {
+    padding: 0px;
+    margin: 0px;
+    vertical-align: top;
+    text-align: left;
+}
+
+.body-content div.section td.tag-cell div.tags div.tag {
+    font-size: 70%;
+}
+
 .body-content form {
     margin-left: 15px;
 }
