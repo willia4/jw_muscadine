@@ -31,6 +31,18 @@
     padding-bottom: 10px;
 }
 
+.body-content div.section td.icon-cell {
+    text-align: center;
+}
+
+.body-content div.section td.icon-cell img {
+    max-height: 50px;
+}
+
+.body-content div.section td.delete-cell {
+    text-align: center;
+}
+
 .body-content form {
     margin-left: 15px;
 }

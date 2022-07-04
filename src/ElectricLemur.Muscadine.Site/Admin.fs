@@ -55,14 +55,19 @@ module Views =
                 games 
                 "Games" 
                 "/admin/game" 
-                [ "Short Name"; "Description"; "Slug"; "" ]
+                [ "Cover"; "Short Name"; "Description"; "Slug"; "" ]
                 (fun g -> 
                     let makeUrl (g: Game) = $"/admin/game/{g.Id}"
                     [
+                        td [ _class "icon-cell" ] (
+                            let path = g.CoverImagePaths |> Option.map (fun p -> p.Size64) |> Util.addRootPath "/images"
+                            match path with
+                               | Some path -> [ img [ _src path ]]
+                               | None -> [])
                         td [] [ a [ _href (makeUrl g)] [ encodedText g.Name ]]
                         td [] [ encodedText g.Description ]
                         td [] [ encodedText g.Slug ]
-                        td [] [
+                        td [ _class "delete-cell" ] [
                             button [ _class "delete-button"
                                      attr "data-id" (string g.Id) 
                                      attr "data-name" g.Name 
@@ -75,14 +80,19 @@ module Views =
                 books
                 "Books"
                 "/admin/book"
-                [ "Title"; "Description"; "Slug"; "" ]
+                [ "Cover"; "Title"; "Description"; "Slug"; "" ]
                 (fun b -> 
                     let makeUrl (b: Book) = $"/admin/book/{b.Id}"
                     [
+                        td [ _class "icon-cell" ] (
+                            let path = b.CoverImagePaths |> Option.map (fun p -> p.Size64) |> Util.addRootPath "/images"
+                            match path with
+                               | Some path -> [ img [ _src path ]]
+                               | None -> [])
                         td [] [ a [ _href (makeUrl b)] [ encodedText b.Title ]]
                         td [] [ encodedText b.Description ]
                         td [] [ encodedText b.Slug ]
-                        td [] [
+                        td [ _class "delete-cell" ] [
                             button [ _class "delete-button"
                                      attr "data-id" (string b.Id) 
                                      attr "data-name" b.Title 
@@ -95,14 +105,19 @@ module Views =
                 projects
                 "Projects"
                 "/admin/project"
-                [ "Name"; "Description"; "Slug"; "" ]
+                [ "Icon"; "Name"; "Description"; "Slug"; "" ]
                 (fun p -> 
-                    let makeUrl (b: Project) = $"/admin/project/{b.Id}"
+                    let makeUrl (p: Project) = $"/admin/project/{p.Id}"
                     [
+                        td [ _class "icon-cell" ] (
+                            let path = p.IconImagePaths |> Option.map (fun p -> p.Size64) |> Util.addRootPath "/images"
+                            match path with
+                               | Some path -> [ img [ _src path ]]
+                               | None -> [])
                         td [] [ a [ _href (makeUrl p)] [ encodedText p.Name ]]
                         td [] [ encodedText p.Description ]
                         td [] [ encodedText p.Slug ]
-                        td [] [
+                        td [ _class "delete-cell" ] [
                             button [ _class "delete-button"
                                      attr "data-id" (string p.Id) 
                                      attr "data-name" p.Name 
