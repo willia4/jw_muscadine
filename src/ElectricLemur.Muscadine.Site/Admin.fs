@@ -7,6 +7,7 @@ open ElectricLemur.Muscadine.Site
 open Newtonsoft.Json.Linq;
 open Game;
 open Book;
+open Project;
 open System.Threading.Tasks
 
 module Views =
@@ -48,7 +49,7 @@ module Views =
 
         ]
 
-    let index (games: seq<Game>) (books: seq<Book>) =
+    let index (games: seq<Game>) (books: seq<Book>) (projects: seq<Project>)=
         [
             makeIndexSection 
                 games 
@@ -90,6 +91,25 @@ module Views =
                         ]
                 ])
                 
+            makeIndexSection
+                projects
+                "Projects"
+                "/admin/project"
+                [ "Name"; "Description"; "Slug"; "" ]
+                (fun p -> 
+                    let makeUrl (b: Project) = $"/admin/project/{b.Id}"
+                    [
+                        td [] [ a [ _href (makeUrl p)] [ encodedText p.Name ]]
+                        td [] [ encodedText p.Description ]
+                        td [] [ encodedText p.Slug ]
+                        td [] [
+                            button [ _class "delete-button"
+                                     attr "data-id" (string p.Id) 
+                                     attr "data-name" p.Name 
+                                     attr "data-url" $"/admin/book/{p.Id}" ]
+                                   [ encodedText "Delete" ]
+                        ]
+                ])
         ] |> layout "Admin"
 
 let statusHandler: HttpHandler = 
@@ -115,11 +135,9 @@ let indexHandler: HttpHandler =
     fun next ctx -> task {
         let gameTask = Game.allGames ctx
         let bookTask = Book.allBooks ctx
+        let projectTask = Project.allProjects ctx
 
-        let tasks = [| 
-            (gameTask :> System.Threading.Tasks.Task)
-            (bookTask :> System.Threading.Tasks.Task)
-        |]
+        let tasks: System.Threading.Tasks.Task array = [| gameTask; bookTask; projectTask |]
 
         let all = System.Threading.Tasks.Task.WhenAll(tasks)
         try
@@ -130,8 +148,9 @@ let indexHandler: HttpHandler =
         if (all.Status = TaskStatus.RanToCompletion) then
             let games = gameTask.Result
             let books = bookTask.Result
+            let projects = projectTask.Result
 
-            return! htmlView (Views.index games books) next ctx
+            return! htmlView (Views.index games books projects) next ctx
         else
             return! (setStatusCode 500 >> text "Could not load documents") next ctx
         //let! games = Game.allGames ctx

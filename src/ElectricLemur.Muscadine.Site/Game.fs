@@ -140,7 +140,7 @@ let makeAndValidateModelFromContext (existing: Game option) (ctx: HttpContext): 
     match requiredFieldsAreValid with
     | Ok _ -> 
         let getValue f = (f |> RequiredFields.formGetter) ctx |> Option.get
-        let getOptionalValue f = existing |> Option.map (fun g -> (f |> OptionalFields.modelGetter) g) |> Option.flatten
+        let getNonFormFieldValue f = existing |> Option.map (fun g -> (f |> OptionalFields.modelGetter) g) |> Option.flatten
 
         let g = {
             Id =            id
@@ -149,7 +149,7 @@ let makeAndValidateModelFromContext (existing: Game option) (ctx: HttpContext): 
             Description =   Fields.description |> getValue
             Slug =          Fields.slug |> getValue
             Completed =     Fields.completed |> getValue
-            CoverImagePaths = Fields.coverImagePaths |> getOptionalValue
+            CoverImagePaths = Fields.coverImagePaths |> getNonFormFieldValue
         }
         return! validateModel id g ctx
     | Error msg -> return Error msg

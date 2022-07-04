@@ -1,4 +1,4 @@
-﻿module ElectricLemur.Muscadine.Site.Book
+﻿module ElectricLemur.Muscadine.Site.Project
 open Giraffe
 open Giraffe.ViewEngine
 open System
@@ -8,86 +8,90 @@ open Newtonsoft.Json.Linq
 open RequiredFields
 open OptionalFields
 
-let documentType = "book"
+let documentType = "project"
 
-type Book = {
+type Project = {
     Id: string;
     DateAdded: DateTimeOffset;
-    Title: string;
+    Name: string;
     Description: string;
     Slug: string;
-    Completed: bool;
-    CoverImagePaths: Image.ImagePaths option;
+    IconImagePaths: Image.ImagePaths option;
+    GitHubLink: string option;
 }
 
 module Fields = 
-    let _id: RequiredFieldDescriptor<Book, string> = {
+    let _id: RequiredFieldDescriptor<Project, string> = {
         Key = "_id"
         Label = "Id"
-        getValueFromModel = (fun b -> b.Id)
+        getValueFromModel = (fun p -> p.Id)
         getValueFromContext = (fun ctx -> None)
         getValueFromJObject = (fun obj -> JObj.getter<string> obj "_id" |> Option.get) }
 
-    let _dateAdded: RequiredFieldDescriptor<Book, System.DateTimeOffset> = {
+    let _dateAdded: RequiredFieldDescriptor<Project, System.DateTimeOffset> = {
         Key = "_dateAdded"
         Label = "Date Added"
-        getValueFromModel = (fun b -> b.DateAdded)
+        getValueFromModel = (fun p -> p.DateAdded)
         getValueFromContext = (fun ctx -> None)
         getValueFromJObject = (fun obj -> JObj.getter<System.DateTimeOffset> obj "_dateAdded" |> Option.get) }
 
-    let title: RequiredFieldDescriptor<Book, string> = {
+    let name: RequiredFieldDescriptor<Project, string> = {
         Key = "name"
         Label = "Name"
-        getValueFromModel = (fun b -> b.Title)
+        getValueFromModel = (fun p -> p.Name)
         getValueFromContext = (fun ctx -> FormFields.fromContext ctx |> FormFields.stringOptionValue "name")
         getValueFromJObject = (fun obj -> JObj.getter<string> obj "name" |> Option.get) }
 
-    let description: RequiredFieldDescriptor<Book, string> = {
+    let description: RequiredFieldDescriptor<Project, string> = {
         Key = "description"
         Label = "Description"
-        getValueFromModel = (fun b -> b.Description)
+        getValueFromModel = (fun p -> p.Description)
         getValueFromContext = (fun ctx -> FormFields.fromContext ctx |> FormFields.stringOptionValue "description")
         getValueFromJObject = (fun obj -> JObj.getter<string> obj "description" |> Option.get) }
 
-    let slug: RequiredFieldDescriptor<Book, string> = {
+    let slug: RequiredFieldDescriptor<Project, string> = {
         Key = "slug"
         Label = "Slug"
-        getValueFromModel = (fun b -> b.Slug)
+        getValueFromModel = (fun p -> p.Slug)
         getValueFromContext = (fun ctx -> FormFields.fromContext ctx |> FormFields.stringOptionValue "slug")
         getValueFromJObject = (fun obj -> JObj.getter<string> obj "slug" |> Option.get) }
-
-    let completed: RequiredFieldDescriptor<Book, bool> = {
-        Key = "completed"
-        Label = "Completed"
-        getValueFromModel = (fun b -> b.Completed)
-        getValueFromContext = (fun ctx -> FormFields.fromContext ctx |> FormFields.boolOptionValue "completed")
-        getValueFromJObject = (fun obj -> JObj.getter<bool> obj "completed" |> Option.get) }
     
-    let coverImagePaths: OptionalFieldDescriptor<Book, Image.ImagePaths> = {
+    let coverImagePaths: OptionalFieldDescriptor<Project, Image.ImagePaths> = {
         Key = "coverImage"
-        Label = "Cover Image"
-        getValueFromModel = (fun b -> b.CoverImagePaths)
+        Label = "Icon Image"
+        getValueFromModel = (fun p -> p.IconImagePaths)
         getValueFromContext = (fun _ -> raise (new NotImplementedException("Cannot get coverImage from form fields")))
-        getValueFromJObject = (fun obj -> JObj.getter<Image.ImagePaths> obj "coverImage"
-        )
+        getValueFromJObject = (fun obj -> JObj.getter<Image.ImagePaths> obj "coverImage")
     }
 
-let addEditView (b: Book option) =
+    let gitHubLink: OptionalFieldDescriptor<Project, string> = {
+        Key = "githubLink"
+        Label = "Github Link"
+        getValueFromModel = (fun p -> p.GitHubLink)
+        getValueFromContext = (fun ctx -> FormFields.fromContext ctx |> FormFields.stringOptionValue "githubLink")
+        getValueFromJObject = (fun obj -> JObj.getter<string> obj "githubLink")
+    }
 
-    let pageTitle = match b with
-                    | None -> "Add Book" 
-                    | Some g-> $"Edit Book %s{g.Title}"
+let addEditView (p: Project option) =
+
+    let pageTitle = match p with
+                    | None -> "Add Project" 
+                    | Some p-> $"Edit Project %s{p.Name}"
 
     let makeTextRow ff = 
-        let v = b |> Option.map (RequiredFields.modelGetter ff) 
+        let v = p |> Option.map (RequiredFields.modelGetter ff) 
         Items.makeTextInputRow (RequiredFields.label ff) (RequiredFields.key ff) v
 
+    let makeOptionalTextRow ff =
+        let v = p |> Option.map (OptionalFields.modelGetter ff) |> Option.flatten
+        Items.makeTextInputRow (OptionalFields.label ff) (OptionalFields.key ff) v
+
     let makecheckboxRow ff = 
-        let v = b |> Option.map (RequiredFields.modelGetter ff)
+        let v = p |> Option.map (RequiredFields.modelGetter ff)
         Items.makeCheckboxInputRow (RequiredFields.label ff) (RequiredFields.key ff) v
 
-    let makeImageRow (ff: OptionalFields.OptionalFieldDescriptor<Book, Image.ImagePaths>) =
-        let v = b 
+    let makeImageRow (ff: OptionalFields.OptionalFieldDescriptor<Project, Image.ImagePaths>) =
+        let v = p 
                 |> Option.map (OptionalFields.modelGetter ff) 
                 |> Option.flatten
                 |> Option.map (fun paths -> paths.Size512)
@@ -98,11 +102,11 @@ let addEditView (b: Book option) =
         div [ _class "page-title" ] [ encodedText pageTitle ]
         form [ _name "book-form"; _method "post"; _enctype "multipart/form-data" ] [
                 table [] [
-                    makeTextRow Fields.title
-                    makeTextRow Fields.description  
+                    makeTextRow Fields.name
+                    makeTextRow Fields.description
+                    makeOptionalTextRow Fields.gitHubLink
                     makeTextRow Fields.slug
                     makeImageRow Fields.coverImagePaths
-                    makecheckboxRow Fields.completed
                     tr [] [
                         td [] []
                         td [] [ input [ _type "submit"; _value "Save" ] ]
@@ -111,45 +115,46 @@ let addEditView (b: Book option) =
             ]
     ]
 
-let validateModel (id: string) (g: Book) ctx = task {
+let validateModel (id: string) (g: Project) ctx = task {
     let stringFieldUniquenessValidator field = RequiredFields.stringFieldUniquenessValidator ctx documentType id field
 
     let valid = 
         Ok g
-        |> Items.performValidation (RequiredFields.requiredStringValidator Fields.title)
+        |> Items.performValidation (RequiredFields.requiredStringValidator Fields.name)
         |> Items.performValidation (RequiredFields.requiredStringValidator Fields.description)
         |> Items.performValidation (RequiredFields.requiredStringValidator Fields.slug)
-    let! valid = valid |> Items.performValidationAsync (stringFieldUniquenessValidator Fields.title)
+    let! valid = valid |> Items.performValidationAsync (stringFieldUniquenessValidator Fields.name)
     let! valid = valid |> Items.performValidationAsync (stringFieldUniquenessValidator Fields.slug)
 
     return valid
 }
 
-let makeAndValidateModelFromContext (existing: Book option) (ctx: HttpContext): Task<Result<Book, string>> = task {
-    let id = existing |> Option.map (fun g -> g.Id) |> Option.defaultValue (string (Util.newGuid ()))
-    let dateAdded = existing |> Option.map (fun g -> g.DateAdded) |> Option.defaultValue System.DateTimeOffset.UtcNow
+let makeAndValidateModelFromContext (existing: Project option) (ctx: HttpContext): Task<Result<Project, string>> = task {
+    let id = existing |> Option.map (fun p -> p.Id) |> Option.defaultValue (string (Util.newGuid ()))
+    let dateAdded = existing |> Option.map (fun p -> p.DateAdded) |> Option.defaultValue System.DateTimeOffset.UtcNow
 
     let fields = FormFields.fromContext ctx
     let requiredFieldsAreValid = 
         Ok ()
-        |> FormFields.checkRequiredStringField fields (RequiredFields.key Fields.title)
+        |> FormFields.checkRequiredStringField fields (RequiredFields.key Fields.name)
         |> FormFields.checkRequiredStringField fields (RequiredFields.key Fields.description)
         |> FormFields.checkRequiredStringField fields (RequiredFields.key Fields.slug)
     
-    let o = ctx |> (RequiredFields.formGetter Fields.title) |> Option.get
+    let o = ctx |> (RequiredFields.formGetter Fields.name) |> Option.get
     match requiredFieldsAreValid with
     | Ok _ -> 
         let getValue f = (f |> RequiredFields.formGetter) ctx |> Option.get
+        let getOptionalValue f = (f |> OptionalFields.formGetter) ctx
         let getNonFormFieldValue f = existing |> Option.map (fun g -> (f |> OptionalFields.modelGetter) g) |> Option.flatten
 
         let g = {
             Id =            id
             DateAdded =     dateAdded
-            Title =         Fields.title |> getValue
+            Name =         Fields.name |> getValue
             Description =   Fields.description |> getValue
             Slug =          Fields.slug |> getValue
-            Completed =     Fields.completed |> getValue
-            CoverImagePaths = Fields.coverImagePaths |> getNonFormFieldValue
+            IconImagePaths = Fields.coverImagePaths |> getNonFormFieldValue
+            GitHubLink = Fields.gitHubLink |> getOptionalValue
         }
         return! validateModel id g ctx
     | Error msg -> return Error msg
@@ -162,25 +167,25 @@ let makeModelFromJObject (obj: JObject) =
     {
         Id =            Fields._id |> getValue
         DateAdded =     Fields._dateAdded |> getValue
-        Title =         Fields.title|> getValue
+        Name =         Fields.name |> getValue
         Description =   Fields.description |> getValue
         Slug =          Fields.slug |> getValue
-        Completed =     Fields.completed |> getValue
-        CoverImagePaths = Fields.coverImagePaths |> getOptionalValue
+        IconImagePaths = Fields.coverImagePaths |> getOptionalValue
+        GitHubLink = Fields.gitHubLink |> getOptionalValue
     }
 
-let makeJObjectFromModel (g: Book) =
+let makeJObjectFromModel (p: Project) =
     (new JObject())
     |> (fun obj -> 
             obj.["_documentType"] <- documentType
             obj)
-    |> RequiredFields.setJObject g Fields._id
-    |> RequiredFields.setJObject g Fields._dateAdded
-    |> RequiredFields.setJObject g Fields.title
-    |> RequiredFields.setJObject g Fields.description
-    |> RequiredFields.setJObject g Fields.slug
-    |> RequiredFields.setJObject g Fields.completed
-    |> OptionalFields.setJObject g Fields.coverImagePaths
+    |> RequiredFields.setJObject p Fields._id
+    |> RequiredFields.setJObject p Fields._dateAdded
+    |> RequiredFields.setJObject p Fields.name
+    |> RequiredFields.setJObject p Fields.description
+    |> RequiredFields.setJObject p Fields.slug
+    |> OptionalFields.setJObject p Fields.coverImagePaths
+    |> OptionalFields.setJObject p Fields.gitHubLink
 
 
 let addHandler_get =
@@ -189,19 +194,19 @@ let addHandler_get =
 
 let addHandler_post : HttpHandler = 
     fun next (ctx: HttpContext) -> task {
-        let! b = makeAndValidateModelFromContext None ctx
+        let! p = makeAndValidateModelFromContext None ctx
         
-        match b with
-        | Ok b ->
+        match p with
+        | Ok p ->
             let! coverImageUploadResult =
-                Items.handleImageUpload ctx documentType b.Id Fields.coverImagePaths.Key b.CoverImagePaths (fun newPaths -> { b with CoverImagePaths = newPaths})
+                Items.handleImageUpload ctx documentType p.Id Fields.coverImagePaths.Key p.IconImagePaths (fun newPaths -> { p with IconImagePaths = newPaths})
 
             match coverImageUploadResult with
             | Error msg -> return! (setStatusCode 400 >=> text msg) next ctx
-            | Ok g ->
-                let data = makeJObjectFromModel g
+            | Ok p ->
+                let data = makeJObjectFromModel p
                 let! id = Database.insertDocument ctx data
-                return! (redirectTo false $"/admin/book/%s{id}") next ctx
+                return! (redirectTo false $"/admin/project/%s{id}") next ctx
         | Error msg -> return! (setStatusCode 400 >=> text msg) next ctx
     }
 
@@ -220,18 +225,18 @@ let editHandler_post id : HttpHandler =
         | None -> return! (setStatusCode 404) next ctx
         | Some existing ->
             let existing = makeModelFromJObject existing
-            let! b = makeAndValidateModelFromContext (Some existing) ctx
-            match b with
-            | Ok b ->
+            let! p = makeAndValidateModelFromContext (Some existing) ctx
+            match p with
+            | Ok p ->
                 let! coverImageUploadResult = 
-                    Items.handleImageUpload ctx documentType b.Id Fields.coverImagePaths.Key b.CoverImagePaths (fun newPaths -> { b with CoverImagePaths = newPaths})
+                    Items.handleImageUpload ctx documentType p.Id Fields.coverImagePaths.Key p.IconImagePaths (fun newPaths -> { p with IconImagePaths = newPaths})
 
                 match coverImageUploadResult with
                 | Error msg -> return! (setStatusCode 400 >=> text msg) next ctx
-                | Ok g -> 
-                    let data = makeJObjectFromModel g
+                | Ok p -> 
+                    let data = makeJObjectFromModel p
                     do! Database.upsertDocument ctx data
-                    return! (redirectTo false $"/admin/book/%s{id}") next ctx
+                    return! (redirectTo false $"/admin/project/%s{id}") next ctx
             | Error msg -> return! (setStatusCode 400 >=> text msg) next ctx
     }
 
@@ -239,7 +244,7 @@ let deleteHandler_delete id =
     fun next ctx -> task {
         let! existing = Database.getDocumentById id ctx
         let existing = existing |> Option.map makeModelFromJObject
-        let existingCoverImage = existing |> Option.map (fun e -> e.CoverImagePaths) |> Option.flatten
+        let existingCoverImage = existing |> Option.map (fun e -> e.IconImagePaths) |> Option.flatten
 
         match existingCoverImage with
         | Some existingCoverImage ->
@@ -255,6 +260,6 @@ let deleteHandler_delete id =
         return! setStatusCode 200 next ctx
     }
     
-let allBooks ctx = 
+let allProjects ctx = 
     Database.getDocumentsByType documentType (makeModelFromJObject >> Some) ctx
 
