@@ -72,7 +72,7 @@ module Fields =
         getValueFromJObject = (fun obj -> JObj.getter<string> obj "githubLink")
     }
 
-let addEditView (p: Project option) =
+let addEditView (p: Project option) allTags documentTags =
 
     let pageTitle = match p with
                     | None -> "Add Project" 
@@ -107,6 +107,8 @@ let addEditView (p: Project option) =
                     makeOptionalTextRow Fields.gitHubLink
                     makeTextRow Fields.slug
                     makeImageRow Fields.coverImagePaths
+                    Items.makeTagsInputRow "Tags" Tag.formKey allTags documentTags
+
                     tr [] [
                         td [] []
                         td [] [ input [ _type "submit"; _value "Save" ] ]
@@ -189,8 +191,11 @@ let makeJObjectFromModel (p: Project) =
 
 
 let addHandler_get =
-    fun next (ctx: HttpContext) ->
-        htmlView (addEditView None) next ctx
+    fun next (ctx: HttpContext) -> task {
+        let! allTags = Tag.getExistingTags ctx
+        return! htmlView (addEditView None allTags []) next ctx
+    }
+        
 
 let addHandler_post : HttpHandler = 
     fun next (ctx: HttpContext) -> task {
@@ -206,6 +211,8 @@ let addHandler_post : HttpHandler =
             | Ok p ->
                 let data = makeJObjectFromModel p
                 let! id = Database.insertDocument ctx data
+                do! Tag.saveTagsForForm documentType id Tag.formKey ctx
+
                 return! (redirectTo false $"/admin/project/%s{id}") next ctx
         | Error msg -> return! (setStatusCode 400 >=> text msg) next ctx
     }
@@ -215,7 +222,10 @@ let editHandler_get id =
         let! existing = Database.getDocumentById id ctx
         let existing = existing |> Option.map makeModelFromJObject
 
-        return! htmlView (addEditView existing) next ctx
+        let! allTags = Tag.getExistingTags ctx
+        let! documentTags = Tag.loadTagsForDocument documentType id ctx
+
+        return! htmlView (addEditView existing allTags documentTags) next ctx
     }
 
 let editHandler_post id : HttpHandler =
@@ -236,6 +246,8 @@ let editHandler_post id : HttpHandler =
                 | Ok p -> 
                     let data = makeJObjectFromModel p
                     do! Database.upsertDocument ctx data
+                    do! Tag.saveTagsForForm documentType p.Id Tag.formKey ctx
+
                     return! (redirectTo false $"/admin/project/%s{id}") next ctx
             | Error msg -> return! (setStatusCode 400 >=> text msg) next ctx
     }
