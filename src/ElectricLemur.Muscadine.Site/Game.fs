@@ -16,7 +16,6 @@ type Game = {
     Name: string;
     Description: string;
     Slug: string;
-    Completed: bool;
     CoverImagePaths: Image.ImagePaths option;
 }
 
@@ -55,13 +54,6 @@ module Fields =
         getValueFromModel = (fun g -> g.Slug)
         getValueFromContext = (fun ctx -> FormFields.fromContext ctx |> FormFields.stringOptionValue "slug")
         getValueFromJObject = (fun obj -> JObj.getter<string> obj "slug" |> Option.get) }
-
-    let completed: RequiredFieldDescriptor<Game, bool> = {
-        Key = "completed"
-        Label = "Completed"
-        getValueFromModel = (fun g -> g.Completed)
-        getValueFromContext = (fun ctx -> FormFields.fromContext ctx |> FormFields.boolOptionValue "completed")
-        getValueFromJObject = (fun obj -> JObj.getter<bool> obj "completed" |> Option.get) }
     
     let coverImagePaths: OptionalFieldDescriptor<Game, Image.ImagePaths> = {
         Key = "coverImage"
@@ -102,7 +94,6 @@ let addEditView (g: Game option) allTags documentTags =
                     makeTextRow Fields.description  
                     makeTextRow Fields.slug
                     makeImageRow Fields.coverImagePaths
-                    makecheckboxRow Fields.completed
                     Items.makeTagsInputRow "Tags" Tag.formKey allTags documentTags
                     tr [] [
                         td [] []
@@ -149,7 +140,6 @@ let makeAndValidateModelFromContext (existing: Game option) (ctx: HttpContext): 
             Name =          Fields.name |> getValue
             Description =   Fields.description |> getValue
             Slug =          Fields.slug |> getValue
-            Completed =     Fields.completed |> getValue
             CoverImagePaths = Fields.coverImagePaths |> getNonFormFieldValue
         }
         return! validateModel id g ctx
@@ -166,7 +156,6 @@ let makeModelFromJObject (obj: JObject) =
         Name =          Fields.name |> getValue
         Description =   Fields.description |> getValue
         Slug =          Fields.slug |> getValue
-        Completed =     Fields.completed |> getValue
         CoverImagePaths = Fields.coverImagePaths |> getOptionalValue
     }
 
@@ -180,7 +169,6 @@ let makeJObjectFromModel (g: Game) =
     |> RequiredFields.setJObject g Fields.name
     |> RequiredFields.setJObject g Fields.description
     |> RequiredFields.setJObject g Fields.slug
-    |> RequiredFields.setJObject g Fields.completed
     |> OptionalFields.setJObject g Fields.coverImagePaths
 
 

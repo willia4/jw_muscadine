@@ -16,7 +16,6 @@ type Book = {
     Title: string;
     Description: string;
     Slug: string;
-    Completed: bool;
     CoverImagePaths: Image.ImagePaths option;
 }
 
@@ -55,13 +54,6 @@ module Fields =
         getValueFromModel = (fun b -> b.Slug)
         getValueFromContext = (fun ctx -> FormFields.fromContext ctx |> FormFields.stringOptionValue "slug")
         getValueFromJObject = (fun obj -> JObj.getter<string> obj "slug" |> Option.get) }
-
-    let completed: RequiredFieldDescriptor<Book, bool> = {
-        Key = "completed"
-        Label = "Completed"
-        getValueFromModel = (fun b -> b.Completed)
-        getValueFromContext = (fun ctx -> FormFields.fromContext ctx |> FormFields.boolOptionValue "completed")
-        getValueFromJObject = (fun obj -> JObj.getter<bool> obj "completed" |> Option.get) }
     
     let coverImagePaths: OptionalFieldDescriptor<Book, Image.ImagePaths> = {
         Key = "coverImage"
@@ -102,7 +94,7 @@ let addEditView (b: Book option) allTags documentTags =
                     makeTextRow Fields.description  
                     makeTextRow Fields.slug
                     makeImageRow Fields.coverImagePaths
-                    makecheckboxRow Fields.completed
+
                     Items.makeTagsInputRow "Tags" Tag.formKey allTags documentTags
 
                     tr [] [
@@ -150,7 +142,6 @@ let makeAndValidateModelFromContext (existing: Book option) (ctx: HttpContext): 
             Title =         Fields.title |> getValue
             Description =   Fields.description |> getValue
             Slug =          Fields.slug |> getValue
-            Completed =     Fields.completed |> getValue
             CoverImagePaths = Fields.coverImagePaths |> getNonFormFieldValue
         }
         return! validateModel id g ctx
@@ -167,7 +158,6 @@ let makeModelFromJObject (obj: JObject) =
         Title =         Fields.title|> getValue
         Description =   Fields.description |> getValue
         Slug =          Fields.slug |> getValue
-        Completed =     Fields.completed |> getValue
         CoverImagePaths = Fields.coverImagePaths |> getOptionalValue
     }
 
@@ -181,7 +171,6 @@ let makeJObjectFromModel (g: Book) =
     |> RequiredFields.setJObject g Fields.title
     |> RequiredFields.setJObject g Fields.description
     |> RequiredFields.setJObject g Fields.slug
-    |> RequiredFields.setJObject g Fields.completed
     |> OptionalFields.setJObject g Fields.coverImagePaths
 
 
