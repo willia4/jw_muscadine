@@ -14,59 +14,81 @@ module JsonString =
     let value (JsonString input) = input
     let from (input: string) = JsonString(input)
 
+let idField = "_id"
+let documentTypeField = "_documentType"
+
+module Filters = 
+    open MongoDB.Bson
+    type FilterBuilder = 
+        {
+            EqualTo: seq<string * BsonValue>;
+            NotEqualTo: seq<string * BsonValue>;
+            In: seq<string * seq<BsonValue>>;
+        } 
+        override this.ToString() = 
+            ""
+
+    let build filterBuilder = 
+        let filter = new BsonDocument()
+            
+        filterBuilder.EqualTo 
+        |> Seq.iter (fun (k, v) -> 
+            filter.[k] <- v)
+
+        filterBuilder.NotEqualTo
+        |> Seq.iter(fun (k, v) ->
+            filter.[k] <- new BsonDocument("$ne", v))
+
+        filterBuilder.In
+        |> Seq.iter(fun (k, vs) ->
+            let a = (new BsonArray()).AddRange(vs)
+            filter.[k] <- new BsonDocument("$in", a))
+
+        filter
+
+    let addEquals k v current =
+        { current with EqualTo = (Seq.append current.EqualTo [ (k, v) ]) }
+
+    let addNotEquals k v current =
+        { current with NotEqualTo = (Seq.append current.NotEqualTo [ k, v ]) }
+
+    let addIn k (v: BsonValue) current =
+        let newIn = 
+            current.In 
+            |> Map.ofSeq
+            |> Map.change k (fun existing -> 
+                match existing with
+                | Some existing -> existing |> Seq.append [ v ]
+                | None -> [ v ]
+                |> Some
+            )
+            |> Map.toSeq
+        { current with In = newIn }
+
+    let empty = { EqualTo = Seq.empty; NotEqualTo = Seq.empty; In = Seq.empty }
+
+    let byMap (m: Map<string, BsonValue>) current =
+        m 
+        |> Map.toSeq
+        |> Seq.fold (fun c (k, v) -> addEquals k v c) current
+            
+    let by = addEquals
+    let byDocumentType (typeName: string) current = by documentTypeField typeName current
+    let byId (id: string) current = by idField id current
+    let notId (id: string) current = addNotEquals idField id current
+
+    
+module Sort =
+    let empty = Filters.empty
+    let byId current = Filters.by idField 1 current
+    let by k current = Filters.by k 1 current
+    let build = Filters.build
+
 module private Mongo =
     open MongoDB.Driver
     open MongoDB.Bson
-    
-    let idField = "_id"
-    let documentTypeField = "_documentType"
 
-    module Filters = 
-        type FilterBuilder = 
-            {
-                EqualTo: seq<string * BsonValue>;
-                NotEqualTo: seq<string * BsonValue>;
-            } 
-            override this.ToString() = 
-                ""
 
-        let build filterBuilder = 
-            let filter = new BsonDocument()
-            
-            filterBuilder.EqualTo 
-            |> Seq.iter (fun (k, v) -> 
-                filter.[k] <- v)
-
-            filterBuilder.NotEqualTo
-            |> Seq.iter(fun (k, v) ->
-                filter.[k] <- new BsonDocument("$ne", v))
-
-            filter
-
-        let addEquals k v current =
-            { current with EqualTo = (Seq.append current.EqualTo [ (k, v) ]) }
-
-        let addNotEquals k v current =
-            { current with NotEqualTo = (Seq.append current.NotEqualTo [ k, v ]) }
-
-        let empty = { EqualTo = Seq.empty; NotEqualTo = Seq.empty }
-
-        let byMap (m: Map<string, BsonValue>) current =
-            m 
-            |> Map.toSeq
-            |> Seq.fold (fun c (k, v) -> addEquals k v c) current
-            
-        let by = addEquals
-        let byDocumentType (typeName: string) current = by documentTypeField typeName current
-        let byId (id: string) current = by idField id current
-        let notId (id: string) current = addNotEquals idField id current
-
-    
-    module Sort =
-        let empty = Filters.empty
-        let byId current = Filters.by idField 1 current
-        let by k current = Filters.by k 1 current
-        let build = Filters.build
 
     type MongoSettings = { Hostname: string; Database: string; Collection: string; Username: string; Password: string }
     type MongoDatabase = { Client: IMongoClient; Database: IMongoDatabase; Collection: IMongoCollection<BsonDocument> }
@@ -131,6 +153,7 @@ module private Mongo =
         do! createIndex db [ ("_documentType", Ascending) ] IndexOptions.None
         do! createIndex db [ ("slug", Ascending); ("_documentType", Ascending) ] IndexOptions.None
         do! createIndex db [ ("_documentType", Ascending); ("slug", Ascending) ] IndexOptions.None
+        do! createIndex db [ ("_documentType", Ascending); ("itemId", Ascending) ] IndexOptions.None
         return db
     }
 
@@ -153,24 +176,27 @@ module private Mongo =
         return! db.Collection.CountDocumentsAsync(filter)
     }
 
+    let private cursorToSeq(cursor: IAsyncCursor<'a>) = task {
+        let acc = new System.Collections.Generic.List<'a>()
+
+        let! hasNext = cursor.MoveNextAsync()
+        let mutable continueLooping = hasNext
+        while continueLooping do
+            acc.AddRange(cursor.Current)
+            let! hasNext = cursor.MoveNextAsync()
+            continueLooping <- hasNext
+
+        return (acc :> seq<'a>)
+
+    }
     let getDocuments (filter: BsonDocument) (sort: BsonDocument) (db: MongoDatabase) = task {
         use! cursor = db.Collection
                         .Find(filter)
                         .Sort(sort)
                         .ToCursorAsync()
 
-        let acc = new System.Collections.Generic.List<JObject>()
-        
-        let! hasNext = cursor.MoveNextAsync()
-        
-        let mutable continueLooping = hasNext
-        while continueLooping do
-            acc.AddRange(cursor.Current |> Seq.map bsonToJObject)   
-            let! hasNext = cursor.MoveNextAsync()
-            continueLooping <- hasNext
-        
-        let r: JObject seq = acc
-        return r
+        let! documents = cursorToSeq cursor
+        return (documents |> Seq.map bsonToJObject)
     }
     
     let getDocument (id: string) (db: MongoDatabase) = task {
@@ -181,6 +207,21 @@ module private Mongo =
                 | _ -> item |> bsonToJObject |> Some
     }
     
+    let getDistinctValues<'a> (field: string) (filter: BsonDocument) (db: MongoDatabase) = task {
+        let f: FieldDefinition<BsonDocument, 'a> = field
+
+        use! cursor = db.Collection.DistinctAsync<'a>(field, filter)
+        let! docs = cursorToSeq cursor
+
+        return docs 
+               //|> Seq.map bsonToJObject
+               //|> Seq.map (fun obj -> JObj.getter<'a> obj field)
+               //|> Util.unwrapSeqOfOptions
+               //|> function
+               //   | Some s -> s
+               //   | None -> []
+    }
+
     let insertDocument document (db: MongoDatabase) = task {
         let bson =  jObjectToBson document
         let id =
@@ -220,8 +261,8 @@ module private Mongo =
 
 let getAllDocuments (ctx: HttpContext) = task {
     let! db = Mongo.openDatabase ctx
-    let filter = Mongo.Filters.empty |> Mongo.Filters.build
-    let sort = Mongo.Sort.empty |> Mongo.Sort.build
+    let filter = Filters.empty |> Filters.build
+    let sort = Sort.empty |> Sort.build
     return! Mongo.getDocuments filter sort db
 }
 
@@ -229,18 +270,30 @@ let getDocumentCount (ctx: HttpContext) (category: string option)= task {
     let! db = Mongo.openDatabase ctx
     let filter = 
         match category with
-        | Some c -> Mongo.Filters.empty |> Mongo.Filters.byDocumentType c |> Mongo.Filters.build
-        | None -> Mongo.Filters.empty |> Mongo.Filters.build
+        | Some c -> Filters.empty |> Filters.byDocumentType c |> Filters.build
+        | None -> Filters.empty |> Filters.build
 
     return! Mongo.countDocuments filter db
 }
 
-let getDocumentsByType documentType (mapper: JObject -> 'a option) ctx = task {
+let getDocumentsForFilterAndSort filter sort ctx = task {
     let! db = Mongo.openDatabase ctx
-    let filter = Mongo.Filters.empty |> Mongo.Filters.byDocumentType documentType |> Mongo.Filters.build
-    let sort = Mongo.Sort.empty |> Mongo.Sort.by "dateAdded" |> Mongo.Sort.build
-    let! documents = db |> Mongo.getDocuments filter sort
 
+    let filter = filter |> Filters.build
+    let sort = sort |> Filters.build
+
+    let! documents = db |> Mongo.getDocuments filter sort
+    return documents
+}
+
+let getDocumentsForFilter filter ctx = getDocumentsForFilterAndSort filter Sort.empty ctx
+
+let getDocumentsByType documentType (mapper: JObject -> 'a option) ctx = task {
+    
+    let filter = Filters.empty |> Filters.byDocumentType documentType
+    let sort = Sort.empty |> Sort.by "dateAdded"
+    let! documents = getDocumentsForFilterAndSort filter sort ctx
+    
     return documents
             |> Seq.map mapper
             |> Seq.filter Option.isSome
@@ -270,12 +323,12 @@ let deleteDocument ctx id = task {
 let checkUniqueness documentType fieldName (fieldValue: MongoDB.Bson.BsonValue) allowedId ctx = task {
     let! db = Mongo.openDatabase ctx
     let filter = 
-        Mongo.Filters.empty
-        |> Mongo.Filters.byDocumentType documentType
-        |> Mongo.Filters.addEquals fieldName fieldValue
-        |> Mongo.Filters.notId allowedId
-        |> Mongo.Filters.build
-    let sort = Mongo.Sort.empty |> Mongo.Filters.build
+        Filters.empty
+        |> Filters.byDocumentType documentType
+        |> Filters.addEquals fieldName fieldValue
+        |> Filters.notId allowedId
+        |> Filters.build
+    let sort = Sort.empty |> Filters.build
 
     //let! documentCount = db |> Mongo.countDocuments filter
     let! documents = db |> Mongo.getDocuments filter sort 
@@ -289,18 +342,20 @@ let resetIndexes ctx = task {
 }
 
 let getIdForDocumentTypeAndSlug documentType slug ctx = task {
-    let! db = Mongo.openDatabase ctx
     let filter = 
-        Mongo.Filters.empty
-        |> Mongo.Filters.byDocumentType documentType
-        |> Mongo.Filters.addEquals "slug" slug
-        |> Mongo.Filters.build
-    let sort = Mongo.Sort.empty |> Mongo.Filters.build
+        Filters.empty
+        |> Filters.byDocumentType documentType
+        |> Filters.addEquals "slug" slug
 
-    let! documents = db |> Mongo.getDocuments filter sort
+    let! documents = getDocumentsForFilter filter ctx
 
     return documents
            |> Seq.tryHead
            |> Option.map (fun d -> JObj.getter<string> d "_id")
            |> Option.flatten
+}
+
+let getDistinctValues<'a> field filter ctx = task {
+    let! db = Mongo.openDatabase ctx
+    return! Mongo.getDistinctValues<'a> field (filter |> Filters.build) db
 }

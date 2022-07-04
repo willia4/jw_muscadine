@@ -25,7 +25,13 @@ let boolOptionValue key (formFields: IFormCollection) =
 
 let boolValue key (formFields: IFormCollection) =
     boolOptionValue key formFields |> Option.get
-    
+
+let stringListValue key (formFields: IFormCollection) =
+    if formFields |> containsKey key then
+        formFields.[key] |> Seq.toList
+    else
+        []
+
 let checkRequiredField getter isEmpty (formFields: IFormCollection) key prev = 
     match prev with
     | Ok resultValue -> 
@@ -40,3 +46,4 @@ let checkRequiredField getter isEmpty (formFields: IFormCollection) key prev =
 
 let checkRequiredStringField (formFields: IFormCollection) key prev = 
     checkRequiredField stringOptionValue System.String.IsNullOrWhiteSpace formFields key prev
+

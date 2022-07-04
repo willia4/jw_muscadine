@@ -398,6 +398,35 @@ let makeCheckboxInputRow label key (value: bool option) =
     let el = input attributes
     makeInputRow label el
 
+let makeTagsInputRow label key (allTags: string seq) (documentTags: string seq) =
+    let selectAttributes = [
+        _name key
+        _id key
+        _multiple
+        _size "10"
+    ]
+
+    let allTags = Seq.append allTags documentTags |> Seq.distinct |> Seq.sort |> Seq.toList
+    let tagIsSelected t = documentTags |> Seq.contains t
+
+    let el = 
+        div [ _class "tags-container" ] [
+            select selectAttributes (
+                allTags 
+                |> List.map (fun t -> 
+                    let attributes = 
+                        [ _value t ]
+                        |> Util.appendToListIf (tagIsSelected t) _selected
+
+                    option attributes [ encodedText t ]))
+
+            div [ _class "new-tag-container"] [
+                input [ _type "text"; _class "new-tag-field"; _id "new-tag-field"; _name "new-tag-field" ]
+                button [ _class "new-tag-button" ] [ encodedText "Add Tag"]
+            ]
+        ]
+    makeInputRow label el
+
 let _makeInputRowForFormElement (model: 'a option) (label: string) key =
     let (fieldType, req) = _modelFieldType<'a> key
     let label = if req = Required_ && fieldType <> CheckboxField_ then

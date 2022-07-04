@@ -79,10 +79,42 @@ function configureDragAndDrop() {
     }
 }
 
+function configureTags() {
+    function configureTagContainer(container) {
+        const listBox = container.getElementsByTagName("select")[0];
+        const textBox = container.getElementsByClassName("new-tag-field")[0];
+        const button = container.getElementsByClassName("new-tag-button")[0];
+
+        button.addEventListener("click", (event) => {
+            event.preventDefault();
+
+            let newTag = textBox.value;
+            if (typeof newTag !== "string" || newTag === "") return;
+            newTag = newTag.trim();
+
+            const existingTagNodes = Array.from(listBox.childNodes);
+            const existingTagNode = existingTagNodes.find(c => c.text === newTag);
+            if (existingTagNode) {
+                existingTagNode.selected = true;
+            } else {
+                listBox.add(new Option(newTag, newTag, true, true));
+            }
+
+            textBox.value = "";
+        });
+    }
+
+    const containers = document.getElementsByClassName("tags-container");
+    for (let i = 0; i < containers.length; i++) {
+        configureTagContainer(containers[i]);
+    }
+}
+
 (() => {
   if (document.addEventListener) {
       document.addEventListener("DOMContentLoaded", () => {
           configureDragAndDrop();
+          configureTags();
 
           const buttons = document.getElementsByClassName("delete-button");
     

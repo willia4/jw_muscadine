@@ -22,12 +22,28 @@ let appendSeqToList (a: 'a list) (b: 'a seq) =
 
     m (List.rev a) (b |> Seq.rev) |> List.rev
 
+let unwrapSeqOfOptions(s: seq<option<'a>>) =
+    if Seq.forall Option.isSome s then
+        Some (Seq.map Option.get s)
+    else
+        None
+
 let unwrapListOfOptions(s: List<option<'a>>) =
     if List.forall Option.isSome s then
         Some (List.map Option.get s)
     else
         None
 
+let mergeMaps (merger: 'v -> 'v -> 'v) (m1: Map<'k, 'v>) (m2: Map<'k, 'v>) =
+    m2
+    |> Map.fold (fun res k v ->
+        res 
+        |> Map.change k (fun otherV -> 
+            match otherV with
+            | Some otherV -> Some (merger v otherV)
+            | None -> Some v)
+      ) m1
+    
 let getFormString (ctx: HttpContext) (key: string) =
     if ctx.Request.Form.ContainsKey(key) then
         Some (string ctx.Request.Form.[key])

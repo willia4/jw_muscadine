@@ -72,6 +72,28 @@
     height: 100px;
 }
 
+.body-content form select {
+    width: 100%;
+    min-width: 100px;
+    min-height: 100px;
+}
+
+.body-content form div.tags-container {
+    display: flex;
+    flex-direction: column;
+}
+
+.body-content form div.tags-container div.new-tag-container {
+    display: flex;
+    flex-direction: row;
+    margin-top: 5px;
+}
+
+.body-content form #new-tag-field {
+    width: 65%;
+    margin-right: 15px;
+}
+
 .body-content .section-header {}
 
 .body-content .section-header a {

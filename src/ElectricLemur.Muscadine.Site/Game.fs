@@ -72,7 +72,7 @@ module Fields =
         )
     }
 
-let addEditView (g: Game option) =
+let addEditView (g: Game option) allTags documentTags =
 
     let pageTitle = match g with
                     | None -> "Add Game" 
@@ -103,6 +103,7 @@ let addEditView (g: Game option) =
                     makeTextRow Fields.slug
                     makeImageRow Fields.coverImagePaths
                     makecheckboxRow Fields.completed
+                    Items.makeTagsInputRow "Tags" Tag.formKey allTags documentTags
                     tr [] [
                         td [] []
                         td [] [ input [ _type "submit"; _value "Save" ] ]
@@ -184,8 +185,12 @@ let makeJObjectFromModel (g: Game) =
 
 
 let addHandler_get =
-    fun next (ctx: HttpContext) ->
-        htmlView (addEditView None) next ctx
+    fun next (ctx: HttpContext) -> task {
+        let! allTags = Tag.getExistingTags ctx
+
+        return! htmlView (addEditView None allTags []) next ctx
+    }
+
 
 let addHandler_post : HttpHandler = 
     fun next (ctx: HttpContext) -> task {
@@ -201,6 +206,8 @@ let addHandler_post : HttpHandler =
             | Ok g ->
                 let data = makeJObjectFromModel g
                 let! id = Database.insertDocument ctx data
+                do! Tag.saveTagsForForm documentType id Tag.formKey ctx
+
                 return! (redirectTo false $"/admin/game/%s{id}") next ctx
         | Error msg -> return! (setStatusCode 400 >=> text msg) next ctx
     }
@@ -210,7 +217,10 @@ let editHandler_get id =
         let! existing = Database.getDocumentById id ctx
         let existing = existing |> Option.map makeModelFromJObject
 
-        return! htmlView (addEditView existing) next ctx
+        let! allTags = Tag.getExistingTags ctx
+        let! documentTags = Tag.loadTagsForDocument documentType id ctx
+
+        return! htmlView (addEditView existing allTags documentTags) next ctx
     }
 
 let editHandler_post id : HttpHandler =
@@ -231,6 +241,8 @@ let editHandler_post id : HttpHandler =
                 | Ok g -> 
                     let data = makeJObjectFromModel g
                     do! Database.upsertDocument ctx data
+                    do! Tag.saveTagsForForm documentType g.Id Tag.formKey ctx
+
                     return! (redirectTo false $"/admin/game/%s{id}") next ctx
             | Error msg -> return! (setStatusCode 400 >=> text msg) next ctx
     }

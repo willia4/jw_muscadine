@@ -183,6 +183,7 @@ let main args =
         .AddGiraffe() |> ignore
 
     builder.Services
+        .AddMemoryCache()
         .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
         .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, fun options ->
             options.ExpireTimeSpan <- TimeSpan.FromDays(15)

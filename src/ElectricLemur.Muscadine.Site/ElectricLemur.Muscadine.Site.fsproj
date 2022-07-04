@@ -25,6 +25,7 @@
     <Compile Include="Login.fs" />
     <Compile Include="Database.fs" />
     <Compile Include="Image.fs" />
+    <Compile Include="Tag.fs" />
     <Compile Include="Items.fs" />
     <Compile Include="RequiredFields.fs" />
     <Compile Include="OptionalFields.fs" />
