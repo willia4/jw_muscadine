@@ -10,3 +10,5 @@
 *.userosscache
 *.sln.docstates
 .vs/
+
+.fake

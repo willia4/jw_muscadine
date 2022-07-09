@@ -10,9 +10,9 @@
       "type": "coreclr",
       "request": "launch",
       "preLaunchTask": "Build: ElectricLemur.Muscadine.Site.fsproj",
-      "program": "${workspaceFolder}/ElectricLemur.Muscadine.Site/bin/Debug/net6.0/ElectricLemur.Muscadine.Site.App.dll",
+      "program": "${workspaceFolder}/src/ElectricLemur.Muscadine.Site/bin/Debug/net6.0/ElectricLemur.Muscadine.Site.App.dll",
       "args": [],
-      "cwd": "${workspaceFolder}",
+      "cwd": "${workspaceFolder}/src/ElectricLemur.Muscadine.Site",
       "stopAtEntry": false,
       "_serverReadyAction": {
         "action": "openExternally",

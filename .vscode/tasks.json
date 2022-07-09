@@ -1,0 +1,41 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Build",
+			"type": "shell",
+			"command": "dotnet build ./ElectricLemur.Muscadine.sln",
+			"group": "build",
+			"presentation": {
+				"reveal": "always",
+				"panel": "shared"
+			}
+		},
+		{
+			"label": "Clean",
+			"type": "shell",
+			"command": "dotnet clean ./ElectricLemur.Muscadine.sln",
+			"group": "build",
+			"presentation": {
+				"reveal": "always",
+				"panel": "shared"
+			}
+		},
+		{
+			"label": "Clean and Build",
+			"group": "build",
+			"dependsOrder": "sequence",
+			"dependsOn": [ "Clean", "Build" ]
+		},
+		{
+			"label": "Restore",
+			"type": "shell",
+			"command": "dotnet restore ./ElectricLemur.Muscadine.sln",
+			"group": "build",
+			"presentation": {
+				"reveal": "always",
+				"panel": "shared"
+			}
+		},
+	]
+}

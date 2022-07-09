@@ -40,7 +40,9 @@
     <Content Include="appsettings.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="appsettings.Development.json" />
+    <Content Include="appsettings.Development.json">
+      <CopyToOutputDirectory Condition="Exists('$(MSBuildProjectDirectory)\appsettings.Development.json')">Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="wwwroot\css\admin.css">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
