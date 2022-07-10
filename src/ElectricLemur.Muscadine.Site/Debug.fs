@@ -4,24 +4,40 @@ open Microsoft.AspNetCore.Http
 open Giraffe
 open Giraffe.ViewEngine
 
+let private writeJObjectArray (objects: Newtonsoft.Json.Linq.JObject seq) (ctx: HttpContext) = task {
+    use writer = new System.IO.StreamWriter(ctx.Response.Body)
+    do! writer.WriteLineAsync("[")
+    let mutable comma = ""
+    for obj in objects do
+        let line = $"%s{comma} %s{obj.ToString()}"
+        do! writer.WriteLineAsync(line)
+        comma <- ","
+
+    do! writer.WriteLineAsync("]")
+}
+
 let allDocumentsHandler: HttpHandler =
-    fun next (ctx: HttpContext) -> task {
+    fun next ctx -> task {
         let! documents = Database.getAllDocuments ctx
-        use writer = new System.IO.StreamWriter(ctx.Response.Body)
+        do! writeJObjectArray documents ctx
 
-        do! writer.WriteLineAsync("[")
-        let mutable comma = ""
-
-        for doc in documents do
-            let line = $"%s{comma} %s{doc.ToString()}"
-            do! writer.WriteLineAsync(line)
-            comma <- ", "
-
-        do! writer.WriteLineAsync("]")
         return Some ctx
     }
 
-let resetDatabase: HttpHandler = 
+let orphanedTagsGetHandler: HttpHandler =
+    fun next ctx -> task {
+        let! tags = Tag.orphanedTagsAsJObjects ctx
+        do! writeJObjectArray tags ctx
+        return Some ctx
+    }
+
+let orphanedTagsDeleteHandler: HttpHandler =
+    fun next ctx -> task {
+        do! Tag.deleteOrphanedTags ctx
+        return Some ctx
+    }
+
+let resetDatabase: HttpHandler =
         htmlView (html [] [
             script [ _type "application/javascript" ] [
                 rawText """

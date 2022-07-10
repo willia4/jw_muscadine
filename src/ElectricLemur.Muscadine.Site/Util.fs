@@ -276,4 +276,13 @@ let taskOptionMap (f: 'a -> 'b) (t: System.Threading.Tasks.Task<Option<'a>>) = t
         | None -> None
 }
 
+let seqAsyncFilter (predicate: 'a -> System.Threading.Tasks.Task<bool>) (list: seq<'a>) = task {
+    let res = new System.Collections.Generic.List<'a>()
+    for item in list do
+        let! allowed = predicate item
+        if (allowed) then
+            res.Add(item)
+    return (System.Collections.Immutable.ImmutableList.Empty.AddRange(res)) :> seq<'a>
+}
+
 let emptyDiv = Giraffe.ViewEngine.HtmlElements.div [ Giraffe.ViewEngine.Attributes._style "display: none"] []

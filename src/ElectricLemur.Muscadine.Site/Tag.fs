@@ -95,13 +95,12 @@ let getExistingTags ctx = task {
     return tags |> Seq.toList
 }
 
-
 let getExistingTagsForDocumentType itemDocumentType ctx = task {
-    let filter = 
-        Database.Filters.empty 
+    let filter =
+        Database.Filters.empty
         |> Database.Filters.addEquals Database.documentTypeField documentType
         |> Database.Filters.addEquals "itemDocumentType" itemDocumentType
-        
+
     let! tags = Database.getDistinctValues<string> "tag" filter ctx
     return tags |> Seq.sort |> Seq.toList
 }
@@ -109,4 +108,25 @@ let getExistingTagsForDocumentType itemDocumentType ctx = task {
 let saveTagsForForm itemDocumentType itemId key ctx = task {
     let tags = FormFields.stringListValue key (ctx |> FormFields.fromContext)
     do! setTagsForDocument itemDocumentType itemId tags ctx
+}
+
+let private getOrphanedTags ctx = task {
+    let mapper x =
+        try
+            Some (JObjectToTagAssignment x)
+        with
+        | _ -> None
+
+    let! allTags = Database.getDocumentsByType documentType mapper ctx
+    return! (allTags |> Util.seqAsyncFilter (fun t -> task {
+        let! item = Database.getDocumentByTypeAndId t.ItemDocumentType t.ItemId ctx
+        return (item |> Option.isNone)
+    }))
+}
+
+let orphanedTagsAsJObjects ctx = getOrphanedTags ctx |> Util.taskSeqMap tagAssignmentToJObject
+let deleteOrphanedTags ctx = task {
+    let! tags = getOrphanedTags ctx
+    for tag in tags do
+        do! Database.deleteDocument ctx tag.Id
 }

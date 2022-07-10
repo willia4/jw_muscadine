@@ -121,6 +121,8 @@ let webApp =
 
                     route "/debug/all" >=> Login.requiresAdminRedirect "/debug/all" >=> Debug.allDocumentsHandler
                     route "/debug/reset" >=> Login.requiresAdminAPICall >=> Debug.resetDatabase
+                    route "/debug/orphaned-tags" >=> Login.requiresAdminAPICall >=> Debug.orphanedTagsGetHandler
+                    route "/debug/orphaned-tags/delete" >=> Login.requiresAdminAPICall >=> Debug.orphanedTagsDeleteHandler
 
                     routef "/game/%s/microblog" (fun id -> Microblog.microblogs_get Game.documentType id)
                     routef "/book/%s/microblog" (fun id -> Microblog.microblogs_get Book.documentType id)
