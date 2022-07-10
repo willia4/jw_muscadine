@@ -37,14 +37,14 @@ let private JObjectToTagAssignment obj =
         Tag = getter "tag"
     }
 
-let private loadTagAssignmentsForDocuments (itemDocumentType: string) ids ctx =
-    AssociatedItem.loadAssociatedItemsForDocuments documentType itemDocumentType ids JObjectToTagAssignment ctx
+let private loadTagAssignmentsForDocuments (itemDocumentType: string) itemIds ctx =
+    AssociatedItem.loadAssociatedItemsForDocuments documentType itemDocumentType itemIds JObjectToTagAssignment ctx
 
-let private loadTagAssignmentsForDocument itemDocumentType id ctx =
-    loadTagAssignmentsForDocuments itemDocumentType [id] ctx
+let private loadTagAssignmentsForDocument itemDocumentType itemId ctx =
+    loadTagAssignmentsForDocuments itemDocumentType [itemId] ctx
 
-let loadTagsForDocuments itemDocumentType ids ctx =
-    AssociatedItem.loadAssociatedItemMapForDocuments documentType itemDocumentType ids JObjectToTagAssignment (fun i -> i.Id) (fun i -> i.Tag)ctx
+let loadTagsForDocuments itemDocumentType itemIds ctx =
+    AssociatedItem.loadAssociatedItemMapForDocuments documentType itemDocumentType itemIds JObjectToTagAssignment (fun i -> i.ItemId) (fun i -> i.Tag) ctx
 
 let loadTagsForDocument itemDocumentType itemId ctx = task {
     let! tags = loadTagsForDocuments itemDocumentType [itemId] ctx

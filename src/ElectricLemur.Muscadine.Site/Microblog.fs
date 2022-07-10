@@ -58,14 +58,14 @@ let private microblogToJObject (microblog: Microblog) =
   |> JObj.setValue "id" microblog.Id
   |> JObj.setValue "text" microblog.Text
 
-let private loadMicroblogAssignmentsForDocuments itemDocumentType ids ctx =
-  AssociatedItem.loadAssociatedItemsForDocuments documentType itemDocumentType ids JObjectToMicroblogAssignment ctx
+let private loadMicroblogAssignmentsForDocuments itemDocumentType itemIds ctx =
+  AssociatedItem.loadAssociatedItemsForDocuments documentType itemDocumentType itemIds JObjectToMicroblogAssignment ctx
 
-let private loadMicroblogAssignmentsForDocument itemDocumentType id ctx =
-  loadMicroblogAssignmentsForDocuments itemDocumentType [ id ] ctx
+let private loadMicroblogAssignmentsForDocument itemDocumentType itemId ctx =
+  loadMicroblogAssignmentsForDocuments itemDocumentType [ itemId ] ctx
 
-let loadMicroblogsForDocuments itemDocumentType ids ctx = task {
-  let! r = AssociatedItem.loadAssociatedItemMapForDocuments documentType itemDocumentType ids JObjectToMicroblogAssignment (fun i -> i.ItemId) MicroblogAssignmentToMicroblog ctx
+let loadMicroblogsForDocuments itemDocumentType itemIds ctx = task {
+  let! r = AssociatedItem.loadAssociatedItemMapForDocuments documentType itemDocumentType itemIds JObjectToMicroblogAssignment (fun i -> i.ItemId) MicroblogAssignmentToMicroblog ctx
 
   return r
     |> Map.map (fun _ blogs -> blogs |> sortMicroblogs)
