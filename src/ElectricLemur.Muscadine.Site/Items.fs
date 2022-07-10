@@ -397,8 +397,19 @@ let makeImageInputRow label key pathToDisplay =
                 ]
     makeInputRow label el
 
-let makeTextInputRow label key value = 
-    let el = input [ 
+let makeTextAreaInputRow label key value =
+    let el =
+        textarea [
+            _id key
+            _name key
+            _rows "5"
+            _cols "30"
+        ] [ encodedText (value |> Option.defaultValue "")]
+
+    makeInputRow label el
+
+let makeTextInputRow label key value =
+    let el = input [
         _type "text"
         _id key
         _name key

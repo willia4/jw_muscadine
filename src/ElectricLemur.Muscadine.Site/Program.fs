@@ -117,6 +117,8 @@ let webApp =
                     route "/admin/project/_new" >=> Login.requiresAdminRedirect "/admin/project/_new" >=> Project.addHandler_get
                     routef "/admin/project/%s" (fun id -> Login.requiresAdminRedirect $"/admin/project/%s{id} ">=> Project.editHandler_get id)
 
+                    routef "/admin/microblog/%s" (fun id -> Login.requiresAdminRedirect $"/admin/microblog/%s{id}" >=> Microblog.microblogs_edit_get id)
+
                     route "/debug/all" >=> Login.requiresAdminRedirect "/debug/all" >=> Debug.allDocumentsHandler
                     route "/debug/reset" >=> Login.requiresAdminAPICall >=> Debug.resetDatabase
 
@@ -142,6 +144,7 @@ let webApp =
                     route "/admin/project/_new" >=> Login.requiresAdminRedirect "/admin/project/_new" >=> Project.addHandler_post
                     routef "/admin/project/%s" (fun id -> Login.requiresAdminRedirect $"/admin/project/%s{id}" >=> Project.editHandler_post id)
 
+                    routef "/admin/microblog/%s" (fun id -> Login.requiresAdminRedirect $"/admin/microblog/%s{id}" >=> Microblog.microblogs_edit_post id)
 
                 ]
             DELETE >=>

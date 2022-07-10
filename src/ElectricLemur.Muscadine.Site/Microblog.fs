@@ -168,3 +168,54 @@ let microblogs_delete itemDocumentType itemId blogId : HttpHandler =
     do! deleteMicroblogFromItem itemDocumentType itemId blogId ctx
     return! setStatusCode 200 next ctx
   }
+
+let private editView (microblog: MicroblogAssignment) =
+  let pageTitle = "Edit Microblog"
+  Items.layout pageTitle Map.empty [
+    div [ _class "page-title" ] [ encodedText pageTitle ]
+    form [ _name "form"; _method "post" ] [
+      table [ ] [
+        Items.makeInputRow "Timestamp" (encodedText (microblog.DateAdded.ToString("g")))
+        Items.makeTextAreaInputRow "Text" "text" (Some microblog.Text)
+
+        tr [] [
+          td [] []
+          td [] [ input [ _type "submit"; _value "Save" ] ]
+        ]
+      ]
+    ]
+  ]
+
+let microblogs_edit_get id : HttpHandler =
+  fun next ctx -> task {
+    let! existing =
+      Database.getDocumentByTypeAndId documentType id ctx
+      |> Util.taskOptionMap JObjectToMicroblogAssignment
+
+    return! match existing with
+            | None -> (setStatusCode 404 >=> text "Microblog not found") next ctx
+            | Some existing -> htmlView (editView existing) next ctx
+
+  }
+
+let microblogs_edit_post id : HttpHandler =
+  fun next ctx -> task {
+    let! existing =
+      Database.getDocumentByTypeAndId documentType id ctx
+      |> Util.taskOptionMap JObjectToMicroblogAssignment
+
+    return! match existing with
+            | None -> (setStatusCode 404 >=> text "Microblog not found") next ctx
+            | Some existing ->
+                let newText = Util.getFormString ctx "text"
+                match newText with
+                | None -> (setStatusCode 400 >=> text "Invalid request; missing text") next ctx
+                | Some newText ->
+                    let updatedRecord = { existing with Text = newText }
+                    let updatedRecord = updatedRecord |> microblogAssignmentToJObject
+                    task {
+                      do! Database.upsertDocument ctx updatedRecord
+                      return! (redirectTo false $"/admin/microblog/%s{id}") next ctx
+                    }
+
+  }

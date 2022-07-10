@@ -174,7 +174,11 @@ function configureMicroblogs() {
             let tr = document.createElement("tr");
     
             const d = new Date(data._dateAdded);
-            tr.appendChild(document.createElement("td")).appendChild(document.createTextNode(d.toLocaleString()));
+            const link = document.createElement("a");
+            link.appendChild(document.createTextNode(d.toLocaleString()));
+            link.setAttribute("href", "/admin/microblog/" + data.id);
+
+            tr.appendChild(link);
             tr.appendChild(document.createElement("td")).appendChild(document.createTextNode(data.text));
     
             const deleteButton = document.createElement("button");
