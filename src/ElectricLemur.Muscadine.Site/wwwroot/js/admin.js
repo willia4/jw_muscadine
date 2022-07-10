@@ -119,14 +119,28 @@ function configureMicroblogs() {
         textBox.rows = 5;
         textBox.cols = 30;
 
-        const addButton = newMicroblogContainer.appendChild(document.createElement("button"));
+        const addButtonContainer = newMicroblogContainer.appendChild(document.createElement("div"));
+        addButtonContainer.classList.add("add-button-container");
+
+        const addButton = addButtonContainer.appendChild(document.createElement("button"));
         addButton.appendChild(document.createTextNode("Add"));
         addButton.disabled = true;
+
+        const characterCount =  addButtonContainer.appendChild(document.createElement("span"));
+        function setCharacterCount(count) {
+            if (characterCount.childNodes.length) {
+                characterCount.removeChild(characterCount.childNodes[0]);
+            }
+            characterCount.appendChild(document.createTextNode("" + count));
+        }
+        setCharacterCount(0);
 
         textBox.addEventListener("input", (event) => {
             const v = textBox.value;
             const enableButton = typeof(v) === "string" && v.length > 0;
             addButton.disabled = !enableButton;
+
+            setCharacterCount(!enableButton ? 0 : v.length);
         });
 
         addButton.addEventListener("click", async (event) => {

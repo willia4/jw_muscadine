@@ -127,6 +127,15 @@
     height: 25px;
 }
 
+.body-content div.microblog-container div.new-microblog-container .add-button-container {
+    display: flex;
+    flex-direction: column;
+}
+
+.body-content div.microblog-container div.new-microblog-container span {
+    font-size: 80%;
+}
+
 .body-content div.microblog-container th {
     text-align: left;
 }
