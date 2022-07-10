@@ -84,7 +84,7 @@ let addEditView (b: Book option) allTags documentTags =
         Items.makeCheckboxInputRow (RequiredFields.label ff) (RequiredFields.key ff) v
 
     let makeImageRow (ff: OptionalFields.OptionalFieldDescriptor<Book, Image.ImagePaths>) =
-        let v = b 
+        let v = b
                 |> Option.map (OptionalFields.modelGetter ff) 
                 |> Option.flatten
                 |> Option.map (fun paths -> paths.Size512)
@@ -262,6 +262,7 @@ let deleteHandler_delete id =
             Util.deleteRelativePathIfExists existingCoverImage.Size64 ctx
         | None -> ()
 
+        do! Tag.clearTagsForDocument documentType id ctx
         do! Microblog.deleteAllMicroblogsFromItem documentType id ctx
         do! Database.deleteDocument ctx id
         return! setStatusCode 200 next ctx

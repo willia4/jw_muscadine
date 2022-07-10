@@ -261,6 +261,7 @@ let deleteHandler_delete id =
             Util.deleteRelativePathIfExists existingCoverImage.Size64 ctx
         | None -> ()
 
+        do! Tag.clearTagsForDocument documentType id ctx
         do! Microblog.deleteAllMicroblogsFromItem documentType id ctx
         do! Database.deleteDocument ctx id
         return! setStatusCode 200 next ctx
