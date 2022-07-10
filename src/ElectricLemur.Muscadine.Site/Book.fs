@@ -70,7 +70,12 @@ let addEditView (b: Book option) allTags documentTags =
                     | None -> "Add Book" 
                     | Some b-> $"Edit Book %s{b.Title}"
 
-    let makeTextRow ff = 
+    let pageData =
+        match b with
+        | Some b -> Map.ofList [ ("id", Items.pageDataType.String b.Id); ("slug", Items.pageDataType.String  "book")]
+        | None -> Map.empty
+
+    let makeTextRow ff =
         let v = b |> Option.map (RequiredFields.modelGetter ff) 
         Items.makeTextInputRow (RequiredFields.label ff) (RequiredFields.key ff) v
 
@@ -86,7 +91,7 @@ let addEditView (b: Book option) allTags documentTags =
 
         Items.makeImageInputRow (OptionalFields.label ff) (OptionalFields.key ff) v
 
-    Items.layout pageTitle [
+    Items.layout pageTitle pageData [
         div [ _class "page-title" ] [ encodedText pageTitle ]
         form [ _name "book-form"; _method "post"; _enctype "multipart/form-data" ] [
                 table [] [
@@ -103,6 +108,11 @@ let addEditView (b: Book option) allTags documentTags =
                     ]
                 ]
             ]
+
+        (match b with
+        | None -> Util.emptyDiv
+        | Some _ ->
+            div [ _class "microblog-container section" ] [])
     ]
 
 let validateModel (id: string) (g: Book) ctx = task {
@@ -252,6 +262,7 @@ let deleteHandler_delete id =
             Util.deleteRelativePathIfExists existingCoverImage.Size64 ctx
         | None -> ()
 
+        do! Microblog.deleteAllMicroblogsFromItem documentType id ctx
         do! Database.deleteDocument ctx id
         return! setStatusCode 200 next ctx
     }

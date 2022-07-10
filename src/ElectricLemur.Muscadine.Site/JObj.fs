@@ -61,3 +61,9 @@ let setOptionalValue<'a> (key: string) (v: 'a option) (obj: JObject) =
     match v with 
     | None -> obj
     | Some v -> setValue key v obj
+
+let parseString (s: string) =
+    try
+        Ok (JObject.Parse(s))
+    with
+    | ex -> Error ex.Message

@@ -1,7 +1,7 @@
 ﻿module Tag
 open ElectricLemur.Muscadine.Site
 open Microsoft.AspNetCore.Http
-open Giraffe 
+open Giraffe
 open Microsoft.Extensions.Caching.Memory
 
 type TaggedItem<'a> = {
@@ -19,83 +19,40 @@ type private TagAssignment = {
     Tag: string
 }
 
-let private tagAssignmentToJObject itemDocumentType a = 
+let private tagAssignmentToJObject a =
     new Newtonsoft.Json.Linq.JObject()
     |> JObj.setValue Database.idField a.Id
     |> JObj.setValue Database.documentTypeField documentType
-    |> JObj.setValue "itemDocumentType" itemDocumentType
-    |> JObj.setValue "itemId" a.ItemId
+    |> JObj.setValue AssociatedItem.itemDocumentTypeField a.ItemDocumentType
+    |> JObj.setValue AssociatedItem.itemIdField a.ItemId
     |> JObj.setValue "tag" a.Tag
 
-let private JObjectToTagAssignment obj = 
+let private JObjectToTagAssignment obj =
     let getter k =JObj.getter<string> obj k |> Option.get
 
     {
         Id = getter Database.idField
-        ItemId = getter "itemId"
-        ItemDocumentType = getter "itemDocumentType"
+        ItemId = getter AssociatedItem.itemIdField
+        ItemDocumentType = getter AssociatedItem.itemDocumentTypeField
         Tag = getter "tag"
     }
 
-let private loadTagAssignmentsForDocuments (itemDocumentType: string) ids ctx = task {
-    let loadTagsForChunk (ids: string seq) = task {
-        let filter = 
-            ids 
-            |> Seq.fold (fun filter id -> filter |> Database.Filters.addIn "itemId" id) Database.Filters.empty
-        
-        let filter = 
-            filter 
-            |> Database.Filters.addEquals Database.documentTypeField documentType
-            |> Database.Filters.addEquals "itemDocumentType" itemDocumentType
+let private loadTagAssignmentsForDocuments (itemDocumentType: string) ids ctx =
+    AssociatedItem.loadAssociatedItemsForDocuments documentType itemDocumentType ids JObjectToTagAssignment ctx
 
-        let! tagAssignments = Database.getDocumentsForFilter filter ctx
+let private loadTagAssignmentsForDocument itemDocumentType id ctx =
+    loadTagAssignmentsForDocuments itemDocumentType [id] ctx
 
-        return tagAssignments 
-            |> Seq.map JObjectToTagAssignment
-    }
-
-    let mutable loadedAssignments = List.empty
-    // Mongo docs say to only do "tens" of items for "in" queries, so let's set a reasonable limit of 30
-    let chunks = ids |> Seq.chunkBySize 30
-    for chunk in chunks do
-        let! tags = loadTagsForChunk chunk
-        loadedAssignments <- List.append loadedAssignments (tags |> Seq.toList)
-    
-    return loadedAssignments
-}
-
-let private loadTagAssignmentsForDocument itemDocumentType id ctx = task {
-    return! loadTagAssignmentsForDocuments itemDocumentType [id] ctx
-}
-
-let loadTagsForDocuments itemDocumentType ids ctx = task {
-    let! assignments = loadTagAssignmentsForDocuments itemDocumentType ids ctx
-
-    let mapItemIdToTags = 
-        assignments 
-        |> List.fold (fun m a -> 
-            m |> Map.change a.ItemId (fun tags -> 
-                match tags with
-                | Some tags -> Some (List.append tags [ a.Tag ] |> List.distinct)
-                | None -> Some [ a.Tag ]
-            )) Map.empty
-
-    return ids
-        |> Seq.fold (fun m id -> 
-            match m |> Map.containsKey id with 
-            | true -> m
-            | false -> Map.add id [] m
-        ) mapItemIdToTags
-
-}
+let loadTagsForDocuments itemDocumentType ids ctx =
+    AssociatedItem.loadAssociatedItemMapForDocuments documentType itemDocumentType ids JObjectToTagAssignment (fun i -> i.Id) (fun i -> i.Tag)ctx
 
 let loadTagsForDocument itemDocumentType itemId ctx = task {
     let! tags = loadTagsForDocuments itemDocumentType [itemId] ctx
-    return tags 
-           |> Map.tryFind itemId
-           |> function
-              | Some tags -> tags
-              | None -> []
+    return tags
+            |> Map.tryFind itemId
+            |> function
+                | Some tags -> tags
+                | None -> []
 }
 
 let setTagsForDocument itemDocumentType itemId (tags: string seq) ctx = task {
@@ -116,7 +73,7 @@ let setTagsForDocument itemDocumentType itemId (tags: string seq) ctx = task {
         do! Database.deleteDocument ctx i.Id
 
     for i in toAdd do
-        let! _ = Database.insertDocument ctx (tagAssignmentToJObject itemDocumentType i)
+        let! _ = Database.insertDocument ctx (tagAssignmentToJObject i)
         ()
 
     return ()
@@ -132,7 +89,7 @@ let getExistingTags ctx = task {
     let filter = 
         Database.Filters.empty 
         |> Database.Filters.addEquals Database.documentTypeField documentType
-            
+
     let! tags = Database.getDistinctValues<string> "tag" filter ctx
 
     return tags |> Seq.toList

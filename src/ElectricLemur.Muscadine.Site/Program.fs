@@ -120,22 +120,38 @@ let webApp =
                     route "/debug/all" >=> Login.requiresAdminRedirect "/debug/all" >=> Debug.allDocumentsHandler
                     route "/debug/reset" >=> Login.requiresAdminAPICall >=> Debug.resetDatabase
 
+                    routef "/game/%s/microblog" (fun id -> Microblog.microblogs_get Game.documentType id)
+                    routef "/book/%s/microblog" (fun id -> Microblog.microblogs_get Book.documentType id)
+                    routef "/project/%s/microblog" (fun id -> Microblog.microblogs_get Project.documentType id)
+
                     routexp "/images/(.*?)/(.*?)/(.*?)/(.*)" Image.imageRouter
                 ]
             POST >=>
                 choose [
                     route "/admin/login" >=> Login.postHandler "/admin/login" "/admin" (Login.defaultCredentialValidator (Login.getExpectedAdminCredentials ctx))
 
+                    routef "/admin/game/%s/microblog" (fun id -> Login.requiresAdminAPICall >=> Microblog.addHandler_post Game.documentType id)
+                    routef "/admin/book/%s/microblog" (fun id -> Login.requiresAdminAPICall >=> Microblog.addHandler_post Book.documentType id)
+                    routef "/admin/project/%s/microblog" (fun id -> Login.requiresAdminAPICall >=> Microblog.addHandler_post Project.documentType id)
+
                     route "/admin/game/_new" >=> Login.requiresAdminRedirect "/admin/game/_new" >=> Game.addHandler_post
+
                     routef "/admin/game/%s" (fun id -> Login.requiresAdminRedirect $"/admin/game/%s{id}" >=> Game.editHandler_post id)
                     route "/admin/book/_new" >=> Login.requiresAdminRedirect "/admin/book/_new" >=> Book.addHandler_post
                     routef "/admin/book/%s" (fun id -> Login.requiresAdminRedirect $"/admin/book/%s{id}" >=> Book.editHandler_post id)
                     route "/admin/project/_new" >=> Login.requiresAdminRedirect "/admin/project/_new" >=> Project.addHandler_post
                     routef "/admin/project/%s" (fun id -> Login.requiresAdminRedirect $"/admin/project/%s{id}" >=> Project.editHandler_post id)
+
+
                 ]
             DELETE >=>
                 choose [
                     route "/debug/reset" >=> Login.requiresAdminAPICall >=> Debug.resetDatabaseDeleteHandler
+
+                    routef "/admin/game/%s/microblog/%s" (fun (itemId, blogId) -> Login.requiresAdminAPICall >=> Microblog.microblogs_delete Game.documentType itemId blogId)
+                    routef "/admin/book/%s/microblog/%s" (fun (itemId, blogId) -> Login.requiresAdminAPICall >=> Microblog.microblogs_delete Book.documentType itemId blogId)
+                    routef "/admin/project/%s/microblog/%s" (fun (itemId, blogId) -> Login.requiresAdminAPICall >=> Microblog.microblogs_delete Project.documentType itemId blogId)
+
                     routef "/admin/game/%s" (fun id -> Login.requiresAdminRedirect $"/admin/game/%s{id}" >=> Game.deleteHandler_delete id)
                     routef "/admin/book/%s" (fun id -> Login.requiresAdminRedirect $"/admin/book/%s{id}" >=> Book.deleteHandler_delete id)
                     routef "/admin/project/%s" (fun id -> Login.requiresAdminRedirect $"/admin/project/%s{id}" >=> Project.deleteHandler_delete id)

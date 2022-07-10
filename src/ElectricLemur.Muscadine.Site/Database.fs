@@ -305,6 +305,16 @@ let getDocumentById id ctx = task {
     return! db |> Mongo.getDocument id
 }
 
+let getDocumentByTypeAndId documentType id ctx = task {
+    let filter =
+        Filters.empty
+        |> Filters.byDocumentType documentType
+        |> Filters.byId id
+
+    let! documents = getDocumentsForFilter filter ctx
+    return documents |> Seq.tryHead
+}
+
 let insertDocument ctx (document: JObject) = task {
     let! db = Mongo.openDatabase ctx
     return! Mongo.insertDocument document db

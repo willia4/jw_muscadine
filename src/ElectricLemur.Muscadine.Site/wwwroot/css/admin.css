@@ -112,6 +112,29 @@
     margin-right: 15px;
 }
 
+.body-content div.microblog-container div.new-microblog-container {
+    display: flex;
+    flex-direction: row;
+    margin-top: 5px;
+}
+
+.body-content div.microblog-container div.new-microblog-container textarea {
+    margin-right: 15px;
+    margin-bottom: 15px;
+}
+
+.body-content div.microblog-container div.new-microblog-container button {
+    height: 25px;
+}
+
+.body-content div.microblog-container th {
+    text-align: left;
+}
+
+.body-content div.microblog-container td {
+    padding-right: 15px;
+}
+
 .body-content .section-header {}
 
 .body-content .section-header a {
@@ -119,7 +142,6 @@
 }
 
 .body-content .section-header span {
-    font-weight: bold;
     font-size: 20pt;
 }
 

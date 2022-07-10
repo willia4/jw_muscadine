@@ -331,11 +331,33 @@ let performValidationAsync (f: 'a -> Task<Result<'a, string>>) (prev: Result<'a,
         return! f g
     }
 
-let layout pageTitle content =
+type pageDataType =
+    | String of value: string
+    | Int of value: int
+    | Float of value: float
+
+let layout pageTitle pageData content =
+    let makePageDataScript =
+        let sb = new System.Text.StringBuilder()
+        let sb = sb.AppendLine("window.pageData = {};")
+
+        let sb =
+            pageData
+            |> Map.fold (fun (sb: System.Text.StringBuilder) k v ->
+
+                let sb = sb.Append($"window.pageData[\"%s{k}\"] = ")
+                let sb = sb.Append(match v with
+                                   | String s -> $"\"%s{s}\""
+                                   | Int i -> $"%d{i}"
+                                   | Float f -> $"%f{f}")
+                sb.AppendLine(";")) sb
+        sb.ToString()
+
     html [] [
         head [] [
             title [] [ encodedText pageTitle ]
             link [ (_rel "stylesheet"); (_type "text/css"); (_href "/css/admin.css") ]
+            script [] [ rawText makePageDataScript ]
             script [ _src "/js/admin.js" ] []
         ]
         body [] [

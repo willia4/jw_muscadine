@@ -32,10 +32,8 @@
 
 function configureDragAndDrop() {
 
-    const containers = document.getElementsByClassName("image-input");
-    for (let i = 0; i < containers.length; i++) {
-        const container = containers[i];
-
+    const containers = Array.from(document.getElementsByClassName("image-input"));
+    for (const container of containers) {
         container.addEventListener("dragenter", (event) => {
             container.classList.add("dragging");
         });
@@ -104,10 +102,113 @@ function configureTags() {
         });
     }
 
-    const containers = document.getElementsByClassName("tags-container");
-    for (let i = 0; i < containers.length; i++) {
-        configureTagContainer(containers[i]);
+    const containers = Array.from(document.getElementsByClassName("tags-container"));
+    containers.forEach(configureTagContainer)
+}
+
+function configureMicroblogs() {
+    function configureMicroblogContainer(container) {
+        const header = container.appendChild(document.createElement("div"));
+        header.classList.add("section-header");
+        header.appendChild(document.createElement("span")).appendChild(document.createTextNode("Microblogs"));
+
+        const newMicroblogContainer = container.appendChild(document.createElement("div"));
+        newMicroblogContainer.classList.add("new-microblog-container");
+
+        const textBox = newMicroblogContainer.appendChild(document.createElement("textarea"));
+        textBox.rows = 5;
+        textBox.cols = 30;
+
+        const addButton = newMicroblogContainer.appendChild(document.createElement("button"));
+        addButton.appendChild(document.createTextNode("Add"));
+        addButton.disabled = true;
+
+        textBox.addEventListener("input", (event) => {
+            const v = textBox.value;
+            const enableButton = typeof(v) === "string" && v.length > 0;
+            addButton.disabled = !enableButton;
+        });
+
+        addButton.addEventListener("click", async (event) => {
+            event.preventDefault();
+            const postBody = {
+                "text": textBox.value
+            };
+            let url = "/admin/" + pageData.slug +"/" + pageData.id + "/microblog";
+
+            const response = await fetch(url, {
+                method: "POST",
+                mode: "same-origin",
+                cache: "no-cache",
+                credentials: "same-origin",
+                body: JSON.stringify(postBody)
+            });
+
+            const allContainerNodes = Array.from(container.childNodes);
+            for(const c of allContainerNodes) { container.removeChild(c); }
+            configureMicroblogContainer(container);
+        });
+
+        let existingTable = container.appendChild(document.createElement("table"));
+
+        let existingTableHeader = existingTable.appendChild(document.createElement("tr"));
+        existingTableHeader.appendChild(document.createElement("th")).appendChild(document.createTextNode("Date"));
+        existingTableHeader.appendChild(document.createElement("th")).appendChild(document.createTextNode("Text"));
+        existingTableHeader.appendChild(document.createElement("th"));
+
+        function makeTableRow(data) {
+            let tr = document.createElement("tr");
+    
+            const d = new Date(data._dateAdded);
+            tr.appendChild(document.createElement("td")).appendChild(document.createTextNode(d.toLocaleString()));
+            tr.appendChild(document.createElement("td")).appendChild(document.createTextNode(data.text));
+    
+            const deleteButton = document.createElement("button");
+            deleteButton.appendChild(document.createTextNode("Delete"));
+    
+            tr.appendChild(document.createElement("td")).appendChild(deleteButton);
+    
+            deleteButton.addEventListener("click", async (event) => {
+                event.preventDefault();
+    
+                const answer = confirm("Delete microblog with text \"" + data.text + "\"?");
+                if (!answer) return;
+    
+                const url = "/admin/" + pageData.slug + "/" + pageData.id + "/microblog/" + data.id;
+                const response = await fetch(url, {
+                    method: "DELETE",
+                    mode: "same-origin",
+                    cache: "no-cache",
+                    credentials: "same-origin"
+                });
+    
+                if (!response || response.status !== 200) {
+                    alert("Could not delete microblog; response was unsuccessful");
+                    return;
+                }
+    
+                existingTable.removeChild(tr);
+            });
+    
+            return tr;
+        }
+
+        let getUrl = "/" + pageData.slug +"/" + pageData.id + "/microblog";
+        fetch(getUrl).then(async (response) => {
+            if (response.status !== 200) {
+                console.error('Got bad response when retrieving microblogs');
+                return;
+            }
+
+            const data = await response.json();
+            for (const row of data.map(makeTableRow)) {
+                existingTable.appendChild(row)
+            }
+        });
     }
+
+    const containers = Array.from(document.getElementsByClassName("microblog-container"));
+    containers.forEach(configureMicroblogContainer)
 }
 
 (() => {
@@ -115,6 +216,7 @@ function configureTags() {
       document.addEventListener("DOMContentLoaded", () => {
           configureDragAndDrop();
           configureTags();
+          configureMicroblogs();
 
           const buttons = document.getElementsByClassName("delete-button");
     

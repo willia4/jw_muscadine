@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <AssemblyName>ElectricLemur.Muscadine.Site.App</AssemblyName>
@@ -25,7 +25,9 @@
     <Compile Include="Login.fs" />
     <Compile Include="Database.fs" />
     <Compile Include="Image.fs" />
+    <Compile Include="AssociatedItem.fs" />
     <Compile Include="Tag.fs" />
+    <Compile Include="Microblog.fs" />
     <Compile Include="Items.fs" />
     <Compile Include="RequiredFields.fs" />
     <Compile Include="OptionalFields.fs" />
