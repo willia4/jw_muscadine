@@ -31,32 +31,12 @@ type Message =
 module Views =
     open Giraffe.ViewEngine
 
-    let layout (content: XmlNode list) =
-        html [] [
-            head [] [
-                title []  [ encodedText "ElectricLemur.Muscadine.Site" ]
-                link [ _rel  "stylesheet"
-                       _type "text/css"
-                       _href "/css/main.css" ]
-            ]
-            body [] content
-        ]
-
-    let partial () =
-        h1 [] [ encodedText "ElectricLemur.Muscadine.Site" ]
-
-    let index (model : Message) =
-        [
-            partial()
-            p [] [ encodedText model.Text ]
-        ] |> layout
-
     let underConstruction =
         html [] [
             head [] [
                 meta [ (_httpEquiv "Content-Type"); (_content "text/html; charset=utf-8") ]
                 title [] [ encodedText "James Williams" ]
-                link [ (_rel "stylesheet"); (_type "text/css"); (_href "/css/index.css") ]
+                link [ (_rel "stylesheet"); (_type "text/css"); (_href "/css/landing.css") ]
             ]
 
             body [] [
@@ -87,20 +67,14 @@ module Views =
 // Web app
 // ---------------------------------
 
-let indexHandler2 (name : string) =
-    fun (next: HttpFunc) (ctx: HttpContext) ->
-        let greetings = sprintf "Hello %s, from Giraffe!" name
-        let model     = { Text = greetings }
-        let view      = Views.index model
-        htmlView view next ctx
-
 let webApp =
     fun (next: HttpFunc) (ctx: HttpContext) ->
         choose [
             GET >=>
                 choose [
-                    //route "/" >=> indexHandler "world"
-                    //routef "/hello/%s" indexHandler
+                    route "/dev" >=> redirectTo true "/dev/"
+                    route "/dev/" >=> Frontend.indexHandler
+
                     route "/" >=> htmlView Views.underConstruction
                     route "/admin/login" >=> Login.getHandler
                     route "/admin/logout" >=> Login.logoutHandler "/admin/login"

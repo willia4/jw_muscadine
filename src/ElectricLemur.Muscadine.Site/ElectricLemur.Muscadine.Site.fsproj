@@ -35,6 +35,7 @@
     <Compile Include="Book.fs" />
     <Compile Include="Project.fs" />
     <Compile Include="Debug.fs" />
+    <Compile Include="Frontend.fs" />
     <Compile Include="Admin.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
@@ -48,7 +49,7 @@
     <Content Include="wwwroot\css\admin.css">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="wwwroot\css\index.css">
+    <Content Include="wwwroot\css\landing.css">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
