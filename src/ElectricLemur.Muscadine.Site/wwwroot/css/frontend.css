@@ -140,7 +140,7 @@ body
   width: 32px;
 }
 
-@media screen and (min-width: 669px) and (max-width: 920px) {
+@media screen and (min-width: 669px) and (max-width: 1366px) {
   .sidebar ul li a.small-button {
     display: inline-block;
   }
