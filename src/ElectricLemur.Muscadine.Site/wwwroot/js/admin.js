@@ -237,7 +237,7 @@ function configureMicroblogs() {
           configureMicroblogs();
 
           const buttons = document.getElementsByClassName("delete-button");
-    
+
           for (let i = 0; i < buttons.length; i++) {
             const b = buttons[i];
 

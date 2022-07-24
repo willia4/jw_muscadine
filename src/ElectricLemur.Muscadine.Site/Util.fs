@@ -6,7 +6,22 @@ open Giraffe
 let flip f a b = f b a
 let flip3 f a b c = f c b a
 
-let mapResultToOption f r = 
+let flattenSeq (s: seq<seq<'a>>) = seq {
+    for subseq in s do
+        for i in subseq do
+            yield i
+}
+
+let flattenList (list: List<List<'a>>): List<'a> =
+
+    List.foldBack (fun subList acc ->
+        List.foldBack (fun item acc -> item :: acc) subList acc
+    ) list List.empty
+
+    // let s = list |> Seq.map (fun x -> x |> List.toSeq)
+    // s |> flattenSeq |> Seq.toList
+
+let mapResultToOption f r =
     match r with
     | Ok v -> Some (f v)
     | Error _ -> None
