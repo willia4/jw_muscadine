@@ -177,6 +177,7 @@ body
     font-size: 15px;
     background-color: var(--left-background-color);
     padding-left: 15px;
+    border-left: 0;
   }
 
   .content-wrapper .sidebar {
@@ -185,6 +186,7 @@ body
     transition-property: height, opacity;
     transition-duration: 1s;
     overflow: hidden;
+    border: 0;
   }
 
   .content-wrapper .sidebar.shown {
@@ -219,5 +221,9 @@ body
 
   .content-wrapper .header button.menu-button:hover {
     color: var(--primary-color);
+  }
+
+  .content-wrapper .main-content {
+    border-left: 0;
   }
 }
