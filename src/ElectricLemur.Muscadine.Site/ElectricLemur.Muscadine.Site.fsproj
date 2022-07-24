@@ -55,6 +55,9 @@
     <Content Include="wwwroot\css\frontend.css">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="wwwroot\css\remedy.css">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="wwwroot\img\head_logo_512.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
