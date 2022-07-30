@@ -178,8 +178,15 @@ let main args =
         .AddGiraffe()
         .AddMemoryCache()
         .AddWebOptimizer(fun pipeline ->
-            pipeline.CompileScssFiles() |> ignore
-            ())
+            let options = new WebOptimizer.Sass.WebOptimizerScssOptions()
+            let minifyCss = builder.Configuration.GetValue<bool>("minifyCss", true)
+            let minifyJavascript = builder.Configuration.GetValue<bool>("minifyJavascript", true)
+
+            options.MinifyCss <- minifyCss
+            pipeline.CompileScssFiles(options) |> ignore
+
+            if minifyJavascript then
+                pipeline.MinifyJsFiles() |> ignore)
         .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
         .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, fun options ->
             options.ExpireTimeSpan <- TimeSpan.FromDays(15)
