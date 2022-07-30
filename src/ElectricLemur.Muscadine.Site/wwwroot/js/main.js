@@ -1,5 +1,5 @@
 function toggleMenu() {
-  const sidebar = document.querySelector(".content-wrapper .sidebar");
+  const sidebar = document.getElementById("main-sidebar");
   if (!sidebar) { return; }
   const sidebarClasses = Array.from(sidebar.classList)
 

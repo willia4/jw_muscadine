@@ -1,7 +1,11 @@
 module Util
 open Microsoft.AspNetCore.Http
+open Microsoft.AspNetCore.Hosting
 open Microsoft.Extensions.Configuration
 open Giraffe
+open Giraffe.ViewEngine
+open Microsoft.Extensions.Caching.Memory
+
 
 let flip f a b = f b a
 let flip3 f a b c = f c b a
@@ -300,4 +304,35 @@ let seqAsyncFilter (predicate: 'a -> System.Threading.Tasks.Task<bool>) (list: s
     return (System.Collections.Immutable.ImmutableList.Empty.AddRange(res)) :> seq<'a>
 }
 
-let emptyDiv = Giraffe.ViewEngine.HtmlElements.div [ Giraffe.ViewEngine.Attributes._style "display: none"] []
+let emptyDiv = div [ _style "display: none"] []
+
+let hashFile fullPath =
+    use sha256 = System.Security.Cryptography.SHA256.Create()
+    use stream = System.IO.File.OpenRead(fullPath)
+    let bytes = sha256.ComputeHash(stream)
+    Microsoft.AspNetCore.WebUtilities.WebEncoders.Base64UrlEncode(bytes)
+
+let private fileVersion assetDirectory file (ctx: HttpContext) =
+    let env = ctx.GetService<IWebHostEnvironment>()
+    let config = ctx.GetService<IConfiguration>()
+    let cacheEnabled = config.GetValue<bool>("webOptimizer:enableCaching", false)
+
+    if cacheEnabled then
+        let cache = ctx.GetService<IMemoryCache>()
+
+        let fullPath = System.IO.Path.Join(env.WebRootPath, assetDirectory, file)
+        let cacheKey = $"fileVersion-%s{fullPath}"
+        cache.GetOrCreate(cacheKey, fun cacheEntry ->
+            cacheEntry.SlidingExpiration <- System.TimeSpan.FromDays(2)
+            hashFile fullPath)
+    else
+        (newGuid() |> string).ToLowerInvariant().Replace("-", "")
+
+let cssLinkTag cssFile ctx=
+    let version = fileVersion "css" cssFile ctx
+    link [ (_rel "stylesheet"); (_type "text/css"); (_href $"/css/%s{cssFile}?v=%s{version}") ]
+
+let javascriptTag javascriptFile ctx =
+    let version = fileVersion "js" javascriptFile ctx
+    script [ _src $"/js/%s{javascriptFile}?v={version}" ] []
+

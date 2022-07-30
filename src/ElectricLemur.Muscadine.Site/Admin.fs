@@ -11,12 +11,12 @@ open Project;
 open System.Threading.Tasks
 
 module Views =
-    let layout (pageTitle: string) (content: XmlNode list) = 
+    let layout (pageTitle: string) (content: XmlNode list) ctx =
         html [] [
             head [] [
                 title [] [ encodedText pageTitle ]
-                link [ (_rel "stylesheet"); (_type "text/css"); (_href "/css/admin.css") ]
-                script [ _src "/js/admin.js" ] []
+                (Util.cssLinkTag "admin.scss" ctx)
+                (Util.javascriptTag "admin.js" ctx)
             ]
             body [] [
                 div [ _class "site-title" ] [
@@ -49,10 +49,10 @@ module Views =
 
         ]
 
-    let index (games: seq<Game * List<string>> ) (books: seq<Book * List<string>>) (projects: seq<Project * List<string>>)=
+    let index (games: seq<Game * List<string>> ) (books: seq<Book * List<string>>) (projects: seq<Project * List<string>>) (ctx: HttpContext) =
         let makeTagsCell tags = 
             div [ _class "tags" ] (tags |> List.sort |> List.map (fun t -> div [ _class "tag" ] [encodedText t]))
-        [
+        let content = [
             makeIndexSection 
                 games 
                 "Games" 
@@ -133,7 +133,9 @@ module Views =
                                    [ encodedText "Delete" ]
                         ]
                 ])
-        ] |> layout "Admin"
+        ]
+
+        layout "Admin" content ctx
 
 let statusHandler: HttpHandler = 
     fun (next: HttpFunc) (ctx: HttpContext) ->
@@ -176,5 +178,5 @@ let indexHandler: HttpHandler =
         let books = matchItemsToTags books (fun x -> x.Id) bookTags
         let projects = matchItemsToTags projects (fun x -> x.Id) projectTags
 
-        return! htmlView (Views.index games books projects) next ctx
+        return! htmlView (Views.index games books projects ctx) next ctx
     }

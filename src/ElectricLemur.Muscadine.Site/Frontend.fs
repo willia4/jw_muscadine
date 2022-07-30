@@ -55,7 +55,7 @@ module PageDefinitions =
     ]
 
 
-let layout pageDefinition content =
+let layout pageDefinition content ctx =
   let pageHeader = PageDefinitions.pageTitle pageDefinition
   let sidebarOrder = [ PageDefinitions.AboutMe; PageDefinitions.Projects; PageDefinitions.Books; PageDefinitions.Games; PageDefinitions.Colophon ]
 
@@ -65,21 +65,21 @@ let layout pageDefinition content =
                 meta [ (_name "viewport"); (_content "width=device-width, initial-scale=1") ]
                 meta [ (_httpEquiv "Content-Type"); (_content "text/html; charset=utf-8") ]
                 title [] [ encodedText $"James Williams.me - %s{ pageHeader }" ]
-                link [ (_rel "stylesheet"); (_type "text/css"); (_href "/css/remedy.css") ]
-                link [ (_rel "stylesheet"); (_type "text/css"); (_href "/css/frontend.css") ]
+                (Util.cssLinkTag "remedy.css" ctx)
+                (Util.cssLinkTag "frontend.scss" ctx)
                 script [ (_src "https://kit.fontawesome.com/84935c491f.js"); (_crossorigin "anonymous") ] []
-                script [ (_src "/js/main.js") ] []
+                (Util.javascriptTag "main.js" ctx)
             ]
       body [] [
-        div [ _class "content-wrapper" ] [
-          div [ _class "logo"] [ img [ _src "/img/head_logo_512.png" ] ]
-          div [ _class "header" ] [
-            button [ (_class "menu-button"); (attr "@click" "alert('Hello World!')") ] [
+        div [ _id "content-wrapper" ] [
+          div [ _id "main-logo"] [ img [ _src "/img/head_logo_512.png" ] ]
+          div [ _id "main-header" ] [
+            button [ _class "menu-button" ] [
               i [ _class "fa-solid fa-bars" ] []
             ]
             encodedText pageHeader
           ]
-          div [ _class "sidebar"] [
+          div [ _id "main-sidebar"] [
             ul [] (
               sidebarOrder
               |> List.map (fun p ->
@@ -87,7 +87,7 @@ let layout pageDefinition content =
 
             )
           ]
-          div [ _class "main-content" ] content
+          div [ _id "main-content" ] content
         ]
       ]
     ]
@@ -105,7 +105,7 @@ let indexHandler =
       |> Option.defaultValue 100
 
     let lines = [1..lineCount] |> List.map (fun i -> div [] [ encodedText $"Line %d{i}" ])
-    layout PageDefinitions.AboutMe [
+    (layout PageDefinitions.AboutMe [
       div [ ] lines
-    ]
+    ] ctx)
     |> (fun x -> htmlView x next ctx)

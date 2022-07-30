@@ -14,6 +14,8 @@
   <ItemGroup>
     <PackageReference Include="Giraffe" Version="6.0.*" />
     <PackageReference Include="Giraffe.ViewEngine" Version="1.3.*" />
+    <PackageReference Include="LigerShark.WebOptimizer.Core" Version="3.0.368" />
+    <PackageReference Include="LigerShark.WebOptimizer.Sass" Version="3.0.91" />
     <PackageReference Include="MongoDB.Driver" Version="2.15.1" />
     <PackageReference Include="SixLabors.ImageSharp" Version="2.1.3" />
   </ItemGroup>
@@ -46,45 +48,7 @@
     <Content Include="appsettings.Development.json">
       <CopyToOutputDirectory Condition="Exists('$(MSBuildProjectDirectory)\appsettings.Development.json')">Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="wwwroot\css\admin.css">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="wwwroot\css\landing.css">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="wwwroot\css\frontend.css">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="wwwroot\css\remedy.css">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="wwwroot\img\head_logo_512.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="wwwroot\fonts\Ubuntu-Bold.ttf">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="wwwroot\fonts\Ubuntu-BoldItalic.ttf">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="wwwroot\fonts\Ubuntu-Italic.ttf">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="wwwroot\fonts\Ubuntu-Light.ttf">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="wwwroot\fonts\Ubuntu-LightItalic.ttf">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="wwwroot\fonts\Ubuntu-Medium.ttf">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="wwwroot\fonts\Ubuntu-MediumItalic.ttf">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="wwwroot\fonts\Ubuntu-Regular.ttf">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
+    <None Include="wwwroot\**"><CopyToOutputDirectory>Always</CopyToOutputDirectory></None>
   </ItemGroup>
   <ItemGroup>
     <None Include="wwwroot\js\admin.js">
