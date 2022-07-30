@@ -1,4 +1,5 @@
 @use "../colors";
+@use "../breakpoints";
 
 @use "../fonts";
 
@@ -7,8 +8,12 @@
   flex-direction: row;
   width: 100%;
 
+  @include breakpoints.phone {
+    flex-direction: column-reverse;
+  }
+
   .about-text-container {
-    flex-grow: 1;
+    flex-grow: 1.5;
     .subtitle {
       font-family: "Ubuntu Medium";
       font-size: 20px;
@@ -22,13 +27,32 @@
       color: colors.$heading;
       margin-bottom: 30px;
     }
+
     margin-right: 60px;
+
+    @include breakpoints.phone {
+      margin: auto;
+    }
   }
 
   .about-photo-container {
+    flex-grow: 1;
     margin-left: 60px;
+    min-width: 30%;
     img {
       max-height: 50vh;
+
+    }
+
+    @include breakpoints.phone {
+      margin: auto;
+      margin-bottom: 15px;
+      text-align: center;
+
+      img {
+        max-height: 100%;
+        max-width: 50vw;
+      }
     }
   }
 }

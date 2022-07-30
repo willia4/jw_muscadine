@@ -18,7 +18,7 @@ html {
 body {
   overflow-x: clip;
   font-family: "Ubuntu Regular";
-  font-size: 14px;
+  font-size: 17px;
   color: colors.$text;
   width: 100vw;
   height: 100vh
@@ -220,5 +220,6 @@ body {
   @include breakpoints.phone {
     border-left: 0;
     flex-grow: 1;
+    padding: 15px;
   }
 }

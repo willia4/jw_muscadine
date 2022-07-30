@@ -1,3 +1,12 @@
-This is the first paragraph of a biography.
+James is a standard issue nerd, practically to a fault. He was learning BASIC while his peers were learning to throw and catch.
+He enjoys walking around a well-lit 3D-rendered landscape but would prefer to stay indoors.
+He can't dance (don't ask him) but he can /dance and /manderville all night long.
+If you're interested in an in-depth analysis between the command techniques of various Starfleet captains, you are going to have a great
+time with James at parties (this is a lie: James doesn't go to parties).
 
-This is a second paragraph of a biography.
+Professionally, James is a seasoned developer with nearly two decades of experience. He enjoys all sorts of different programming languages,
+platforms, and programming methodologies. His own personal style is a spicy mix of functional and object-oriented: he even nearly understands monads!
+
+When he's not working, he's probably working on his personal programming projects. Beyond that: you might find him playing a turn-based RPG
+(or watching a Let's Play of a more action-oriented RPG), editing pictures in Photoshop, reading a novel with a space ship on the cover,
+and always always always drinking far more tea than can possibly be wise. 
