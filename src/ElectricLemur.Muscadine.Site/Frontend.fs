@@ -66,7 +66,7 @@ let layout pageDefinition content ctx =
                 meta [ (_httpEquiv "Content-Type"); (_content "text/html; charset=utf-8") ]
                 title [] [ encodedText $"James Williams.me - %s{ pageHeader }" ]
                 (Util.cssLinkTag "remedy.css" ctx)
-                (Util.cssLinkTag "frontend.css" ctx)
+                (Util.cssLinkTag "frontend.scss" ctx)
                 script [ (_src "https://kit.fontawesome.com/84935c491f.js"); (_crossorigin "anonymous") ] []
                 (Util.javascriptTag "main.js" ctx)
             ]

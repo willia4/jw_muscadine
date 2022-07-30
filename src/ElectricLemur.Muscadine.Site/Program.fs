@@ -36,7 +36,7 @@ module Views =
             head [] [
                 meta [ (_httpEquiv "Content-Type"); (_content "text/html; charset=utf-8") ]
                 title [] [ encodedText "James Williams" ]
-                (Util.cssLinkTag "landing.css" ctx)
+                (Util.cssLinkTag "landing.scss" ctx)
             ]
 
             body [] [
@@ -177,7 +177,9 @@ let main args =
         .AddCors()
         .AddGiraffe()
         .AddMemoryCache()
-        .AddWebOptimizer()
+        .AddWebOptimizer(fun pipeline ->
+            pipeline.CompileScssFiles() |> ignore
+            ())
         .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
         .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, fun options ->
             options.ExpireTimeSpan <- TimeSpan.FromDays(15)

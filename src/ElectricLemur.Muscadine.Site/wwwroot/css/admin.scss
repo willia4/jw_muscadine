@@ -1,0 +1,197 @@
+body {
+  background-color: #efefef;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+}
+
+.site-title {
+  text-align: center;
+  display: block;
+  width: 100%;
+  font-size: 36pt;
+  font-weight: bold;
+  padding-bottom: 30px;
+}
+
+.body-content {
+  padding-left: 30px;
+  padding-right: 30px;
+  padding-bottom: 15px;
+}
+
+.body-content .page-title {
+  font-size: 25pt;
+  padding-bottom: 15px;
+}
+
+.body-content div.section {
+  margin-bottom: 45px;
+}
+
+.body-content div.section div.section-header {
+  padding-bottom: 10px;
+}
+
+.body-content div.section td.icon-cell {
+  text-align: center;
+}
+
+.body-content div.section td.icon-cell img {
+  max-height: 50px;
+}
+
+.body-content div.section td.delete-cell {
+  text-align: center;
+}
+
+.body-content div.section td.tag-cell {
+  padding: 0px;
+  margin: 0px;
+  vertical-align: top;
+  text-align: left;
+}
+
+.body-content div.section td.tag-cell div.tags {
+  padding: 0px;
+  margin: 0px;
+  vertical-align: top;
+  text-align: left;
+}
+
+.body-content div.section td.tag-cell div.tags div.tag {
+  font-size: 70%;
+}
+
+.body-content form {
+  margin-left: 15px;
+}
+
+.body-content form label {
+  font-weight: bold;
+  padding-right: 30px;
+}
+
+.body-content form td {
+  padding-bottom: 10px;
+}
+
+.body-content form td.form-label {}
+
+.body-content form td.form-input {
+  width: 70%;
+  text-align: right;
+}
+
+.body-content form input[type="text"] {
+  width: 100%;
+}
+
+.body-content form input[type="submit"] {
+  min-width: 100px;
+  height: 100px;
+}
+
+.body-content form select {
+  width: 100%;
+  min-width: 100px;
+  min-height: 100px;
+}
+
+.body-content form div.tags-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.body-content form div.tags-container div.new-tag-container {
+  display: flex;
+  flex-direction: row;
+  margin-top: 5px;
+}
+
+.body-content form #new-tag-field {
+  width: 65%;
+  margin-right: 15px;
+}
+
+.body-content div.microblog-container div.new-microblog-container {
+  display: flex;
+  flex-direction: row;
+  margin-top: 5px;
+}
+
+.body-content div.microblog-container div.new-microblog-container textarea {
+  margin-right: 15px;
+  margin-bottom: 15px;
+}
+
+.body-content div.microblog-container div.new-microblog-container button {
+  height: 25px;
+}
+
+.body-content div.microblog-container div.new-microblog-container .add-button-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.body-content div.microblog-container div.new-microblog-container span {
+  font-size: 80%;
+}
+
+.body-content div.microblog-container th {
+  text-align: left;
+}
+
+.body-content div.microblog-container td {
+  padding-right: 15px;
+}
+
+.body-content .section-header {}
+
+.body-content .section-header a {
+  margin: 5px;
+}
+
+.body-content .section-header span {
+  font-size: 20pt;
+}
+
+.body-content table.section-table {
+  min-width: 50%;
+}
+
+.body-content table.section-table th {
+  font-weight: bold;
+  border-width: 1px;
+  border-style: solid;
+}
+
+.body-content table.section-table td {
+  padding-left: 5px;
+  padding-right: 5px;
+  border-width: 1px;
+  border-style: solid;
+}
+
+div.image-input {
+  width: 256px;
+  height: 256px;
+  border-style: solid;
+  border-color: gray;
+  border-width: 2px;
+  text-align: center;
+}
+
+div.image-input.dragging {
+  width: 256px;
+  height: 256px;
+  border-style: solid;
+  border-color: blue;
+  border-width: 2px;
+}
+
+div.image-input img {
+  max-height: 256px;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  aspect-ratio: auto;
+}

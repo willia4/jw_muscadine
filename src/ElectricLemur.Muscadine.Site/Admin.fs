@@ -15,7 +15,7 @@ module Views =
         html [] [
             head [] [
                 title [] [ encodedText pageTitle ]
-                (Util.cssLinkTag "admin.css" ctx)
+                (Util.cssLinkTag "admin.scss" ctx)
                 (Util.javascriptTag "admin.js" ctx)
             ]
             body [] [
