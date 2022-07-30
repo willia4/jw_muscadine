@@ -71,15 +71,15 @@ let layout pageDefinition content ctx =
                 (Util.javascriptTag "main.js" ctx)
             ]
       body [] [
-        div [ _class "content-wrapper" ] [
-          div [ _class "logo"] [ img [ _src "/img/head_logo_512.png" ] ]
-          div [ _class "header" ] [
-            button [ (_class "menu-button"); (attr "@click" "alert('Hello World!')") ] [
+        div [ _id "content-wrapper" ] [
+          div [ _id "main-logo"] [ img [ _src "/img/head_logo_512.png" ] ]
+          div [ _id "main-header" ] [
+            button [ _class "menu-button" ] [
               i [ _class "fa-solid fa-bars" ] []
             ]
             encodedText pageHeader
           ]
-          div [ _class "sidebar"] [
+          div [ _id "main-sidebar"] [
             ul [] (
               sidebarOrder
               |> List.map (fun p ->
@@ -87,7 +87,7 @@ let layout pageDefinition content ctx =
 
             )
           ]
-          div [ _class "main-content" ] content
+          div [ _id "main-content" ] content
         ]
       ]
     ]
