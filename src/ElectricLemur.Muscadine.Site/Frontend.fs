@@ -55,21 +55,26 @@ module PageDefinitions =
     ]
 
 
-let layout pageDefinition content ctx =
+let layout pageDefinition content extraCss ctx =
   let pageHeader = PageDefinitions.pageTitle pageDefinition
   let sidebarOrder = [ PageDefinitions.AboutMe; PageDefinitions.Projects; PageDefinitions.Books; PageDefinitions.Games; PageDefinitions.Colophon ]
 
+  let headNodes =
+    [
+        meta [ (_name "viewport"); (_content "width=device-width, initial-scale=1") ]
+        meta [ (_httpEquiv "Content-Type"); (_content "text/html; charset=utf-8") ]
+        title [] [ encodedText $"James Williams.me - %s{ pageHeader }" ]
+        (Util.cssLinkTag "remedy.css" ctx)
+        (Util.cssLinkTag "frontend.scss" ctx)
+        script [ (_src "https://kit.fontawesome.com/84935c491f.js"); (_crossorigin "anonymous") ] []
+        (Util.javascriptTag "main.js" ctx)
+    ]
+    |> Util.seqPrepend (extraCss |> Seq.map (fun css -> Util.cssLinkTag css ctx))
+    |> Seq.toList
+
   html []
     [
-      head [] [
-                meta [ (_name "viewport"); (_content "width=device-width, initial-scale=1") ]
-                meta [ (_httpEquiv "Content-Type"); (_content "text/html; charset=utf-8") ]
-                title [] [ encodedText $"James Williams.me - %s{ pageHeader }" ]
-                (Util.cssLinkTag "remedy.css" ctx)
-                (Util.cssLinkTag "frontend.scss" ctx)
-                script [ (_src "https://kit.fontawesome.com/84935c491f.js"); (_crossorigin "anonymous") ] []
-                (Util.javascriptTag "main.js" ctx)
-            ]
+      head [] headNodes
       body [] [
         div [ _id "content-wrapper" ] [
           div [ _id "main-logo"] [ img [ _src "/img/head_logo_512.png" ] ]
@@ -92,6 +97,23 @@ let layout pageDefinition content ctx =
       ]
     ]
 
+let aboutMeContent =
+  let biographyParagraphs = Util.extractEmbeddedTextFile "biography.txt" |> Util.textToParagraphs
+
+  [
+    div [ _class "page-content about-me" ] [
+      div [ _class "about-text-container" ]  [
+        div [ _class "subtitle"] [ encodedText "Hello, I am"]
+        div [ _class "title" ] [ encodedText "James Williams"]
+        div [ _class "biography"] biographyParagraphs
+      ]
+
+      div [ _class "about-photo-container" ] [
+        img [ _src "/img/james_and_gary.jpg" ]
+      ]
+    ]
+  ]
+
 
 let indexHandler =
   fun next (ctx: HttpContext) ->
@@ -104,8 +126,8 @@ let indexHandler =
                                | false, _ -> None)
       |> Option.defaultValue 100
 
-    let lines = [1..lineCount] |> List.map (fun i -> div [] [ encodedText $"Line %d{i}" ])
-    (layout PageDefinitions.AboutMe [
-      div [ ] lines
-    ] ctx)
-    |> (fun x -> htmlView x next ctx)
+    let content = aboutMeContent
+
+    let pageHtml = layout PageDefinitions.AboutMe content [ "frontend/about_me.scss" ] ctx
+
+    htmlView pageHtml next ctx

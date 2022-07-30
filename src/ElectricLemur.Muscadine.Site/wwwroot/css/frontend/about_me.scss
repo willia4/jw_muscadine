@@ -1,0 +1,34 @@
+@use "../colors";
+
+@import "fonts.css";
+
+.page-content.about-me {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+
+  .about-text-container {
+    flex-grow: 1;
+    .subtitle {
+      font-family: "Ubuntu Medium";
+      font-size: 20px;
+      color: colors.$heading;
+    }
+
+    .title {
+      font-family: "Lora";
+      font-weight: bold;
+      font-size: 64px;
+      color: colors.$heading;
+      margin-bottom: 30px;
+    }
+    margin-right: 60px;
+  }
+
+  .about-photo-container {
+    margin-left: 60px;
+    img {
+      max-height: 50vh;
+    }
+  }
+}

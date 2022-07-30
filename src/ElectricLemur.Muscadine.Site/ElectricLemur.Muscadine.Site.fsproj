@@ -58,4 +58,7 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="biography.txt" />
+  </ItemGroup>
 </Project>

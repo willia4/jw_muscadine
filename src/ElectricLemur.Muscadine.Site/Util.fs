@@ -227,6 +227,20 @@ let appendToSeqIf p item s =
     else
         s
 
+// TODO make it functional
+let seqChunkByPredicate (p: 'a -> bool)  (s: seq<'a>) = seq {
+        let mutable chunk: 'a list = List.empty
+        for item in s do
+            if (p item) then
+                if (chunk |> List.isEmpty |> not) then
+                    yield (chunk |> List.toSeq)
+                chunk <- List.empty
+            else
+                chunk <- List.append chunk [ item ]
+        if (chunk |> List.isEmpty |> not) then
+            yield (chunk |> List.toSeq)
+}
+
 let newGuid () = System.Guid.NewGuid()
 
 let guidFromString (s: string) = 
@@ -336,3 +350,27 @@ let javascriptTag javascriptFile ctx =
     let version = fileVersion "js" javascriptFile ctx
     script [ _src $"/js/%s{javascriptFile}?v={version}" ] []
 
+let extractEmbeddedResource name =
+    let assembly = System.Reflection.Assembly.GetExecutingAssembly()
+
+    let name = $"ElectricLemur.Muscadine.Site.%s{name}"
+    use stream = assembly.GetManifestResourceStream(name)
+
+    use output = new System.IO.MemoryStream()
+    stream.CopyTo(output)
+
+    output.GetBuffer()
+
+let extractEmbeddedTextFile name =
+    System.Text.Encoding.UTF8.GetString(extractEmbeddedResource name)
+
+let textToParagraphs (text: string) =
+    let lines = text.Split("\n");
+    let paragraphs = lines |> seqChunkByPredicate System.String.IsNullOrWhiteSpace
+
+    paragraphs
+    |> Seq.map (fun p ->
+        let lines = System.String.Join("\n", p)
+        Giraffe.ViewEngine.HtmlElements.p [] [ encodedText lines ]
+    )
+    |> Seq.toList
