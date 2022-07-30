@@ -55,7 +55,7 @@ module PageDefinitions =
     ]
 
 
-let layout pageDefinition content =
+let layout pageDefinition content ctx =
   let pageHeader = PageDefinitions.pageTitle pageDefinition
   let sidebarOrder = [ PageDefinitions.AboutMe; PageDefinitions.Projects; PageDefinitions.Books; PageDefinitions.Games; PageDefinitions.Colophon ]
 
@@ -65,10 +65,10 @@ let layout pageDefinition content =
                 meta [ (_name "viewport"); (_content "width=device-width, initial-scale=1") ]
                 meta [ (_httpEquiv "Content-Type"); (_content "text/html; charset=utf-8") ]
                 title [] [ encodedText $"James Williams.me - %s{ pageHeader }" ]
-                link [ (_rel "stylesheet"); (_type "text/css"); (_href "/css/remedy.css") ]
-                link [ (_rel "stylesheet"); (_type "text/css"); (_href "/css/frontend.css") ]
+                (Util.cssLinkTag "remedy.css" ctx)
+                (Util.cssLinkTag "frontend.css" ctx)
                 script [ (_src "https://kit.fontawesome.com/84935c491f.js"); (_crossorigin "anonymous") ] []
-                script [ (_src "/js/main.js") ] []
+                (Util.javascriptTag "main.js" ctx)
             ]
       body [] [
         div [ _class "content-wrapper" ] [
@@ -105,7 +105,7 @@ let indexHandler =
       |> Option.defaultValue 100
 
     let lines = [1..lineCount] |> List.map (fun i -> div [] [ encodedText $"Line %d{i}" ])
-    layout PageDefinitions.AboutMe [
+    (layout PageDefinitions.AboutMe [
       div [ ] lines
-    ]
+    ] ctx)
     |> (fun x -> htmlView x next ctx)

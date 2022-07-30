@@ -31,12 +31,12 @@ type Message =
 module Views =
     open Giraffe.ViewEngine
 
-    let underConstruction =
+    let underConstruction ctx =
         html [] [
             head [] [
                 meta [ (_httpEquiv "Content-Type"); (_content "text/html; charset=utf-8") ]
                 title [] [ encodedText "James Williams" ]
-                link [ (_rel "stylesheet"); (_type "text/css"); (_href "/css/landing.css") ]
+                (Util.cssLinkTag "landing.css" ctx)
             ]
 
             body [] [
@@ -75,7 +75,7 @@ let webApp =
                     route "/dev" >=> redirectTo true "/dev/"
                     route "/dev/" >=> Frontend.indexHandler
 
-                    route "/" >=> htmlView Views.underConstruction
+                    route "/" >=> htmlView (Views.underConstruction ctx)
                     route "/admin/login" >=> Login.getHandler
                     route "/admin/logout" >=> Login.logoutHandler "/admin/login"
                     route "/admin/status" >=> Login.requiresAdminRedirect "/admin/status" >=> Admin.statusHandler
@@ -175,18 +175,19 @@ let main args =
 
     builder.Services
         .AddCors()
-        .AddGiraffe() |> ignore
-
-    builder.Services
+        .AddGiraffe()
         .AddMemoryCache()
+        .AddWebOptimizer()
         .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
         .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, fun options ->
             options.ExpireTimeSpan <- TimeSpan.FromDays(15)
             options.SlidingExpiration <- true
             options.AccessDeniedPath <- "/Forbidden"
-        ) |> ignore
+        )
+        |> ignore
 
     let app = builder.Build()
+
     (match app.Environment.IsDevelopment() with
     | true ->
         app.UseDeveloperExceptionPage()
@@ -194,9 +195,24 @@ let main args =
         app.UseGiraffeErrorHandler(errorHandler)
             .UseHttpsRedirection())
         .UseCors(configureCors)
-        .UseStaticFiles()
+        .UseWebOptimizer()
+    |> ignore
+
+    let staticFilesOptions = new StaticFileOptions()
+    staticFilesOptions.OnPrepareResponse <- (fun ctx ->
+        let config = ctx.Context.GetService<IConfiguration>()
+        let cacheEnabled = config.GetValue<bool>("webOptimizer:enableCaching", false)
+        if cacheEnabled then
+            let cacheAge = System.TimeSpan.FromDays(30).TotalSeconds |> int
+
+            if (ctx.File.Name.EndsWith(".ttf")) then
+                ctx.Context.Response.Headers.Append(
+                    "Cache-Control", $"max-age=%d{cacheAge}, public"))
+
+    app
+        .UseStaticFiles(staticFilesOptions)
         .UseAuthentication()
         .UseGiraffe(webApp)
-        
+
     app.Run()
     0
