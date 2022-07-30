@@ -61,8 +61,10 @@ let layout pageDefinition content extraCss ctx =
 
   let headNodes =
     [
-        meta [ (_name "viewport"); (_content "width=device-width, initial-scale=1") ]
         meta [ (_httpEquiv "Content-Type"); (_content "text/html; charset=utf-8") ]
+        meta [ (_name "viewport"); (_content "width=device-width, initial-scale=1") ]
+        link [ (_rel "shortcut icon"); (_type "image/png"); (_href "/img/head_logo_32.png") ]
+        link [ (_rel "icon"); (_type "image/png"); (_href "/img/head_logo_256.png") ]
         title [] [ encodedText $"James Williams.me - %s{ pageHeader }" ]
         (Util.cssLinkTag "remedy.css" ctx)
         (Util.cssLinkTag "frontend.scss" ctx)
