@@ -356,7 +356,7 @@ let layout pageTitle pageData content =
     html [] [
         head [] [
             title [] [ encodedText pageTitle ]
-            link [ (_rel "stylesheet"); (_type "text/css"); (_href "/css/admin.css") ]
+            link [ (_rel "stylesheet"); (_type "text/css"); (_href "/css/admin.scss") ]
             script [] [ rawText makePageDataScript ]
             script [ _src "/js/admin.js" ] []
         ]
