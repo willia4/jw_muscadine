@@ -50,8 +50,8 @@ module PageDefinitions =
       | None -> []
 
     [
-        a [ (_class largeButtonClass); (_href (pageRoute buttonPage)) ] (List.append buttonIcon [ encodedText (fst title) ])
-        a [ (_class smallButtonClass); (_href (pageRoute buttonPage)) ] (List.append buttonIcon [ encodedText (snd title) ])
+        a [ (_class largeButtonClass); (_href (pageRoute buttonPage)); (attr "role" "menuitem") ] (List.append buttonIcon [ encodedText (fst title) ])
+        a [ (_class smallButtonClass); (_href (pageRoute buttonPage)); (attr "role" "menuitem") ] (List.append buttonIcon [ encodedText (snd title) ])
     ]
 
 
@@ -79,18 +79,19 @@ let layout pageDefinition content extraCss ctx =
       head [] headNodes
       body [] [
         div [ _id "content-wrapper" ] [
-          div [ _id "main-logo"] [ img [ _src "/img/head_logo_512.png" ] ]
-          div [ _id "main-header" ] [
-            button [ _class "menu-button" ] [
+          div [ _id "main-logo"] [ img [ (_src "/img/head_logo_512.png"); (_alt "Site logo") ] ]
+          header [ _id "main-header" ] [
+            img [ (_src "/img/head_logo_512.png"); (_alt "Site Logo"); (_class "mini-logo") ]
+            encodedText pageHeader
+            button [ (_class "menu-button"); ] [
               i [ _class "fa-solid fa-bars" ] []
             ]
-            encodedText pageHeader
           ]
           div [ _id "main-sidebar"] [
-            ul [] (
+            ul [ attr "role" "menu" ] (
               sidebarOrder
               |> List.map (fun p ->
-                  li [] (PageDefinitions.makeSidebarButton pageDefinition p ))
+                  li [ (attr "role" "presentation") ] (PageDefinitions.makeSidebarButton pageDefinition p ))
 
             )
           ]
@@ -103,10 +104,12 @@ let aboutMeContent =
   let biographyParagraphs = Util.extractEmbeddedTextFile "biography.html"
 
   [
-    div [ _class "page-content about-me" ] [
+    main [ _class "page-content about-me" ] [
       div [ _class "about-text-container" ]  [
-        div [ _class "subtitle" ] [ encodedText "Hello, I am"]
-        div [ _class "title" ] [ encodedText "James Williams"]
+        header [] [
+          div [ _class "subtitle" ] [ encodedText "Hello, I am"]
+          h1 [ _class "title" ] [ encodedText "James Williams"]
+        ]
         div [ _class "biography" ] [ rawText biographyParagraphs ]
         div [ _class "buttons" ] [
           // a [ (_href "https://www.facebook.com/willia4"); ( attr "aria-label" "Facebook" )] [ i [ _class "fa-brands fa-facebook-f"] []]

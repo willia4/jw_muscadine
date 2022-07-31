@@ -80,12 +80,24 @@ body {
 
   border-left: $grid-border;
 
+  img.mini-logo {
+    display: none;
+    max-width: 40px;
+    max-height: 40px;
+    margin-right: 5px;
+
+    @include breakpoints.phone {
+      display: inline;
+    }
+  }
+
   button.menu-button {
     display: none;
 
     @include breakpoints.phone {
       display: inline-block;
-      margin-right: 5px;
+
+      margin-left: auto;
       width: 40px;
       height: 40px;
       font-size: 15px;
@@ -93,10 +105,6 @@ body {
       background-color: $left-background-color;
       border: none;
       color: colors.$text;
-
-      &:hover {
-        color: colors.$primary;
-      }
     }
   }
 
@@ -105,10 +113,11 @@ body {
   }
 
   @include breakpoints.phone {
-    font-size: 15px;
+    font-size: 18px;
     background-color: $left-background-color;
     padding-left: 5px;
     border-left: 0;
+    width: 100vw;
   }
 }
 
