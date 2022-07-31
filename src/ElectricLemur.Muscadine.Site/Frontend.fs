@@ -105,9 +105,22 @@ let aboutMeContent =
   [
     div [ _class "page-content about-me" ] [
       div [ _class "about-text-container" ]  [
-        div [ _class "subtitle"] [ encodedText "Hello, I am"]
+        div [ _class "subtitle" ] [ encodedText "Hello, I am"]
         div [ _class "title" ] [ encodedText "James Williams"]
-        div [ _class "biography"] [ rawText biographyParagraphs ]
+        div [ _class "biography" ] [ rawText biographyParagraphs ]
+        div [ _class "buttons" ] [
+          // a [ (_href "https://www.facebook.com/willia4"); ( attr "aria-label" "Facebook" )] [ i [ _class "fa-brands fa-facebook-f"] []]
+          a [ (_href "https://github.com/willia4"); ( attr "aria-label" "Github" )] [ i [ _class "fa-brands fa-github"] []]
+          a [ (_href "https://www.twitter.com/willia4"); ( attr "aria-label" "Twitter" )] [ i [ _class "fa-brands fa-twitter"] []]
+          a [ (_href "https://photos.jameswilliams.me"); ( attr "aria-label" "Photos" )] [ i [ _class "fa-solid fa-camera"] []]
+          a [ (_href "https://www.linkedin.com/in/jameswilliams-me/"); ( attr "aria-label" "Linked In" )] [ i [ _class "fa-brands fa-linkedin"] []]
+        ]
+        div [ _class "resume-link"] [
+          a [ (_href "https://jameswilliams.me/resume/"); (attr "aria-label" "Resume link" )] [
+            i [ _class "fa-solid fa-angles-right" ] []
+            encodedText "James' Resume"
+          ]
+        ]
       ]
 
       div [ _class "about-photo-container" ] [
