@@ -100,14 +100,14 @@ let layout pageDefinition content extraCss ctx =
     ]
 
 let aboutMeContent =
-  let biographyParagraphs = Util.extractEmbeddedTextFile "biography.txt" |> Util.textToParagraphs
+  let biographyParagraphs = Util.extractEmbeddedTextFile "biography.html"
 
   [
     div [ _class "page-content about-me" ] [
       div [ _class "about-text-container" ]  [
         div [ _class "subtitle"] [ encodedText "Hello, I am"]
         div [ _class "title" ] [ encodedText "James Williams"]
-        div [ _class "biography"] biographyParagraphs
+        div [ _class "biography"] [ rawText biographyParagraphs ]
       ]
 
       div [ _class "about-photo-container" ] [

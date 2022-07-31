@@ -33,6 +33,21 @@
     @include breakpoints.phone {
       margin: auto;
     }
+
+    .biography {
+      a {
+        text-decoration: underline;
+        color: colors.$text;
+
+        &:visited {
+          color: colors.$text
+        }
+
+        &:hover {
+          color: colors.$primary;
+        }
+      }
+    }
   }
 
   .about-photo-container {

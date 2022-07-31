@@ -59,6 +59,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="biography.txt" />
+    <EmbeddedResource Include="biography.html" />
   </ItemGroup>
 </Project>
