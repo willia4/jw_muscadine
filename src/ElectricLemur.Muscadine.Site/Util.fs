@@ -10,57 +10,6 @@ open Microsoft.Extensions.Caching.Memory
 let flip f a b = f b a
 let flip3 f a b c = f c b a
 
-let flattenSeq (s: seq<seq<'a>>) = seq {
-    for subseq in s do
-        for i in subseq do
-            yield i
-}
-
-let flattenList (list: List<List<'a>>): List<'a> =
-
-    List.foldBack (fun subList acc ->
-        List.foldBack (fun item acc -> item :: acc) subList acc
-    ) list List.empty
-
-    // let s = list |> Seq.map (fun x -> x |> List.toSeq)
-    // s |> flattenSeq |> Seq.toList
-
-let mapResultToOption f r =
-    match r with
-    | Ok v -> Some (f v)
-    | Error _ -> None
-
-let appendSeqToList (a: 'a list) (b: 'a seq) =
-    let rec m acc remaining =
-        if (remaining |> Seq.isEmpty) then
-            acc
-        else
-            m ((Seq.head remaining) :: a) (Seq.tail remaining)
-
-    m (List.rev a) (b |> Seq.rev) |> List.rev
-
-let unwrapSeqOfOptions(s: seq<option<'a>>) =
-    if Seq.forall Option.isSome s then
-        Some (Seq.map Option.get s)
-    else
-        None
-
-let unwrapListOfOptions(s: List<option<'a>>) =
-    if List.forall Option.isSome s then
-        Some (List.map Option.get s)
-    else
-        None
-
-let mergeMaps (merger: 'v -> 'v -> 'v) (m1: Map<'k, 'v>) (m2: Map<'k, 'v>) =
-    m2
-    |> Map.fold (fun res k v ->
-        res 
-        |> Map.change k (fun otherV -> 
-            match otherV with
-            | Some otherV -> Some (merger v otherV)
-            | None -> Some v)
-      ) m1
-    
 let getFormString (ctx: HttpContext) (key: string) =
     if ctx.Request.Form.ContainsKey(key) then
         Some (string ctx.Request.Form.[key])
@@ -212,34 +161,6 @@ let getJObjectStrings (obj: Newtonsoft.Json.Linq.JObject) (requiredKeys: string 
 let getMapStrings (m: Map<string, string option>) (requiredKeys: string seq) (optionalKeys: string seq) = 
     safeMapBuilder (fun k -> Map.tryFind k m |> Option.flatten) requiredKeys optionalKeys
 
-let listPrepend (a: 'a list) (b: 'a list) = List.append b a
-let seqPrepend (a: 'a seq) (b: 'a seq) = Seq.append b a
-
-let appendToListIf p item l =
-    if p then
-        List.append l [ item ]
-    else
-        l
-
-let appendToSeqIf p item s =
-    if p then
-        Seq.append s [ item ]
-    else
-        s
-
-// TODO make it functional
-let seqChunkByPredicate (p: 'a -> bool)  (s: seq<'a>) = seq {
-        let mutable chunk: 'a list = List.empty
-        for item in s do
-            if (p item) then
-                if (chunk |> List.isEmpty |> not) then
-                    yield (chunk |> List.toSeq)
-                chunk <- List.empty
-            else
-                chunk <- List.append chunk [ item ]
-        if (chunk |> List.isEmpty |> not) then
-            yield (chunk |> List.toSeq)
-}
 
 let newGuid () = System.Guid.NewGuid()
 
@@ -366,7 +287,7 @@ let extractEmbeddedTextFile name =
 
 let textToParagraphs (text: string) =
     let lines = text.Split("\n");
-    let paragraphs = lines |> seqChunkByPredicate System.String.IsNullOrWhiteSpace
+    let paragraphs = lines |> Seq.chunkByPredicate System.String.IsNullOrWhiteSpace
 
     paragraphs
     |> Seq.map (fun p ->

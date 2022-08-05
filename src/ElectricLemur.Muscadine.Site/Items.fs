@@ -426,7 +426,7 @@ let makeCheckboxInputRow label key (value: bool option) =
             _name key
             _value "on"
         ]
-        |> Util.appendToListIf value _checked
+        |> List.appendIf value _checked
 
     let el = input attributes
     makeInputRow label el
@@ -449,7 +449,7 @@ let makeTagsInputRow label key (allTags: string seq) (documentTags: string seq) 
                 |> List.map (fun t -> 
                     let attributes = 
                         [ _value t ]
-                        |> Util.appendToListIf (tagIsSelected t) _selected
+                        |> List.appendIf (tagIsSelected t) _selected
 
                     option attributes [ encodedText t ]))
 

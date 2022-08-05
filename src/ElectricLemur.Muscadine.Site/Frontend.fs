@@ -71,7 +71,7 @@ let layout pageDefinition content extraCss ctx =
         script [ (_src "https://kit.fontawesome.com/84935c491f.js"); (_crossorigin "anonymous") ] []
         (Util.javascriptTag "main.js" ctx)
     ]
-    |> Util.seqPrepend (extraCss |> Seq.map (fun css -> Util.cssLinkTag css ctx))
+    |> Seq.prepend (extraCss |> Seq.map (fun css -> Util.cssLinkTag css ctx))
     |> Seq.toList
 
   html []

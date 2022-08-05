@@ -42,7 +42,7 @@ module Views =
                 [ _class "section-table" ] 
                 ([
                     tr [] [ for h in tableHeaders -> (th [] [ encodedText h ])]
-                ] |> Util.listPrepend [
+                ] |> List.prepend [
                     for d in data ->
                         tr [] (makeTableRow d)
                 ])

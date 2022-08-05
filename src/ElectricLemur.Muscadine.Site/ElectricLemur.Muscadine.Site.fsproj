@@ -20,6 +20,9 @@
     <PackageReference Include="SixLabors.ImageSharp" Version="2.1.3" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Seq.fs" />
+    <Compile Include="List.fs" />
+    <Compile Include="Option.fs" />
     <Compile Include="Map.fs" />
     <Compile Include="Id.fs" />
     <Compile Include="FormFields.fs" />
