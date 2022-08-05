@@ -135,3 +135,11 @@ let imageRouter (paths: string seq) =
                 | false -> return! setStatusCode 401 next ctx
             | None -> return! setStatusCode 401 next ctx
      }
+
+let deleteAllImages coverImage ctx =
+    deleteRelativePathIfExists coverImage.Original ctx
+    deleteRelativePathIfExists coverImage.Size1024 ctx
+    deleteRelativePathIfExists coverImage.Size512 ctx
+    deleteRelativePathIfExists coverImage.Size256 ctx
+    deleteRelativePathIfExists coverImage.Size128 ctx
+    deleteRelativePathIfExists coverImage.Size64 ctx

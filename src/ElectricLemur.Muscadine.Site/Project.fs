@@ -268,13 +268,7 @@ let deleteHandler_delete id =
         let existingCoverImage = existing |> Option.map (fun e -> e.IconImagePaths) |> Option.flatten
 
         match existingCoverImage with
-        | Some existingCoverImage ->
-            Util.deleteRelativePathIfExists existingCoverImage.Original ctx
-            Util.deleteRelativePathIfExists existingCoverImage.Size1024 ctx
-            Util.deleteRelativePathIfExists existingCoverImage.Size512 ctx
-            Util.deleteRelativePathIfExists existingCoverImage.Size256 ctx
-            Util.deleteRelativePathIfExists existingCoverImage.Size128 ctx
-            Util.deleteRelativePathIfExists existingCoverImage.Size64 ctx
+        | Some existingCoverImage -> Image.deleteAllImages existingCoverImage ctx
         | None -> ()
 
         do! Tag.clearTagsForDocument documentType id ctx
