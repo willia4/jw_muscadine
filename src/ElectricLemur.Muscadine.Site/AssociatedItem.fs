@@ -30,28 +30,12 @@ let loadAssociatedItemsForDocuments (documentType: string) (itemDocumentType: st
   return loadedItems
 }
 
+
 let loadAssociatedItemMapForDocuments documentType itemDocumentType itemIds
     (jObjToItem: (JObject -> 'a)) (associatedIdFromItem: 'a -> string) (resultFromItem: 'a -> 'c) ctx = task {
 
   let! items = loadAssociatedItemsForDocuments documentType itemDocumentType itemIds jObjToItem ctx
-  let mapItemIdToAssociatedItem =
-    items
-    |> List.fold (fun m i ->
-      let associatedId = associatedIdFromItem i
-      let res = resultFromItem i
-      m |> Map.change associatedId (fun foundItems ->
-        match foundItems with
-        | Some foundItems -> Some (List.append foundItems [ res ] |> List.distinct)
-        | None -> Some [ res ]
-      )) Map.empty
+  let mapItemIdToAssociatedItem = Map.ofGroupedList associatedIdFromItem resultFromItem items
 
-  let r =
-    itemIds
-    |> Seq.fold (fun m id ->
-      match m |> Map.containsKey id with
-      | true -> m
-      | false -> Map.add id [] m
-    ) mapItemIdToAssociatedItem
-
-  return r
+  return Map.withPlaceholderIds itemIds [] mapItemIdToAssociatedItem
 }
