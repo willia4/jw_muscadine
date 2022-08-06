@@ -8,6 +8,9 @@ open Util
 open Giraffe
 open ElectricLemur.Muscadine.Site
 
+type Icon =
+    | FontAwesome of string
+    | UrlPath of string
 type ImagePaths = {
     Original: string
     Size1024: string

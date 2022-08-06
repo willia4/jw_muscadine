@@ -519,3 +519,16 @@ let handleImageUpload ctx documentType documentId key (existingPath: Image.Image
                | Ok newPaths -> Ok (modelSetter (Some newPaths))
 
 }
+
+let getDefaultIcon documentType =
+    match documentType with
+    | s when s = Constants.Database.DocumentTypes.Book -> Constants.Icons.Book
+    | s when s = Constants.Database.DocumentTypes.Project -> Constants.Icons.Project
+    | s when s = Constants.Database.DocumentTypes.Game -> Constants.Icons.Game
+    | _ -> Constants.Icons.QuestionMark
+    |> Image.FontAwesome
+
+let getItemImagePaths itemData =
+    match itemData with
+    | Some itemData -> "coverImage" |> JObj.getter<Image.ImagePaths> itemData
+    | None -> None

@@ -57,9 +57,9 @@ let loadTagsForDocument itemDocumentType itemId ctx = task {
 
 let setTagsForDocument itemDocumentType itemId (tags: string seq) ctx = task {
     let! existing = loadTagAssignmentsForDocument itemDocumentType itemId ctx
-    let toDelete = existing |> List.filter (fun e -> not (Seq.contains e.Tag tags))
+    let toDelete = existing |> Seq.filter (fun e -> not (Seq.contains e.Tag tags))
     
-    let toAdd = tags |> Seq.filter (fun t -> not (List.exists (fun e -> e.Tag = t) existing)) |> Seq.toList
+    let toAdd = tags |> Seq.filter (fun t -> not (Seq.exists (fun e -> e.Tag = t) existing)) |> Seq.toList
     let toAdd = 
         toAdd
         |> List.map (fun a -> { 

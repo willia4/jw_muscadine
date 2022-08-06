@@ -156,6 +156,7 @@
       margin-bottom: 40px;
 
       a.icon {
+        display: flex;
         grid-row-start: 1;
         grid-row-end: 3;
         grid-column: 1;
@@ -163,7 +164,7 @@
         height: 64px;
         border: 1px solid black;
         border-radius: 5px;
-        display: inline-block;
+
 
         color: colors.$heading;
         font-size: 43px;
@@ -173,7 +174,14 @@
         margin-right: 15px;
 
         i {
-          margin-top: 8px;
+          margin: auto;
+          padding: 0;
+        }
+
+        img {
+          max-width: 55px;
+          max-height: 55px;
+          margin: auto;
           padding: 0;
         }
       }

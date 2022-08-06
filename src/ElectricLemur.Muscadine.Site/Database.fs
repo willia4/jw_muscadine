@@ -74,6 +74,12 @@ module Filters =
             |> Map.toSeq
         { current with In = newIn }
 
+    let addInSeq k (v: seq<BsonValue>) current =
+        v
+        |> Seq.fold (fun filter v ->
+            filter
+            |> addIn k v) current
+
     let addLessThanOrEqualTo k v current =
         { current with LessThanOrEqualTo = (Seq.append current.LessThanOrEqualTo [ (k, v) ])}
 
@@ -320,6 +326,24 @@ let getDocumentsByType documentType (mapper: JObject -> 'a option) limit ctx = t
 let getDocumentById id ctx = task {
     let! db = Mongo.openDatabase ctx
     return! db |> Mongo.getDocument id
+}
+
+let getDocumentsById idField (ids: seq<string>) additionalFilter ctx = task {
+    // Mongo docs say to only do "tens" of items for "in" queries, so let's set a reasonable limit of 30
+    let chunks = ids |> Seq.chunkBySize 30
+
+    let result = new System.Collections.Generic.List<JObject>()
+
+    for chunk in chunks do
+        let ids = chunk |> Seq.map (fun c ->
+            let c: MongoDB.Bson.BsonValue = c
+            c)
+
+        let filter = additionalFilter |> Filters.addInSeq idField ids
+        let! items = getDocumentsForFilter filter NoLimit ctx
+        result.AddRange(items)
+
+    return result |> Seq.copyToImmutableSeq
 }
 
 let getDocumentByTypeAndId documentType id ctx = task {

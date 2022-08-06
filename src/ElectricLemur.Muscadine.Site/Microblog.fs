@@ -80,26 +80,43 @@ let loadMicroblogsForDocument itemDocumentType itemId ctx = task {
        | None -> []
 }
 
-let private loadItemDataForMicroblogAssignment (microblogAssignment: MicroblogAssignment) ctx = task {
-  let! item = Database.getDocumentByTypeAndId microblogAssignment.ItemDocumentType microblogAssignment.ItemId ctx
+let private readItemData microblogAssignment itemData =
   let itemName =
-    item
+    itemData
     |> Option.choosef [
       (fun obj -> Option.bind (fun obj -> JObj.getter<string> obj "name") obj)
       (fun obj -> Option.bind (fun obj -> JObj.getter<string> obj "title") obj)
     ]
     |> Option.defaultValue "Unknown"
 
-  let itemIcon =
-    match microblogAssignment.ItemDocumentType with
-    | s when s = Constants.Database.DocumentTypes.Book -> Constants.Icons.Book
-    | s when s = Constants.Database.DocumentTypes.Project -> Constants.Icons.Project
-    | s when s = Constants.Database.DocumentTypes.Game -> Constants.Icons.Game
-    | _ -> Constants.Icons.QuestionMark
+  let defaultItemIcon = Items.getDefaultIcon microblogAssignment.ItemDocumentType
 
-  return itemName, itemIcon
+  let path =
+    Items.getItemImagePaths itemData
+    |> Option.map (fun o -> o.Size256)
+    |> Util.addRootPath "/images"
+
+  let itemIcon =
+    match path with
+    | Some path -> Image.UrlPath path
+    | None -> defaultItemIcon
+
+  itemName, itemIcon
+
+let private loadItemDataForMicroblogAssignment (microblogAssignment: MicroblogAssignment) ctx = task {
+  let! item = Database.getDocumentByTypeAndId microblogAssignment.ItemDocumentType microblogAssignment.ItemId ctx
+  return (readItemData microblogAssignment item)
 }
 
+let private loadLinkedItemsData linkedItemIds ctx = task {
+  let! linkedItems = Database.getDocumentsById Database.idField linkedItemIds Database.Filters.empty ctx
+  let linkedItems =
+    linkedItems
+    |> Seq.map (fun obj -> (JObj.getter<string> obj Database.idField |> Option.defaultValue ""), obj)
+    |> Seq.filter (fun (id, _) -> not (System.String.IsNullOrWhiteSpace(id)))
+    |> Map.ofSeq
+  return linkedItems
+}
 let loadRecentMicroblogs (since: System.DateTimeOffset) limit ctx = task {
   let filter =
     Database.Filters.empty
@@ -116,12 +133,16 @@ let loadRecentMicroblogs (since: System.DateTimeOffset) limit ctx = task {
     |> Seq.rev
     |> Seq.map JObjectToMicroblogAssignment
 
-  let! documents =
+  let linkedItems = documents |> Seq.map (fun d -> d.ItemId)
+  let! linkedItems = loadLinkedItemsData linkedItems ctx
+
+  let documents =
     documents
-    |> Seq.mapAsync (fun assignment -> task {
-      let! (name, icon) = loadItemDataForMicroblogAssignment assignment ctx
-      return (name, icon, MicroblogAssignmentToMicroblog assignment)
-    })
+    |> Seq.map (fun assignment ->
+      let linkedItem = linkedItems |> Map.tryFind assignment.ItemId
+      let (name, icon) = readItemData assignment linkedItem
+      (name, icon, MicroblogAssignmentToMicroblog assignment, (assignment.ItemDocumentType, assignment.ItemId, linkedItem))
+    )
 
   return documents
 }

@@ -3,6 +3,7 @@ module ElectricLemur.Muscadine.Site.Frontend
 open Giraffe
 open Giraffe.ViewEngine
 open Microsoft.AspNetCore.Http;
+open Newtonsoft.Json.Linq
 
 module PageDefinitions =
   type Page =
@@ -100,13 +101,19 @@ let layout pageDefinition content extraCss ctx =
       ]
     ]
 
-let makeMicroblogsContent (recentMicroblogs: (string * string * System.DateTimeOffset * string) seq) =
+let makeMicroblogsContent (recentMicroblogs: (string * Image.Icon * System.DateTimeOffset * string * (string * string * JObject option)) seq) =
+
   recentMicroblogs
-  |> Seq.map (fun (name, icon, date, text) ->
+  |> Seq.map (fun (name, icon, date, text, itemInfo) ->
     let d = date.ToString("o")
+    let icon =
+      match icon with
+      | Image.FontAwesome iconClass -> i [ _class iconClass ] []
+      | Image.UrlPath path -> img [ _src path ]
+
     div [ _class "microblog" ] [
       a [ _class "icon" ] [
-        i [ _class icon ] []
+        icon
       ]
       div [ _class "header" ] [
         span [ _class "header-text" ] [ encodedText name ]
@@ -170,12 +177,12 @@ let indexHandler =
                                | false, _ -> None)
       |> Option.defaultValue 100
 
-    let! recentMicroblogs = Microblog.loadRecentMicroblogs (System.DateTimeOffset.UtcNow) (Database.Limit 10) ctx
+    let! recentMicroblogs = Microblog.loadRecentMicroblogs (System.DateTimeOffset.UtcNow) (Database.Limit 7) ctx
     let recentMicroblogs =
       recentMicroblogs
-      |> Seq.map (fun (name, icon, mb) ->
+      |> Seq.map (fun (name, icon, mb, itemInfo) ->
 
-        name, icon, mb.DateAdded, mb.Text
+        name, icon, mb.DateAdded, mb.Text, itemInfo
       )
 
     let content = aboutMeContent recentMicroblogs
