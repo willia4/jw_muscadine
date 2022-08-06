@@ -1,13 +1,18 @@
 function formatUtcDate(dateString) {
+  const padNumber = (n => n < 10 ? "0" + n : "" + n);
+
   const d = new Date(dateString);
   if (d.toString() === "Invalid Date") { return "??date"; }
 
   const amPm = d.getHours() >= 12 ? "pm" : "am";
-  const hours = d.getHours() % 12;
-  const formattedHours = hours < 10 ? "0" + hours : "" + hours
-  const formattedMinutes = d.getMinutes() < 10 ? "0" + d.getMinutes() : "" + d.getMinutes();
 
-  return "" + d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate() + " @ " + formattedHours + ":" + formattedMinutes + amPm;
+  const year = d.getFullYear();
+  const month = padNumber(d.getMonth() + 1);
+  const day = padNumber(d.getDate());
+  const hour = padNumber(d.getHours() % 12);
+  const minute = padNumber(d.getMinutes());
+
+  return "" + year + "-" + month + "-" + day + " @ " + hour + ":" + minute + amPm;
 }
 
 function toggleMenu() {
