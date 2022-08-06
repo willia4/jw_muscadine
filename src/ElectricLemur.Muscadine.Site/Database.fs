@@ -28,7 +28,7 @@ module Filters =
             EqualTo: seq<string * BsonValue>;
             NotEqualTo: seq<string * BsonValue>;
             In: seq<string * seq<BsonValue>>;
-            LessThanEqualDate: seq<string * DateTime>;
+            LessThanOrEqualTo: seq<string * BsonValue>;
         } 
         override this.ToString() = 
             ""
@@ -49,7 +49,7 @@ module Filters =
             let a = (new BsonArray()).AddRange(vs)
             filter.[k] <- new BsonDocument("$in", a))
 
-        filterBuilder.LessThanEqualDate
+        filterBuilder.LessThanOrEqualTo
         |> Seq.iter(fun (k, v) ->
             filter.[k] <- new BsonDocument("$lte", v))
 
@@ -74,10 +74,10 @@ module Filters =
             |> Map.toSeq
         { current with In = newIn }
 
-    let addLessThanEqualDate k (v: System.DateTimeOffset) current =
-        { current with LessThanEqualDate = (Seq.append current.LessThanEqualDate [ (k, v.UtcDateTime) ])}
+    let addLessThanOrEqualTo k v current =
+        { current with LessThanOrEqualTo = (Seq.append current.LessThanOrEqualTo [ (k, v) ])}
 
-    let empty = { EqualTo = Seq.empty; NotEqualTo = Seq.empty; In = Seq.empty; LessThanEqualDate = Seq.empty }
+    let empty = { EqualTo = Seq.empty; NotEqualTo = Seq.empty; In = Seq.empty; LessThanOrEqualTo = Seq.empty }
 
     let byMap (m: Map<string, BsonValue>) current =
         m 

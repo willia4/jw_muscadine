@@ -22,11 +22,11 @@ module PageDefinitions =
 
   let sidebarButtonIcon page =
     match page with
-    | AboutMe -> Some (i [ _class "fa-solid fa-user" ] [])
-    | Projects -> Some (i [ _class "fa-solid fa-laptop-code" ] [])
-    | Books -> Some (i [ _class "fa-solid fa-book-open" ] [])
-    | Games -> Some (i [ _class "fa-solid fa-gamepad" ] [])
-    | Colophon -> Some (i [ _class "fa-solid fa-pen-nib" ] [])
+    | AboutMe -> Some (i [ _class Constants.Icons.AboutMe ] [])
+    | Projects -> Some (i [ _class Constants.Icons.Project ] [])
+    | Books -> Some (i [ _class Constants.Icons.Book ] [])
+    | Games -> Some (i [ _class Constants.Icons.Game ] [])
+    | Colophon -> Some (i [ _class Constants.Icons.Colophon ] [])
 
   let pageTitle = sidebarButtonTitle >> fst
 
@@ -100,7 +100,28 @@ let layout pageDefinition content extraCss ctx =
       ]
     ]
 
-let aboutMeContent =
+let makeMicroblogsContent (recentMicroblogs: (string * string * System.DateTimeOffset * string) seq) =
+  recentMicroblogs
+  |> Seq.map (fun (name, icon, date, text) ->
+    let d = date.ToString("o")
+    div [ _class "microblog" ] [
+      a [ _class "icon" ] [
+        i [ _class icon ] []
+      ]
+      div [ _class "header" ] [
+        span [ _class "header-text" ] [ encodedText name ]
+
+        span [ _class "timestamp" ] [
+          script [] [ rawText $"document.write(formatUtcDate(\"%s{d}\"));" ]
+          noscript [] [ encodedText d ]
+        ]
+      ]
+      div [ _class "text "] [ encodedText text ]
+    ]
+  )
+  |> List.ofSeq
+
+let aboutMeContent recentMicroblogs =
   let biographyParagraphs = Util.extractEmbeddedTextFile "biography.html"
 
   [
@@ -130,11 +151,16 @@ let aboutMeContent =
         img [ _src "/img/james_and_gary.jpg" ]
       ]
     ]
+
+    div [ _class "page-content recent-activity" ] [
+      h2 [ _class "activity-title" ] [ encodedText "My Recent Activity" ]
+      div [ _class "microblogs-container" ] (makeMicroblogsContent recentMicroblogs)
+    ]
   ]
 
 
 let indexHandler =
-  fun next (ctx: HttpContext) ->
+  fun next (ctx: HttpContext) -> task {
     let lineCount =
       match ctx.GetQueryStringValue "lines" with
       | Ok lines -> Some lines
@@ -144,8 +170,16 @@ let indexHandler =
                                | false, _ -> None)
       |> Option.defaultValue 100
 
-    let content = aboutMeContent
+    let! recentMicroblogs = Microblog.loadRecentMicroblogs (System.DateTimeOffset.UtcNow) (Database.Limit 10) ctx
+    let recentMicroblogs =
+      recentMicroblogs
+      |> Seq.map (fun (name, icon, mb) ->
 
+        name, icon, mb.DateAdded, mb.Text
+      )
+
+    let content = aboutMeContent recentMicroblogs
     let pageHtml = layout PageDefinitions.AboutMe content [ "frontend/about_me.scss" ] ctx
 
-    htmlView pageHtml next ctx
+    return! htmlView pageHtml next ctx
+  }

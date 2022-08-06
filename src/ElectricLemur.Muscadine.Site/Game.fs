@@ -8,7 +8,7 @@ open Newtonsoft.Json.Linq
 open RequiredFields
 open OptionalFields
 
-let documentType = "game"
+let documentType = Constants.Database.DocumentTypes.Game
 
 type Game = {
     Id: string;

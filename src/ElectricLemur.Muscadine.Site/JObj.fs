@@ -49,7 +49,7 @@ let setValue<'a> (key: string) (v: 'a) (obj: JObject) =
         match v.GetType() with
         | t when t = typedefof<string> -> JToken.op_Implicit((box v) :?> string)
         | t when t = typedefof<System.DateTimeOffset> -> 
-            let stringValue = ((box v) :?> System.DateTimeOffset).ToString("o")
+            let stringValue = ((box v) :?> System.DateTimeOffset).ToOffset(System.TimeSpan.Zero).ToString("o")
             JToken.op_Implicit(stringValue)
         | t when t = typedefof<bool> -> JToken.op_Implicit((box v) :?> bool)
         | t when not t.IsPrimitive -> JToken.FromObject(v)

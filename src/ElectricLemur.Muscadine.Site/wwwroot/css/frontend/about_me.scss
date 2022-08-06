@@ -127,3 +127,112 @@
     }
   }
 }
+
+.page-content.recent-activity {
+  max-width: 60%;
+  margin-top: 100px;
+
+  @include breakpoints.phone {
+    border-top: solid 1px colors.$heading;
+    margin-top: 30px;
+    max-width: 100%;
+  }
+
+  h2.activity-title {
+    font-family: "Ubuntu Bold";
+    font-size: 32px;
+    color: colors.$heading;
+
+    @include breakpoints.phone {
+      font-size: 23px;
+    }
+  }
+
+  .microblogs-container {
+    .microblog {
+      display: grid;
+      grid-template-columns: auto 4fr;
+      grid-template-rows: auto auto;
+      margin-bottom: 40px;
+
+      a.icon {
+        grid-row-start: 1;
+        grid-row-end: 3;
+        grid-column: 1;
+        width: 64px;
+        height: 64px;
+        border: 1px solid black;
+        border-radius: 5px;
+        display: inline-block;
+
+        color: colors.$heading;
+        font-size: 43px;
+        text-align: center;
+        vertical-align: middle;
+
+        margin-right: 15px;
+
+        i {
+          margin-top: 8px;
+          padding: 0;
+        }
+      }
+
+      .header {
+        display: inline-block;
+        grid-row: 1;
+        grid-column: 2;
+        margin: 0;
+        padding: 0p;
+
+        @include breakpoints.tablet {
+          display: flex;
+          flex-direction: column;
+        }
+
+        @include breakpoints.phone {
+          display: flex;
+          flex-direction: column;
+        }
+
+        .header-text {
+          font-size: 24px;
+          font-family: "Ubuntu Bold";
+          color: colors.$heading;
+
+          @include breakpoints.phone {
+            font-size: 20px;
+            width: 100%;
+          }
+        }
+
+        .timestamp {
+          font-size: 12px;
+          font-family: "Ubuntu Regular";
+          margin-left: 12px;
+          color: colors.$text;
+
+          @include breakpoints.tablet {
+            margin-left: 0px;
+          }
+
+          @include breakpoints.phone {
+            font-size: 10px;
+            margin-left: 0px;
+          }
+        }
+      }
+
+      .text {
+        grid-row: 2;
+        grid-column: 2;
+        // font-family: "Ubuntu Medium";
+        // color: colors.$text;
+        font-size: 90%;
+        @include breakpoints.phone {
+          font-size: 85%;
+        }
+      }
+    }
+  }
+}

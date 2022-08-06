@@ -1,5 +1,7 @@
 module Seq
 
+let copyToImmutableSeq (s: seq<'a>) = List.ofSeq s |> Seq.ofList
+
 // Returns a new Sequence with the values of b prepended to the values of a
 let prepend a b = Seq.append b a
 
@@ -17,17 +19,24 @@ let appendIf p item s =
 let chunkByPredicate (predicate: 'a -> bool)  (s: seq<'a>) = seq {
   let chunk = new System.Collections.Generic.List<'a>()
 
-  let copyChunk (chunk: seq<'a>) =
-    System.Collections.Immutable.ImmutableList.Empty.AddRange(chunk)
-
   for item in s do
       if (predicate item) then
           if (chunk.Count > 0) then
-              yield (copyChunk chunk)
+              yield (copyToImmutableSeq chunk)
           chunk.Clear()
       else
         chunk.Add(item)
 
   if (chunk.Count > 0) then
-    yield (copyChunk chunk)
+    yield (copyToImmutableSeq chunk)
+}
+
+let mapAsync (mapper: 'a -> System.Threading.Tasks.Task<'b>) (s: seq<'a>) = task {
+  let results = new System.Collections.Generic.List<'b>()
+
+  for i in s do
+    let! r = mapper i
+    results.Add(r)
+
+  return (copyToImmutableSeq results)
 }

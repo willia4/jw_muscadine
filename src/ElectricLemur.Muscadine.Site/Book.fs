@@ -8,7 +8,7 @@ open Newtonsoft.Json.Linq
 open RequiredFields
 open OptionalFields
 
-let documentType = "book"
+let documentType = Constants.Database.DocumentTypes.Book
 
 type Book = {
     Id: string;
@@ -19,7 +19,7 @@ type Book = {
     CoverImagePaths: Image.ImagePaths option;
 }
 
-module Fields = 
+module Fields =
     let _id: RequiredFieldDescriptor<Book, string> = {
         Key = "_id"
         Label = "Id"

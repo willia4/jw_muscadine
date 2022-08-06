@@ -80,6 +80,52 @@ let loadMicroblogsForDocument itemDocumentType itemId ctx = task {
        | None -> []
 }
 
+let private loadItemDataForMicroblogAssignment (microblogAssignment: MicroblogAssignment) ctx = task {
+  let! item = Database.getDocumentByTypeAndId microblogAssignment.ItemDocumentType microblogAssignment.ItemId ctx
+  let itemName =
+    item
+    |> Option.choosef [
+      (fun obj -> Option.bind (fun obj -> JObj.getter<string> obj "name") obj)
+      (fun obj -> Option.bind (fun obj -> JObj.getter<string> obj "title") obj)
+    ]
+    |> Option.defaultValue "Unknown"
+
+  let itemIcon =
+    match microblogAssignment.ItemDocumentType with
+    | s when s = Constants.Database.DocumentTypes.Book -> Constants.Icons.Book
+    | s when s = Constants.Database.DocumentTypes.Project -> Constants.Icons.Project
+    | s when s = Constants.Database.DocumentTypes.Game -> Constants.Icons.Game
+    | _ -> Constants.Icons.QuestionMark
+
+  return itemName, itemIcon
+}
+
+let loadRecentMicroblogs (since: System.DateTimeOffset) limit ctx = task {
+  let filter =
+    Database.Filters.empty
+    |> Database.Filters.byDocumentType documentType
+    |> Database.Filters.addLessThanOrEqualTo "_dateAdded" (since.ToOffset(System.TimeSpan.Zero).ToString("o"))
+
+  let sort =
+    Database.Sort.empty
+    |> Database.Sort.by "_dateAdded"
+
+  let! documents = Database.getDocumentsForFilterAndSort filter sort limit ctx
+  let documents =
+    documents
+    |> Seq.rev
+    |> Seq.map JObjectToMicroblogAssignment
+
+  let! documents =
+    documents
+    |> Seq.mapAsync (fun assignment -> task {
+      let! (name, icon) = loadItemDataForMicroblogAssignment assignment ctx
+      return (name, icon, MicroblogAssignmentToMicroblog assignment)
+    })
+
+  return documents
+}
+
 let addMicroblogToDocument itemDocumentType itemId text ctx = task {
   let microblogAssignment = {
     Id = Util.newGuid () |> string

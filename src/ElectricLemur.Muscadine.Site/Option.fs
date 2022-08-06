@@ -26,3 +26,17 @@ let unwrapSeqElements (s: seq<option<'a>>) =
 let unwrapListElements (s: List<option<'a>>) =
   unwrapSeqElements s
   |> Option.map List.ofSeq
+
+/// Given a Sequence of Options, returns the first Option that has Some value. Returns None if all Options in the Sequence are None.
+let choose (options: seq<option<'a>>) =
+  options
+  |> Seq.tryFind Option.isSome
+  |> Option.flatten
+
+/// Applies a sequence of functions to a single Option and returns the first result from those applications that is Some.
+/// Returns None if none of the function applications return Some.
+/// Note: does not short-circuit; all functions will be executed
+let choosef (fs: seq<('a option -> 'b option)>) (o: 'a option) =
+    fs
+    |> Seq.map (fun f -> f o)
+    |> choose

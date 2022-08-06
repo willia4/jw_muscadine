@@ -8,7 +8,7 @@ open Newtonsoft.Json.Linq
 open RequiredFields
 open OptionalFields
 
-let documentType = "project"
+let documentType = Constants.Database.DocumentTypes.Project
 
 type Project = {
     Id: string;
