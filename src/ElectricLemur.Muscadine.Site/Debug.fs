@@ -18,7 +18,7 @@ let private writeJObjectArray (objects: Newtonsoft.Json.Linq.JObject seq) (ctx: 
 
 let allDocumentsHandler: HttpHandler =
     fun next ctx -> task {
-        let! documents = Database.getAllDocuments ctx
+        let! documents = Database.getAllDocuments Database.NoLimit ctx
         do! writeJObjectArray documents ctx
 
         return Some ctx
@@ -58,7 +58,7 @@ let resetDatabase: HttpHandler =
 
 let resetDatabaseDeleteHandler: HttpHandler =
     fun next (ctx: HttpContext) -> task {
-        let! documents = Database.getAllDocuments ctx
+        let! documents = Database.getAllDocuments Database.NoLimit ctx
         let ids = documents |> Seq.map (fun d -> d.Value<string>("_id"))
 
         for id in ids do

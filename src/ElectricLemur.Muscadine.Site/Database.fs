@@ -9,6 +9,10 @@ open System
 
 type ADocument = { _id: string; SomeData: string }
 
+type Limit =
+    | Limit of int
+    | NoLimit
+
 type JsonString = JsonString of string
 module JsonString =
     let value (JsonString input) = input
@@ -24,6 +28,7 @@ module Filters =
             EqualTo: seq<string * BsonValue>;
             NotEqualTo: seq<string * BsonValue>;
             In: seq<string * seq<BsonValue>>;
+            LessThanEqualDate: seq<string * DateTime>;
         } 
         override this.ToString() = 
             ""
@@ -43,6 +48,10 @@ module Filters =
         |> Seq.iter(fun (k, vs) ->
             let a = (new BsonArray()).AddRange(vs)
             filter.[k] <- new BsonDocument("$in", a))
+
+        filterBuilder.LessThanEqualDate
+        |> Seq.iter(fun (k, v) ->
+            filter.[k] <- new BsonDocument("$lte", v))
 
         filter
 
@@ -65,7 +74,10 @@ module Filters =
             |> Map.toSeq
         { current with In = newIn }
 
-    let empty = { EqualTo = Seq.empty; NotEqualTo = Seq.empty; In = Seq.empty }
+    let addLessThanEqualDate k (v: System.DateTimeOffset) current =
+        { current with LessThanEqualDate = (Seq.append current.LessThanEqualDate [ (k, v.UtcDateTime) ])}
+
+    let empty = { EqualTo = Seq.empty; NotEqualTo = Seq.empty; In = Seq.empty; LessThanEqualDate = Seq.empty }
 
     let byMap (m: Map<string, BsonValue>) current =
         m 
@@ -189,10 +201,15 @@ module private Mongo =
         return (acc :> seq<'a>)
 
     }
-    let getDocuments (filter: BsonDocument) (sort: BsonDocument) (db: MongoDatabase) = task {
+    let getDocuments (filter: BsonDocument) (sort: BsonDocument) (limit: Limit) (db: MongoDatabase) = task {
+        let limit = match limit with
+                    | Limit v -> v
+                    | NoLimit -> 0
+
         use! cursor = db.Collection
                         .Find(filter)
                         .Sort(sort)
+                        .Limit(limit)
                         .ToCursorAsync()
 
         let! documents = cursorToSeq cursor
@@ -259,11 +276,11 @@ module private Mongo =
     }
 
 
-let getAllDocuments (ctx: HttpContext) = task {
+let getAllDocuments limit (ctx: HttpContext) = task {
     let! db = Mongo.openDatabase ctx
     let filter = Filters.empty |> Filters.build
     let sort = Sort.empty |> Sort.build
-    return! Mongo.getDocuments filter sort db
+    return! Mongo.getDocuments filter sort limit db
 }
 
 let getDocumentCount (ctx: HttpContext) (category: string option)= task {
@@ -276,23 +293,23 @@ let getDocumentCount (ctx: HttpContext) (category: string option)= task {
     return! Mongo.countDocuments filter db
 }
 
-let getDocumentsForFilterAndSort filter sort ctx = task {
+let getDocumentsForFilterAndSort filter sort limit ctx = task {
     let! db = Mongo.openDatabase ctx
 
     let filter = filter |> Filters.build
     let sort = sort |> Filters.build
 
-    let! documents = db |> Mongo.getDocuments filter sort
+    let! documents = db |> Mongo.getDocuments filter sort limit
     return documents
 }
 
-let getDocumentsForFilter filter ctx = getDocumentsForFilterAndSort filter Sort.empty ctx
+let getDocumentsForFilter filter limit ctx = getDocumentsForFilterAndSort filter Sort.empty limit ctx
 
-let getDocumentsByType documentType (mapper: JObject -> 'a option) ctx = task {
+let getDocumentsByType documentType (mapper: JObject -> 'a option) limit ctx = task {
     
     let filter = Filters.empty |> Filters.byDocumentType documentType
     let sort = Sort.empty |> Sort.by "dateAdded"
-    let! documents = getDocumentsForFilterAndSort filter sort ctx
+    let! documents = getDocumentsForFilterAndSort filter sort limit ctx
     
     return documents
             |> Seq.map mapper
@@ -311,7 +328,7 @@ let getDocumentByTypeAndId documentType id ctx = task {
         |> Filters.byDocumentType documentType
         |> Filters.byId id
 
-    let! documents = getDocumentsForFilter filter ctx
+    let! documents = getDocumentsForFilter filter (Limit 1) ctx
     return documents |> Seq.tryHead
 }
 
@@ -341,7 +358,7 @@ let checkUniqueness documentType fieldName (fieldValue: MongoDB.Bson.BsonValue) 
     let sort = Sort.empty |> Filters.build
 
     //let! documentCount = db |> Mongo.countDocuments filter
-    let! documents = db |> Mongo.getDocuments filter sort 
+    let! documents = db |> Mongo.getDocuments filter sort NoLimit
     let documentCount = Seq.length documents
     return (documentCount = 0)
 }
@@ -357,7 +374,7 @@ let getIdForDocumentTypeAndSlug documentType slug ctx = task {
         |> Filters.byDocumentType documentType
         |> Filters.addEquals "slug" slug
 
-    let! documents = getDocumentsForFilter filter ctx
+    let! documents = getDocumentsForFilter filter (Limit 1) ctx
 
     return documents
            |> Seq.tryHead

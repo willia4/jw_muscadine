@@ -263,5 +263,5 @@ let deleteHandler_delete id =
     }
     
 let allBooks ctx = 
-    Database.getDocumentsByType documentType (makeModelFromJObject >> Some) ctx
+    Database.getDocumentsByType documentType (makeModelFromJObject >> Some) Database.NoLimit ctx
 

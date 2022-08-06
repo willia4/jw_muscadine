@@ -16,7 +16,7 @@ let loadAssociatedItemsForDocuments (documentType: string) (itemDocumentType: st
       |> Database.Filters.addEquals Database.documentTypeField documentType
       |> Database.Filters.addEquals itemDocumentTypeField itemDocumentType
 
-    let! associatedItems = Database.getDocumentsForFilter filter ctx
+    let! associatedItems = Database.getDocumentsForFilter filter Database.NoLimit ctx
     return associatedItems |> Seq.map jObjToItem
   }
 

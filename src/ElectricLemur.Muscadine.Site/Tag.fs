@@ -117,7 +117,7 @@ let private getOrphanedTags ctx = task {
         with
         | _ -> None
 
-    let! allTags = Database.getDocumentsByType documentType mapper ctx
+    let! allTags = Database.getDocumentsByType documentType mapper Database.NoLimit ctx
     return! (allTags |> Util.seqAsyncFilter (fun t -> task {
         let! item = Database.getDocumentByTypeAndId t.ItemDocumentType t.ItemId ctx
         return (item |> Option.isNone)

@@ -261,6 +261,6 @@ let deleteHandler_delete id =
         return! setStatusCode 200 next ctx
     }
     
-let allGames ctx = 
-    Database.getDocumentsByType documentType (makeModelFromJObject >> Some) ctx
+let allGames ctx =
+    Database.getDocumentsByType documentType (makeModelFromJObject >> Some) Database.NoLimit ctx
 
