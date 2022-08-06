@@ -125,12 +125,11 @@ let loadRecentMicroblogs (since: System.DateTimeOffset) limit ctx = task {
 
   let sort =
     Database.Sort.empty
-    |> Database.Sort.by "_dateAdded"
+    |> Database.Sort.byDescending "_dateAdded"
 
   let! documents = Database.getDocumentsForFilterAndSort filter sort limit ctx
   let documents =
     documents
-    |> Seq.rev
     |> Seq.map JObjectToMicroblogAssignment
 
   let linkedItems = documents |> Seq.map (fun d -> d.ItemId)

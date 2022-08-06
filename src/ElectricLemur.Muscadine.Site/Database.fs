@@ -100,6 +100,7 @@ module Sort =
     let empty = Filters.empty
     let byId current = Filters.by idField 1 current
     let by k current = Filters.by k 1 current
+    let byDescending k current = Filters.by k -1 current
     let build = Filters.build
 
 module private Mongo =
