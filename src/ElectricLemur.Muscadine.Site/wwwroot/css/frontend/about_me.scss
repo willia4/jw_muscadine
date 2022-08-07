@@ -150,9 +150,9 @@
 
   .microblogs-container {
     .microblog {
-      display: grid;
-      grid-template-columns: auto 4fr;
-      grid-template-rows: auto auto;
+      display: flex;
+      flex-direction: row;
+
       margin-bottom: 40px;
 
       a.icon {
@@ -162,6 +162,9 @@
         grid-column: 1;
         width: 64px;
         height: 64px;
+        min-width: 64px;
+        min-height: 64px;
+
         border: 1px solid black;
         border-radius: 5px;
 
@@ -171,6 +174,7 @@
         text-align: center;
         vertical-align: middle;
 
+        margin-top: 5px;
         margin-right: 15px;
 
         i {
@@ -186,59 +190,75 @@
         }
       }
 
-      .header {
-        display: inline-block;
-        grid-row: 1;
-        grid-column: 2;
-        margin: 0;
-        padding: 0p;
+      .microblog-text-container {
 
-        @include breakpoints.tablet {
-          display: flex;
-          flex-direction: column;
-        }
 
-        @include breakpoints.phone {
-          display: flex;
-          flex-direction: column;
-        }
-
-        .header-text {
-          font-size: 24px;
-          font-family: "Ubuntu Bold";
-          color: colors.$heading;
-
-          @include breakpoints.phone {
-            font-size: 20px;
-            width: 100%;
-          }
-        }
-
-        .timestamp {
-          font-size: 12px;
-          font-family: "Ubuntu Regular";
-          margin-left: 12px;
-          color: colors.$text;
+        .header {
+          display: inline-block;
+          grid-row: 1;
+          grid-column: 2;
+          margin: 0;
+          padding: 0;
 
           @include breakpoints.tablet {
-            margin-left: 0px;
+            display: flex;
+            flex-direction: column;
           }
 
           @include breakpoints.phone {
-            font-size: 10px;
-            margin-left: 0px;
+            display: flex;
+            flex-direction: column;
+          }
+
+          .header-text {
+            font-size: 24px;
+            font-family: "Ubuntu Bold";
+            color: colors.$heading;
+
+            @include breakpoints.phone {
+              font-size: 20px;
+              width: 100%;
+            }
+          }
+
+          .timestamp {
+            font-size: 12px;
+            font-family: "Ubuntu Regular";
+            margin-left: 12px;
+            color: colors.$text;
+
+            @include breakpoints.tablet {
+              margin-left: 0px;
+            }
+
+            @include breakpoints.phone {
+              font-size: 10px;
+              margin-left: 0px;
+            }
           }
         }
-      }
 
-      .text {
-        grid-row: 2;
-        grid-column: 2;
-        // font-family: "Ubuntu Medium";
-        // color: colors.$text;
-        font-size: 90%;
-        @include breakpoints.phone {
-          font-size: 85%;
+        .text {
+          grid-row: 2;
+          grid-column: 2;
+
+          font-size: 90%;
+          display: flex;
+          flex-direction: column
+          ;
+          p {
+            margin-top: 0;
+            margin-bottom: 0;
+            padding: 0;
+
+            &:not(:first-child) {
+              margin-top: 10px;
+            }
+          }
+
+          @include breakpoints.phone {
+            font-size: 85%;
+          }
         }
       }
     }

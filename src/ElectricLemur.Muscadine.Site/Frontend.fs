@@ -117,15 +117,17 @@ let makeMicroblogsContent (recentMicroblogs: (string * Image.Icon * System.DateT
       a [ _class "icon" ] [
         icon
       ]
-      div [ _class "header" ] [
-        span [ _class "header-text" ] [ encodedText name ]
+      div [ _class "microblog-text-container" ] [
+        div [ _class "header" ] [
+          span [ _class "header-text" ] [ encodedText name ]
 
-        span [ _class "timestamp" ] [
-          script [] [ rawText $"document.write(formatUtcDate(\"%s{d}\"));" ]
-          noscript [] [ encodedText d ]
+          span [ _class "timestamp" ] [
+            script [] [ rawText $"document.write(formatUtcDate(\"%s{d}\"));" ]
+            noscript [] [ encodedText d ]
+          ]
         ]
+        div [ _class "text "] [ rawText markdownHtml ]
       ]
-      div [ _class "text "] [ rawText markdownHtml ]
     ]
   )
   |> List.ofSeq
