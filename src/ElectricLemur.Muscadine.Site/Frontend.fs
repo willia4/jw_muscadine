@@ -106,6 +106,8 @@ let makeMicroblogsContent (recentMicroblogs: (string * Image.Icon * System.DateT
   recentMicroblogs
   |> Seq.map (fun (name, icon, date, text, itemInfo) ->
     let d = date.ToString("o")
+    let markdownHtml = Markdig.Markdown.ToHtml(text)
+
     let icon =
       match icon with
       | Image.FontAwesome iconClass -> i [ _class iconClass ] []
@@ -123,7 +125,7 @@ let makeMicroblogsContent (recentMicroblogs: (string * Image.Icon * System.DateT
           noscript [] [ encodedText d ]
         ]
       ]
-      div [ _class "text "] [ encodedText text ]
+      div [ _class "text "] [ rawText markdownHtml ]
     ]
   )
   |> List.ofSeq
