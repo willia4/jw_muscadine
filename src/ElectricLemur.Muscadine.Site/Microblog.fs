@@ -81,25 +81,8 @@ let loadMicroblogsForDocument itemDocumentType itemId ctx = task {
 }
 
 let private readItemData microblogAssignment itemData =
-  let itemName =
-    itemData
-    |> Option.choosef [
-      (fun obj -> Option.bind (fun obj -> JObj.getter<string> obj "name") obj)
-      (fun obj -> Option.bind (fun obj -> JObj.getter<string> obj "title") obj)
-    ]
-    |> Option.defaultValue "Unknown"
-
-  let defaultItemIcon = Items.getDefaultIcon microblogAssignment.ItemDocumentType
-
-  let path =
-    Items.getItemImagePaths itemData
-    |> Option.map (fun o -> o.Size256)
-    |> Util.addRootPath "/images"
-
-  let itemIcon =
-    match path with
-    | Some path -> Image.UrlPath path
-    | None -> defaultItemIcon
+  let itemName = Items.readNameOrDefault itemData
+  let itemIcon = Items.readItemImageOrDefault itemData (fun i -> i.Size512)
 
   itemName, itemIcon
 

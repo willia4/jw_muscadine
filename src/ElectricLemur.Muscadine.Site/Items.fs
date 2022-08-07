@@ -528,7 +528,33 @@ let getDefaultIcon documentType =
     | _ -> Constants.Icons.QuestionMark
     |> Image.FontAwesome
 
-let getItemImagePaths itemData =
+let tryReadItemImagePaths (itemData: JObject option) =
     match itemData with
     | Some itemData -> "coverImage" |> JObj.getter<Image.ImagePaths> itemData
     | None -> None
+
+let tryReadName (itemData: JObject option) =
+    itemData
+    |> Option.choosef [
+      (fun obj -> Option.bind (fun obj -> JObj.getter<string> obj "name") obj)
+      (fun obj -> Option.bind (fun obj -> JObj.getter<string> obj "title") obj)
+    ]
+
+let tryReadDocumentType (itemData: JObject option) =
+    itemData
+    |> Option.bind (fun itemData -> JObj.getter<string> itemData Database.documentTypeField)
+
+let readItemImageOrDefault itemData chooseSize =
+    itemData
+    |> tryReadItemImagePaths
+    |> Option.map chooseSize
+    |> Util.addRootPath "/images"
+    |> function
+       | Some path -> Image.UrlPath path
+       | None ->
+            itemData
+            |> tryReadDocumentType
+            |> Option.defaultValue ""
+            |> getDefaultIcon
+
+let readNameOrDefault (itemData: JObject option) = itemData |> tryReadName |> Option.defaultValue "Unknown"
