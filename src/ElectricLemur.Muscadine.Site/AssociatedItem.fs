@@ -5,16 +5,18 @@ open Newtonsoft.Json.Linq
 let itemDocumentTypeField = "itemDocumentType"
 let itemIdField = "itemId"
 
-let loadAssociatedItemsForDocuments (documentType: string) (itemDocumentType: string) (itemIds: string seq) (jObjToItem: (JObject -> 'a)) ctx = task {
+let loadAssociatedRawItemsForDocuments (documentType: string) (itemDocumentType: string) (itemIds: string seq) ctx =
   let filter =
     Database.Filters.empty
     |> Database.Filters.addEquals Database.documentTypeField documentType
     |> Database.Filters.addEquals itemDocumentTypeField itemDocumentType
 
-  let! documents = Database.getDocumentsById itemIdField itemIds filter ctx
-  return (documents |> Seq.map jObjToItem)
-}
+  Database.getDocumentsById itemIdField itemIds filter ctx
 
+
+let loadAssociatedItemsForDocuments (documentType: string) (itemDocumentType: string) (itemIds: string seq) (jObjToItem: (JObject -> 'a)) ctx =
+  loadAssociatedRawItemsForDocuments documentType itemDocumentType itemIds ctx
+  |> Task.mapSeq jObjToItem
 
 let loadAssociatedItemMapForDocuments documentType itemDocumentType itemIds
     (jObjToItem: (JObject -> 'a)) (associatedIdFromItem: 'a -> string) (resultFromItem: 'a -> 'c) ctx = task {
@@ -25,3 +27,11 @@ let loadAssociatedItemMapForDocuments documentType itemDocumentType itemIds
 
   return Map.withPlaceholderIds itemIds [] mapItemIdToAssociatedItem
 }
+
+let loadAssociatedRawItemForDocument (documentType: string) (itemDocumentType: string) (itemId: string) ctx =
+  loadAssociatedRawItemsForDocuments documentType itemDocumentType [ itemId ] ctx
+  |> Task.map Seq.tryHead
+
+let loadAssociatedItemForDocument (documentType: string) (itemDocumentType: string) (itemId: string) (jObjToItem: (JObject -> 'a)) ctx =
+  loadAssociatedRawItemForDocument documentType itemDocumentType itemId ctx
+  |> Task.map (fun x -> Option.map jObjToItem x)
