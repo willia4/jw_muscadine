@@ -46,21 +46,19 @@ let private loadTagAssignmentsForDocument itemDocumentType itemId ctx =
 let loadTagsForDocuments itemDocumentType itemIds ctx =
     AssociatedItem.loadAssociatedItemMapForDocuments documentType itemDocumentType itemIds JObjectToTagAssignment (fun i -> i.ItemId) (fun i -> i.Tag) ctx
 
-let loadTagsForDocument itemDocumentType itemId ctx = task {
-    let! tags = loadTagsForDocuments itemDocumentType [itemId] ctx
-    return tags
-            |> Map.tryFind itemId
-            |> function
-                | Some tags -> tags
-                | None -> []
-}
+let loadTagsForDocument itemDocumentType itemId ctx =
+    loadTagsForDocuments itemDocumentType [itemId] ctx
+    |> Task.map (fun m -> Map.tryFind itemId m
+                          |> function
+                             | Some tags -> tags
+                             | None -> [])
 
 let setTagsForDocument itemDocumentType itemId (tags: string seq) ctx = task {
     let! existing = loadTagAssignmentsForDocument itemDocumentType itemId ctx
     let toDelete = existing |> Seq.filter (fun e -> not (Seq.contains e.Tag tags))
-    
+
     let toAdd = tags |> Seq.filter (fun t -> not (Seq.exists (fun e -> e.Tag = t) existing)) |> Seq.toList
-    let toAdd = 
+    let toAdd =
         toAdd
         |> List.map (fun a -> { 
             Id = string (Util.newGuid ());
@@ -79,54 +77,54 @@ let setTagsForDocument itemDocumentType itemId (tags: string seq) ctx = task {
     return ()
 }
 
-let clearTagsForDocument itemDocumentType itemId ctx = task {
-    let! existing = loadTagAssignmentsForDocument itemDocumentType itemId ctx
-    for i in existing do
-        do! Database.deleteDocument ctx i.Id
-}
+let clearTagsForDocument itemDocumentType itemId ctx =
+    loadTagAssignmentsForDocument itemDocumentType itemId ctx
+    |> Task.map (Seq.map (fun tag -> tag.Id))
+    |> Task.bind (Seq.iterAsync (Database.deleteDocument ctx))
 
-let getExistingTags ctx = task {
-    let filter = 
-        Database.Filters.empty 
+
+let getExistingTags ctx =
+    let filter =
+        Database.Filters.empty
         |> Database.Filters.addEquals Database.documentTypeField documentType
 
-    let! tags = Database.getDistinctValues<string> "tag" filter ctx
+    Database.getDistinctValues<string> "tag" filter ctx
+    |> Task.map Seq.sort
+    |> Task.map Seq.toList
 
-    return tags |> Seq.toList
-}
 
-let getExistingTagsForDocumentType itemDocumentType ctx = task {
+let getExistingTagsForDocumentType itemDocumentType ctx =
     let filter =
         Database.Filters.empty
         |> Database.Filters.addEquals Database.documentTypeField documentType
         |> Database.Filters.addEquals "itemDocumentType" itemDocumentType
 
-    let! tags = Database.getDistinctValues<string> "tag" filter ctx
-    return tags |> Seq.sort |> Seq.toList
-}
+    Database.getDistinctValues<string> "tag" filter ctx
+    |> Task.map (Seq.sort)
+    |> Task.map (Seq.toList)
 
-let saveTagsForForm itemDocumentType itemId key ctx = task {
+let saveTagsForForm itemDocumentType itemId key ctx =
     let tags = FormFields.stringListValue key (ctx |> FormFields.fromContext)
-    do! setTagsForDocument itemDocumentType itemId tags ctx
-}
+    setTagsForDocument itemDocumentType itemId tags ctx
 
-let private getOrphanedTags ctx = task {
+let private getOrphanedTags ctx =
     let mapper x =
         try
             Some (JObjectToTagAssignment x)
         with
         | _ -> None
 
-    let! allTags = Database.getDocumentsByType documentType mapper Database.NoLimit ctx
-    return! (allTags |> Util.seqAsyncFilter (fun t -> task {
-        let! item = Database.getDocumentByTypeAndId t.ItemDocumentType t.ItemId ctx
-        return (item |> Option.isNone)
-    }))
-}
+    let asyncPredicate tag =
+        Database.getDocumentByTypeAndId tag.ItemDocumentType tag.ItemId ctx
+        |> Task.map Option.isNone
 
-let orphanedTagsAsJObjects ctx = getOrphanedTags ctx |> Util.taskSeqMap tagAssignmentToJObject
-let deleteOrphanedTags ctx = task {
-    let! tags = getOrphanedTags ctx
-    for tag in tags do
-        do! Database.deleteDocument ctx tag.Id
-}
+    Database.getDocumentsByType documentType mapper Database.NoLimit ctx
+    |> Task.bind (Seq.filterAsync asyncPredicate)
+
+
+let orphanedTagsAsJObjects ctx = getOrphanedTags ctx |> Task.map (Seq.map tagAssignmentToJObject)
+
+let deleteOrphanedTags ctx =
+    getOrphanedTags ctx
+    |> Task.map (Seq.map (fun tag -> tag.Id))
+    |> Task.bind (Seq.iterAsync (fun id -> Database.deleteDocument ctx id))

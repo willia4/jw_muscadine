@@ -187,57 +187,7 @@ let requestBodyFromContext (ctx: HttpContext) = task {
     return! reader.ReadToEndAsync()
 }
 
-let requestBodyFromContextAsJobject ctx = task {
-    let! body = requestBodyFromContext ctx
-  return (JObj.parseString body)
-}
-
-let taskResult v = System.Threading.Tasks.Task.FromResult(v)
-
-let taskMap (f: 'a -> 'b) (t: System.Threading.Tasks.Task<'a>) = task {
-    let! r = t
-    return (f r)
-}
-
-let taskSeqMap (f: 'a -> 'b) (t: System.Threading.Tasks.Task<'a seq>) = task {
-    let! r = t
-    return (r |> Seq.map f)
-}
-
-let taskListMap (f: 'a -> 'b) (t: System.Threading.Tasks.Task<'a list>) = task {
-    let! r = t
-    return (r |> List.map f)
-}
-
-let taskResultBind (f: 'a -> Result<'b, 'e>) (t: System.Threading.Tasks.Task<Result<'a, 'e>>) = task {
-    let! r = t
-    return Result.bind f r
-}
-
-let taskResultMap (f: 'a -> 'b) (t: System.Threading.Tasks.Task<Result<'a, 'e>>) =
-    t |> taskResultBind (fun x -> Ok (f x))
-
-let taskResultMapError (f: 'e -> 'f) (t: System.Threading.Tasks.Task<Result<'a, 'e>>) = task {
-    let! r = t
-    return Result.mapError f r
-}
-
-let taskOptionMap (f: 'a -> 'b) (t: System.Threading.Tasks.Task<Option<'a>>) = task {
-    let! r = t
-    return
-        match r with
-        | Some v -> Some (f v)
-        | None -> None
-}
-
-let seqAsyncFilter (predicate: 'a -> System.Threading.Tasks.Task<bool>) (list: seq<'a>) = task {
-    let res = new System.Collections.Generic.List<'a>()
-    for item in list do
-        let! allowed = predicate item
-        if (allowed) then
-            res.Add(item)
-    return (System.Collections.Immutable.ImmutableList.Empty.AddRange(res)) :> seq<'a>
-}
+let requestBodyFromContextAsJobject ctx = ctx |> requestBodyFromContext |> Task.map (JObj.parseString)
 
 let emptyDiv = div [ _style "display: none"] []
 

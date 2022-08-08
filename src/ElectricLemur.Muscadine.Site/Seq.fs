@@ -40,3 +40,19 @@ let mapAsync (mapper: 'a -> System.Threading.Tasks.Task<'b>) (s: seq<'a>) = task
 
   return (copyToImmutableSeq results)
 }
+
+let filterAsync (predicate: 'a -> System.Threading.Tasks.Task<bool>) (s: seq<'a>) = task {
+  let results = new System.Collections.Generic.List<'a>()
+
+  for i in s do
+    let! p = predicate i
+    if p then
+      results.Add(i)
+
+  return (copyToImmutableSeq results)
+}
+
+let iterAsync (f: 'a -> System.Threading.Tasks.Task<unit>) (s: seq<'a>) = task {
+  for i in s do
+      do! (f i)
+}

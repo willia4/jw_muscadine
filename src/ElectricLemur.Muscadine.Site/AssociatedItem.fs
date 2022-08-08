@@ -13,20 +13,16 @@ let loadAssociatedRawItemsForDocuments (documentType: string) (itemDocumentType:
 
   Database.getDocumentsById itemIdField itemIds filter ctx
 
-
 let loadAssociatedItemsForDocuments (documentType: string) (itemDocumentType: string) (itemIds: string seq) (jObjToItem: (JObject -> 'a)) ctx =
   loadAssociatedRawItemsForDocuments documentType itemDocumentType itemIds ctx
-  |> Task.mapSeq jObjToItem
+  |> Task.map (Seq.map jObjToItem)
 
 let loadAssociatedItemMapForDocuments documentType itemDocumentType itemIds
-    (jObjToItem: (JObject -> 'a)) (associatedIdFromItem: 'a -> string) (resultFromItem: 'a -> 'c) ctx = task {
-
-  let! items = loadAssociatedItemsForDocuments documentType itemDocumentType itemIds jObjToItem ctx
-  let items = items |> List.ofSeq
-  let mapItemIdToAssociatedItem = Map.ofGroupedList associatedIdFromItem resultFromItem items
-
-  return Map.withPlaceholderIds itemIds [] mapItemIdToAssociatedItem
-}
+    (jObjToItem: (JObject -> 'a)) (associatedIdFromItem: 'a -> string) (resultFromItem: 'a -> 'c) ctx =
+    loadAssociatedItemsForDocuments documentType itemDocumentType itemIds jObjToItem ctx
+    |> Task.map List.ofSeq
+    |> Task.map (Map.ofGroupedList associatedIdFromItem resultFromItem)
+    |> Task.map (Map.withPlaceholderIds itemIds [])
 
 let loadAssociatedRawItemForDocument (documentType: string) (itemDocumentType: string) (itemId: string) ctx =
   loadAssociatedRawItemsForDocuments documentType itemDocumentType [ itemId ] ctx

@@ -326,7 +326,7 @@ let performValidation (f: 'a -> Result<'a, string>) (prev: Result<'a, string>) =
 
 let performValidationAsync (f: 'a -> Task<Result<'a, string>>) (prev: Result<'a, string>) = 
     match prev with
-    | Error s -> Task.FromResult(Error s)
+    | Error s -> Task.fromResult (Error s)
     | Ok g -> task {
         return! f g
     }
@@ -498,7 +498,7 @@ let handleFileUpload ctx documentType id key (existingPath: string option) (mode
 
     let! filePath =
         match file with
-        | None -> System.Threading.Tasks.Task.FromResult(Ok existingPath)
+        | None -> Task.fromResult (Ok existingPath)
         | Some file -> Util.saveFileToDataStore file documentType id key ctx
 
     return match filePath with

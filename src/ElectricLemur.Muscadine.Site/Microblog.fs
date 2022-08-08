@@ -149,11 +149,11 @@ let deleteAllMicroblogsFromItem itemDocumentType itemId ctx = task {
 }
 
 let deleteMicroblogFromItem itemDocumentType itemId microblogId ctx = task {
-  let! existing = (Database.getDocumentById microblogId ctx |> Util.taskMap (Option.map JObjectToMicroblogAssignment))
+  let! existing = Database.getDocumentById microblogId ctx |> Task.map (Option.map JObjectToMicroblogAssignment)
 
   do! match existing with
       | Some m -> Database.deleteDocument ctx m.Id
-      | None -> System.Threading.Tasks.Task.FromResult(())
+      | None -> Task.fromResult ()
 }
 
 type PostBody = {
@@ -162,11 +162,11 @@ type PostBody = {
 
 let postBodyFromContext (ctx: HttpContext) =
   Util.requestBodyFromContextAsJobject ctx
-  |> Util.taskResultBind (fun obj ->
+  |> Task.map (Result.bind (fun obj ->
     match JObj.getter<string> obj "text" with
     | Some t -> Ok { Text = t }
     | None -> Error "Invalid post body; missing text element"
-  )
+  ))
 
 let addHandler_post itemDocumentType itemId : HttpHandler =
   fun next ctx -> task {
@@ -178,12 +178,12 @@ let addHandler_post itemDocumentType itemId : HttpHandler =
       | Some _ -> task {
         let! model =
           postBodyFromContext ctx
-          |> Util.taskResultBind (fun m ->
+          |> Task.map (Result.bind (fun m ->
               if System.String.IsNullOrWhiteSpace(m.Text) then
                 Error "Text is required"
               else
                 Ok m
-            )
+            ))
 
         return!
           match model with
@@ -239,7 +239,7 @@ let microblogs_edit_get id : HttpHandler =
   fun next ctx -> task {
     let! existing =
       Database.getDocumentByTypeAndId documentType id ctx
-      |> Util.taskOptionMap JObjectToMicroblogAssignment
+      |> Task.map (Option.map JObjectToMicroblogAssignment)
 
     return! match existing with
             | None -> (setStatusCode 404 >=> text "Microblog not found") next ctx
@@ -251,7 +251,7 @@ let microblogs_edit_post id : HttpHandler =
   fun next ctx -> task {
     let! existing =
       Database.getDocumentByTypeAndId documentType id ctx
-      |> Util.taskOptionMap JObjectToMicroblogAssignment
+      |> Task.map (Option.map JObjectToMicroblogAssignment)
 
     return! match existing with
             | None -> (setStatusCode 404 >=> text "Microblog not found") next ctx

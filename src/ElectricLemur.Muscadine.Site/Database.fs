@@ -128,8 +128,8 @@ module private Mongo =
         let collection = database.GetCollection<BsonDocument>(settings.Collection)
         
         let r = { Client = client; Database = database; Collection = collection }
-        Task.FromResult(r)
-    
+        Task.fromResult r
+
     type private IndexDirection = 
         | Ascending
         | Descending

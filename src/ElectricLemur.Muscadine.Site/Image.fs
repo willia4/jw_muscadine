@@ -90,7 +90,7 @@ let saveImageToDataStore (originalFile: IFormFile) documentType (documentId: str
 
     let! r = 
         match paths with
-        | Error msg -> taskResult (Error msg)
+        | Error msg -> Task.fromResult (Error msg)
         | Ok paths -> task {
             let! bytes = formFileToBytes originalFile
             return Ok (paths, bytes)
@@ -125,7 +125,7 @@ let imageRouter (paths: string seq) =
                     return id |> Option.map Id.compressId
                 }
                 else 
-                    Some (idOrSlug |> Id.compressId) |> Util.taskResult
+                    Some (idOrSlug |> Id.compressId) |> Task.fromResult
 
             match id with
             | Some id ->
