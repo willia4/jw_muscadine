@@ -115,21 +115,18 @@ let addEditView (b: Book option) allTags documentTags =
             div [ _class "microblog-container section" ] [])
     ]
 
-let validateModel (id: string) (g: Book) ctx = task {
+let validateModel (id: string) (g: Book) ctx =
     let stringFieldUniquenessValidator field = RequiredFields.stringFieldUniquenessValidator ctx documentType id field
 
-    let valid = 
-        Ok g
-        |> Items.performValidation (RequiredFields.requiredStringValidator Fields.title)
-        |> Items.performValidation (RequiredFields.requiredStringValidator Fields.description)
-        |> Items.performValidation (RequiredFields.requiredStringValidator Fields.slug)
-    let! valid = valid |> Items.performValidationAsync (stringFieldUniquenessValidator Fields.title)
-    let! valid = valid |> Items.performValidationAsync (stringFieldUniquenessValidator Fields.slug)
+    Ok g
+    |> Task.fromResult
+    |> Task.map (Items.performValidation (RequiredFields.requiredStringValidator Fields.title))
+    |> Task.map (Items.performValidation (RequiredFields.requiredStringValidator Fields.description))
+    |> Task.map (Items.performValidation (RequiredFields.requiredStringValidator Fields.slug))
+    |> Task.bind (Items.performValidationAsync (stringFieldUniquenessValidator Fields.title))
+    |> Task.bind (Items.performValidationAsync (stringFieldUniquenessValidator Fields.slug))
 
-    return valid
-}
-
-let makeAndValidateModelFromContext (existing: Book option) (ctx: HttpContext): Task<Result<Book, string>> = task {
+let makeAndValidateModelFromContext (existing: Book option) (ctx: HttpContext): Task<Result<Book, string>> =
     let id = existing |> Option.map (fun g -> g.Id) |> Option.defaultValue (string (Util.newGuid ()))
     let dateAdded = existing |> Option.map (fun g -> g.DateAdded) |> Option.defaultValue System.DateTimeOffset.UtcNow
 
@@ -154,9 +151,9 @@ let makeAndValidateModelFromContext (existing: Book option) (ctx: HttpContext): 
             Slug =          Fields.slug |> getValue
             CoverImagePaths = Fields.coverImagePaths |> getNonFormFieldValue
         }
-        return! validateModel id g ctx
-    | Error msg -> return Error msg
-}
+        validateModel id g ctx
+    | Error msg -> Task.fromResult (Error msg)
+
 
 let makeModelFromJObject (obj: JObject) =
     let getValue f = (f |> RequiredFields.jobjGetter) obj
@@ -194,7 +191,7 @@ let addHandler_get =
 let addHandler_post : HttpHandler = 
     fun next (ctx: HttpContext) -> task {
         let! b = makeAndValidateModelFromContext None ctx
-        
+
         match b with
         | Ok b ->
             let! coverImageUploadResult =

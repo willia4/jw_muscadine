@@ -126,21 +126,19 @@ let addEditView (p: Project option) allTags documentTags =
             div [ _class "microblog-container section" ] [])
     ]
 
-let validateModel (id: string) (g: Project) ctx = task {
+let validateModel (id: string) (g: Project) ctx =
     let stringFieldUniquenessValidator field = RequiredFields.stringFieldUniquenessValidator ctx documentType id field
 
-    let valid = 
-        Ok g
-        |> Items.performValidation (RequiredFields.requiredStringValidator Fields.name)
-        |> Items.performValidation (RequiredFields.requiredStringValidator Fields.description)
-        |> Items.performValidation (RequiredFields.requiredStringValidator Fields.slug)
-    let! valid = valid |> Items.performValidationAsync (stringFieldUniquenessValidator Fields.name)
-    let! valid = valid |> Items.performValidationAsync (stringFieldUniquenessValidator Fields.slug)
+    Ok g
+    |> Task.fromResult
+    |> Task.map (Items.performValidation (RequiredFields.requiredStringValidator Fields.name))
+    |> Task.map (Items.performValidation (RequiredFields.requiredStringValidator Fields.description))
+    |> Task.map (Items.performValidation (RequiredFields.requiredStringValidator Fields.slug))
+    |> Task.bind (Items.performValidationAsync (stringFieldUniquenessValidator Fields.name))
+    |> Task.bind (Items.performValidationAsync (stringFieldUniquenessValidator Fields.slug))
 
-    return valid
-}
 
-let makeAndValidateModelFromContext (existing: Project option) (ctx: HttpContext): Task<Result<Project, string>> = task {
+let makeAndValidateModelFromContext (existing: Project option) (ctx: HttpContext): Task<Result<Project, string>> =
     let id = existing |> Option.map (fun p -> p.Id) |> Option.defaultValue (string (Util.newGuid ()))
     let dateAdded = existing |> Option.map (fun p -> p.DateAdded) |> Option.defaultValue System.DateTimeOffset.UtcNow
 
@@ -167,9 +165,9 @@ let makeAndValidateModelFromContext (existing: Project option) (ctx: HttpContext
             IconImagePaths = Fields.coverImagePaths |> getNonFormFieldValue
             GitHubLink = Fields.gitHubLink |> getOptionalValue
         }
-        return! validateModel id g ctx
-    | Error msg -> return Error msg
-}
+        validateModel id g ctx
+    | Error msg -> Task.fromResult (Error msg)
+
 
 let makeModelFromJObject (obj: JObject) =
     let getValue f = (f |> RequiredFields.jobjGetter) obj
