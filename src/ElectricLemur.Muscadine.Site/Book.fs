@@ -253,9 +253,9 @@ module Handlers =
             let existing = existing |> Option.map makeModelFromJObject
             let existingCoverImage = existing |> Option.map (fun e -> e.CoverImagePaths) |> Option.flatten
 
-            match existingCoverImage with
-            | Some existingCoverImage -> Image.deleteAllImages existingCoverImage ctx
-            | None -> ()
+            do! match existingCoverImage with
+                | Some existingCoverImage -> Image.deleteAllImages existingCoverImage ctx
+                | None -> Task.fromResult ()
 
             do! Tag.clearTagsForDocument documentType id ctx
             do! Microblog.deleteAllMicroblogsFromItem documentType id ctx

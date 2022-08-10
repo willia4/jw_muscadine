@@ -113,6 +113,7 @@ let deleteAllImages coverImage ctx =
     deleteRelativePathIfExists coverImage.Size256 ctx
     deleteRelativePathIfExists coverImage.Size128 ctx
     deleteRelativePathIfExists coverImage.Size64 ctx
+    Task.fromResult ()
 
 module Handlers =
     let GET_imageRouter (paths: string seq) =
