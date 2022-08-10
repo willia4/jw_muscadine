@@ -170,7 +170,7 @@ let aboutMeContent recentMicroblogs =
   ]
 
 module Handlers =
-  let indexHandler =
+  let GET_index =
     fun next (ctx: HttpContext) -> task {
       let lineCount =
         match ctx.GetQueryStringValue "lines" with

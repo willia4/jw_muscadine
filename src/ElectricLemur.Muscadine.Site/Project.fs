@@ -199,14 +199,14 @@ let makeJObjectFromModel (p: Project) =
 let allProjects ctx =
     Database.getDocumentsByType documentType (makeModelFromJObject >> Some) Database.NoLimit ctx
 module Handlers =
-    let addHandler_get =
+    let GET_add =
         fun next (ctx: HttpContext) -> task {
             let! allTags = Tag.getExistingTags ctx
             return! htmlView (addEditView None allTags []) next ctx
         }
             
 
-    let addHandler_post : HttpHandler = 
+    let POST_add : HttpHandler =
         fun next (ctx: HttpContext) -> task {
             let! p = makeAndValidateModelFromContext None ctx
             
@@ -226,7 +226,7 @@ module Handlers =
             | Error msg -> return! (setStatusCode 400 >=> text msg) next ctx
         }
 
-    let editHandler_get id =
+    let GET_edit id =
         fun next (ctx: HttpContext) -> task {
             let! existing = Database.getDocumentById id ctx
             let existing = existing |> Option.map makeModelFromJObject
@@ -237,7 +237,7 @@ module Handlers =
             return! htmlView (addEditView existing allTags documentTags) next ctx
         }
 
-    let editHandler_post id : HttpHandler =
+    let POST_edit id : HttpHandler =
         fun next (ctx: HttpContext) -> task {
             let! existing = Database.getDocumentById id ctx
             match existing with
@@ -261,7 +261,7 @@ module Handlers =
                 | Error msg -> return! (setStatusCode 400 >=> text msg) next ctx
         }
 
-    let deleteHandler_delete id =
+    let DELETE id =
         fun next ctx -> task {
             let! existing = Database.getDocumentById id ctx
             let existing = existing |> Option.map makeModelFromJObject

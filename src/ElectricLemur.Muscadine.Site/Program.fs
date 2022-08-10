@@ -73,67 +73,67 @@ let webApp =
             GET >=>
                 choose [
                     route "/dev" >=> redirectTo true "/dev/"
-                    route "/dev/" >=> Frontend.Handlers.indexHandler
+                    route "/dev/" >=> Frontend.Handlers.GET_index
 
                     route "/" >=> htmlView (Views.underConstruction ctx)
                     route "/admin/login" >=> Login.getHandler
                     route "/admin/logout" >=> Login.logoutHandler "/admin/login"
-                    route "/admin/status" >=> Login.requiresAdminRedirect "/admin/status" >=> Admin.Handlers.statusHandler
-                    route "/admin/check-database" >=> Login.requiresAdminRedirect "/admin/check-database" >=> Admin.Handlers.checkDatabaseHandler
+                    route "/admin/status" >=> Login.requiresAdminRedirect "/admin/status" >=> Admin.Handlers.GET_status
+                    route "/admin/check-database" >=> Login.requiresAdminRedirect "/admin/check-database" >=> Admin.Handlers.GET_checkDatabase
 
                     route "/admin/" >=> redirectTo true "/admin"
-                    route "/admin" >=> Login.requiresAdminRedirect "/admin" >=> Admin.Handlers.indexHandler
+                    route "/admin" >=> Login.requiresAdminRedirect "/admin" >=> Admin.Handlers.GET_index
 
-                    route "/admin/game/_new" >=> Login.requiresAdminRedirect "/admin/game/_new" >=> Game.Handlers.addHandler_get
-                    routef "/admin/game/%s" (fun id -> Login.requiresAdminRedirect $"/admin/game/%s{id} ">=> Game.Handlers.editHandler_get id)
-                    route "/admin/book/_new" >=> Login.requiresAdminRedirect "/admin/book/_new" >=> Book.Handlers.addHandler_get
-                    routef "/admin/book/%s" (fun id -> Login.requiresAdminRedirect $"/admin/book/%s{id} ">=> Book.Handlers.editHandler_get id)
-                    route "/admin/project/_new" >=> Login.requiresAdminRedirect "/admin/project/_new" >=> Project.Handlers.addHandler_get
-                    routef "/admin/project/%s" (fun id -> Login.requiresAdminRedirect $"/admin/project/%s{id} ">=> Project.Handlers.editHandler_get id)
+                    route "/admin/game/_new" >=> Login.requiresAdminRedirect "/admin/game/_new" >=> Game.Handlers.GET_add
+                    routef "/admin/game/%s" (fun id -> Login.requiresAdminRedirect $"/admin/game/%s{id} ">=> Game.Handlers.GET_edit id)
+                    route "/admin/book/_new" >=> Login.requiresAdminRedirect "/admin/book/_new" >=> Book.Handlers.GET_add
+                    routef "/admin/book/%s" (fun id -> Login.requiresAdminRedirect $"/admin/book/%s{id} ">=> Book.Handlers.GET_edit id)
+                    route "/admin/project/_new" >=> Login.requiresAdminRedirect "/admin/project/_new" >=> Project.Handlers.GET_add
+                    routef "/admin/project/%s" (fun id -> Login.requiresAdminRedirect $"/admin/project/%s{id} ">=> Project.Handlers.GET_edit id)
 
-                    routef "/admin/microblog/%s" (fun id -> Login.requiresAdminRedirect $"/admin/microblog/%s{id}" >=> Microblog.Handlers.microblogs_edit_get id)
+                    routef "/admin/microblog/%s" (fun id -> Login.requiresAdminRedirect $"/admin/microblog/%s{id}" >=> Microblog.Handlers.GET_edit id)
 
-                    route "/debug/all" >=> Login.requiresAdminRedirect "/debug/all" >=> Debug.Handlers.allDocumentsHandler
-                    route "/debug/reset" >=> Login.requiresAdminAPICall >=> Debug.Handlers.resetDatabase
-                    route "/debug/orphaned-tags" >=> Login.requiresAdminAPICall >=> Debug.Handlers.orphanedTagsGetHandler
-                    route "/debug/orphaned-tags/delete" >=> Login.requiresAdminAPICall >=> Debug.Handlers.orphanedTagsDeleteHandler
+                    route "/debug/all" >=> Login.requiresAdminRedirect "/debug/all" >=> Debug.Handlers.GET_allDocuments
+                    route "/debug/reset" >=> Login.requiresAdminAPICall >=> Debug.Handlers.GET_resetDatabase
+                    route "/debug/orphaned-tags" >=> Login.requiresAdminAPICall >=> Debug.Handlers.GET_orphanedTags
+                    route "/debug/orphaned-tags/delete" >=> Login.requiresAdminAPICall >=> Debug.Handlers.DELETE_orphanedTags
 
-                    routef "/game/%s/microblog" (fun id -> Microblog.Handlers.microblogs_get Game.documentType id)
-                    routef "/book/%s/microblog" (fun id -> Microblog.Handlers.microblogs_get Book.documentType id)
-                    routef "/project/%s/microblog" (fun id -> Microblog.Handlers.microblogs_get Project.documentType id)
+                    routef "/game/%s/microblog" (fun id -> Microblog.Handlers.GET_list Game.documentType id)
+                    routef "/book/%s/microblog" (fun id -> Microblog.Handlers.GET_list Book.documentType id)
+                    routef "/project/%s/microblog" (fun id -> Microblog.Handlers.GET_list Project.documentType id)
 
-                    routexp "/images/(.*?)/(.*?)/(.*?)/(.*)" Image.Handlers.imageRouter
+                    routexp "/images/(.*?)/(.*?)/(.*?)/(.*)" Image.Handlers.GET_imageRouter
                 ]
             POST >=>
                 choose [
                     route "/admin/login" >=> Login.postHandler "/admin/login" "/admin" (Login.defaultCredentialValidator (Login.getExpectedAdminCredentials ctx))
 
-                    routef "/admin/game/%s/microblog" (fun id -> Login.requiresAdminAPICall >=> Microblog.Handlers.addHandler_post Game.documentType id)
-                    routef "/admin/book/%s/microblog" (fun id -> Login.requiresAdminAPICall >=> Microblog.Handlers.addHandler_post Book.documentType id)
-                    routef "/admin/project/%s/microblog" (fun id -> Login.requiresAdminAPICall >=> Microblog.Handlers.addHandler_post Project.documentType id)
+                    routef "/admin/game/%s/microblog" (fun id -> Login.requiresAdminAPICall >=> Microblog.Handlers.POST_add Game.documentType id)
+                    routef "/admin/book/%s/microblog" (fun id -> Login.requiresAdminAPICall >=> Microblog.Handlers.POST_add Book.documentType id)
+                    routef "/admin/project/%s/microblog" (fun id -> Login.requiresAdminAPICall >=> Microblog.Handlers.POST_add Project.documentType id)
 
-                    route "/admin/game/_new" >=> Login.requiresAdminRedirect "/admin/game/_new" >=> Game.Handlers.addHandler_post
+                    route "/admin/game/_new" >=> Login.requiresAdminRedirect "/admin/game/_new" >=> Game.Handlers.POST_add
 
-                    routef "/admin/game/%s" (fun id -> Login.requiresAdminRedirect $"/admin/game/%s{id}" >=> Game.Handlers.editHandler_post id)
-                    route "/admin/book/_new" >=> Login.requiresAdminRedirect "/admin/book/_new" >=> Book.Handlers.addHandler_post
-                    routef "/admin/book/%s" (fun id -> Login.requiresAdminRedirect $"/admin/book/%s{id}" >=> Book.Handlers.editHandler_post id)
-                    route "/admin/project/_new" >=> Login.requiresAdminRedirect "/admin/project/_new" >=> Project.Handlers.addHandler_post
-                    routef "/admin/project/%s" (fun id -> Login.requiresAdminRedirect $"/admin/project/%s{id}" >=> Project.Handlers.editHandler_post id)
+                    routef "/admin/game/%s" (fun id -> Login.requiresAdminRedirect $"/admin/game/%s{id}" >=> Game.Handlers.POST_edit id)
+                    route "/admin/book/_new" >=> Login.requiresAdminRedirect "/admin/book/_new" >=> Book.Handlers.POST_add
+                    routef "/admin/book/%s" (fun id -> Login.requiresAdminRedirect $"/admin/book/%s{id}" >=> Book.Handlers.POST_edit id)
+                    route "/admin/project/_new" >=> Login.requiresAdminRedirect "/admin/project/_new" >=> Project.Handlers.POST_add
+                    routef "/admin/project/%s" (fun id -> Login.requiresAdminRedirect $"/admin/project/%s{id}" >=> Project.Handlers.POST_edit id)
 
-                    routef "/admin/microblog/%s" (fun id -> Login.requiresAdminRedirect $"/admin/microblog/%s{id}" >=> Microblog.Handlers.microblogs_edit_post id)
+                    routef "/admin/microblog/%s" (fun id -> Login.requiresAdminRedirect $"/admin/microblog/%s{id}" >=> Microblog.Handlers.POST_edit id)
 
                 ]
             DELETE >=>
                 choose [
-                    route "/debug/reset" >=> Login.requiresAdminAPICall >=> Debug.Handlers.resetDatabaseDeleteHandler
+                    route "/debug/reset" >=> Login.requiresAdminAPICall >=> Debug.Handlers.DELETE_resetDatabase
 
-                    routef "/admin/game/%s/microblog/%s" (fun (itemId, blogId) -> Login.requiresAdminAPICall >=> Microblog.Handlers.microblogs_delete Game.documentType itemId blogId)
-                    routef "/admin/book/%s/microblog/%s" (fun (itemId, blogId) -> Login.requiresAdminAPICall >=> Microblog.Handlers.microblogs_delete Book.documentType itemId blogId)
-                    routef "/admin/project/%s/microblog/%s" (fun (itemId, blogId) -> Login.requiresAdminAPICall >=> Microblog.Handlers.microblogs_delete Project.documentType itemId blogId)
+                    routef "/admin/game/%s/microblog/%s" (fun (itemId, blogId) -> Login.requiresAdminAPICall >=> Microblog.Handlers.DELETE Game.documentType itemId blogId)
+                    routef "/admin/book/%s/microblog/%s" (fun (itemId, blogId) -> Login.requiresAdminAPICall >=> Microblog.Handlers.DELETE Book.documentType itemId blogId)
+                    routef "/admin/project/%s/microblog/%s" (fun (itemId, blogId) -> Login.requiresAdminAPICall >=> Microblog.Handlers.DELETE Project.documentType itemId blogId)
 
-                    routef "/admin/game/%s" (fun id -> Login.requiresAdminRedirect $"/admin/game/%s{id}" >=> Game.Handlers.deleteHandler_delete id)
-                    routef "/admin/book/%s" (fun id -> Login.requiresAdminRedirect $"/admin/book/%s{id}" >=> Book.Handlers.deleteHandler_delete id)
-                    routef "/admin/project/%s" (fun id -> Login.requiresAdminRedirect $"/admin/project/%s{id}" >=> Project.Handlers.deleteHandler_delete id)
+                    routef "/admin/game/%s" (fun id -> Login.requiresAdminRedirect $"/admin/game/%s{id}" >=> Game.Handlers.DELETE id)
+                    routef "/admin/book/%s" (fun id -> Login.requiresAdminRedirect $"/admin/book/%s{id}" >=> Book.Handlers.DELETE id)
+                    routef "/admin/project/%s" (fun id -> Login.requiresAdminRedirect $"/admin/project/%s{id}" >=> Project.Handlers.DELETE id)
                 ]
             setStatusCode 404 >=> text "Not Found" ] next ctx
 

@@ -17,7 +17,7 @@ let private writeJObjectArray (objects: Newtonsoft.Json.Linq.JObject seq) (ctx: 
 }
 
 module Handlers =
-    let allDocumentsHandler: HttpHandler =
+    let GET_allDocuments: HttpHandler =
         fun next ctx -> task {
             let! documents = Database.getAllDocuments Database.NoLimit ctx
             do! writeJObjectArray documents ctx
@@ -25,20 +25,20 @@ module Handlers =
             return Some ctx
         }
 
-    let orphanedTagsGetHandler: HttpHandler =
+    let GET_orphanedTags: HttpHandler =
         fun next ctx -> task {
             let! tags = Tag.orphanedTagsAsJObjects ctx
             do! writeJObjectArray tags ctx
             return Some ctx
         }
 
-    let orphanedTagsDeleteHandler: HttpHandler =
+    let DELETE_orphanedTags: HttpHandler =
         fun next ctx -> task {
             do! Tag.deleteOrphanedTags ctx
             return Some ctx
         }
 
-    let resetDatabase: HttpHandler =
+    let GET_resetDatabase: HttpHandler =
             htmlView (html [] [
                 script [ _type "application/javascript" ] [
                     rawText """
@@ -57,7 +57,7 @@ module Handlers =
                 ]
             ]) 
 
-    let resetDatabaseDeleteHandler: HttpHandler =
+    let DELETE_resetDatabase: HttpHandler =
         fun next (ctx: HttpContext) -> task {
             let! documents = Database.getAllDocuments Database.NoLimit ctx
             let ids = documents |> Seq.map (fun d -> d.Value<string>("_id"))

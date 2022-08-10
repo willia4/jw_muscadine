@@ -138,7 +138,7 @@ module Views =
         layout "Admin" content ctx
 
 module Handlers =
-    let statusHandler: HttpHandler =
+    let GET_status: HttpHandler =
         fun (next: HttpFunc) (ctx: HttpContext) ->
             let user = ctx.User
             let role = match user.FindFirst(ClaimTypes.Role) with
@@ -148,7 +148,7 @@ module Handlers =
             text role next ctx
 
 
-    let checkDatabaseHandler: HttpHandler =
+    let GET_checkDatabase: HttpHandler =
         fun next ctx -> task {
             let! documentCount = Database.getDocumentCount ctx None
             let! gameCount = Database.getDocumentCount ctx (Some Game.documentType)
@@ -157,7 +157,7 @@ module Handlers =
             return! text result next ctx
         }
 
-    let indexHandler: HttpHandler = 
+    let GET_index: HttpHandler =
         fun next ctx -> task {
             let! games = Game.allGames ctx
             let! books = Book.allBooks ctx

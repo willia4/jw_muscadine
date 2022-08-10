@@ -186,7 +186,7 @@ let private editView (microblog: MicroblogAssignment) =
   ]
 
 module Handlers =
-  let addHandler_post itemDocumentType itemId : HttpHandler =
+  let POST_add itemDocumentType itemId : HttpHandler =
     fun next ctx -> task {
       let! item = Database.getDocumentByTypeAndId itemDocumentType itemId ctx
 
@@ -221,7 +221,7 @@ module Handlers =
         }
     }
 
-  let microblogs_get itemDocumentType itemId : HttpHandler =
+  let GET_list itemDocumentType itemId : HttpHandler =
     fun next ctx -> task {
       let! blogs = loadMicroblogsForDocument itemDocumentType itemId ctx
 
@@ -230,7 +230,7 @@ module Handlers =
       return! json blogs next ctx
     }
 
-  let microblogs_delete itemDocumentType itemId blogId : HttpHandler =
+  let DELETE itemDocumentType itemId blogId : HttpHandler =
     fun next ctx -> task {
       do! deleteMicroblogFromItem itemDocumentType itemId blogId ctx
       return! setStatusCode 200 next ctx
@@ -238,7 +238,7 @@ module Handlers =
 
 
 
-  let microblogs_edit_get id : HttpHandler =
+  let GET_edit id : HttpHandler =
     fun next ctx -> task {
       let! existing =
         Database.getDocumentByTypeAndId documentType id ctx
@@ -250,7 +250,7 @@ module Handlers =
 
     }
 
-  let microblogs_edit_post id : HttpHandler =
+  let POST_edit id : HttpHandler =
     fun next ctx -> task {
       let! existing =
         Database.getDocumentByTypeAndId documentType id ctx
