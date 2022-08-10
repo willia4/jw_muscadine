@@ -137,46 +137,47 @@ module Views =
 
         layout "Admin" content ctx
 
-let statusHandler: HttpHandler = 
-    fun (next: HttpFunc) (ctx: HttpContext) ->
-        let user = ctx.User
-        let role = match user.FindFirst(ClaimTypes.Role) with
-                   | null -> "No Role"
-                   | claim -> claim.Value
+module Handlers =
+    let statusHandler: HttpHandler =
+        fun (next: HttpFunc) (ctx: HttpContext) ->
+            let user = ctx.User
+            let role = match user.FindFirst(ClaimTypes.Role) with
+                    | null -> "No Role"
+                    | claim -> claim.Value
 
-        text role next ctx
+            text role next ctx
 
 
-let checkDatabaseHandler: HttpHandler =
-    fun next ctx -> task {
-        let! documentCount = Database.getDocumentCount ctx None
-        let! gameCount = Database.getDocumentCount ctx (Some Game.documentType)
+    let checkDatabaseHandler: HttpHandler =
+        fun next ctx -> task {
+            let! documentCount = Database.getDocumentCount ctx None
+            let! gameCount = Database.getDocumentCount ctx (Some Game.documentType)
 
-        let result = $"Database results\n\nTotal documents: %d{documentCount}\Games: %d{gameCount}"
-        return! text result next ctx
-    }
+            let result = $"Database results\n\nTotal documents: %d{documentCount}\Games: %d{gameCount}"
+            return! text result next ctx
+        }
 
-let indexHandler: HttpHandler = 
-    fun next ctx -> task {
-        let! games = Game.allGames ctx
-        let! books = Book.allBooks ctx
-        let! projects = Project.allProjects ctx
+    let indexHandler: HttpHandler = 
+        fun next ctx -> task {
+            let! games = Game.allGames ctx
+            let! books = Book.allBooks ctx
+            let! projects = Project.allProjects ctx
 
-        let! gameTags = Tag.loadTagsForDocuments Game.documentType (games |> Seq.map (fun x -> x.Id)) ctx
-        let! bookTags = Tag.loadTagsForDocuments Book.documentType (books |> Seq.map (fun x -> x.Id)) ctx
-        let! projectTags = Tag.loadTagsForDocuments Project.documentType (projects |> Seq.map (fun x -> x.Id)) ctx
+            let! gameTags = Tag.loadTagsForDocuments Game.documentType (games |> Seq.map (fun x -> x.Id)) ctx
+            let! bookTags = Tag.loadTagsForDocuments Book.documentType (books |> Seq.map (fun x -> x.Id)) ctx
+            let! projectTags = Tag.loadTagsForDocuments Project.documentType (projects |> Seq.map (fun x -> x.Id)) ctx
 
-        let matchItemsToTags (items: seq<'a>) (idGetter: 'a -> string) tags = 
-            items
-            |> Seq.map (fun i -> 
-                let id = idGetter i
-                let tags = tags |> Map.tryFind id |> Option.defaultValue []
-                (i, tags)
-            )
+            let matchItemsToTags (items: seq<'a>) (idGetter: 'a -> string) tags = 
+                items
+                |> Seq.map (fun i -> 
+                    let id = idGetter i
+                    let tags = tags |> Map.tryFind id |> Option.defaultValue []
+                    (i, tags)
+                )
 
-        let games = matchItemsToTags games (fun x -> x.Id) gameTags
-        let books = matchItemsToTags books (fun x -> x.Id) bookTags
-        let projects = matchItemsToTags projects (fun x -> x.Id) projectTags
+            let games = matchItemsToTags games (fun x -> x.Id) gameTags
+            let books = matchItemsToTags books (fun x -> x.Id) bookTags
+            let projects = matchItemsToTags projects (fun x -> x.Id) projectTags
 
-        return! htmlView (Views.index games books projects ctx) next ctx
-    }
+            return! htmlView (Views.index games books projects ctx) next ctx
+        }

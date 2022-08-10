@@ -168,56 +168,6 @@ let postBodyFromContext (ctx: HttpContext) =
     | None -> Error "Invalid post body; missing text element"
   ))
 
-let addHandler_post itemDocumentType itemId : HttpHandler =
-  fun next ctx -> task {
-    let! item = Database.getDocumentByTypeAndId itemDocumentType itemId ctx
-
-    return!
-      match item with
-      | None -> (setStatusCode 404 >=> text $"Unable to find %s{itemDocumentType} with id %s{itemId}") next ctx
-      | Some _ -> task {
-        let! model =
-          postBodyFromContext ctx
-          |> Task.map (Result.bind (fun m ->
-              if System.String.IsNullOrWhiteSpace(m.Text) then
-                Error "Text is required"
-              else
-                Ok m
-            ))
-
-        return!
-          match model with
-          | Error msg -> (setStatusCode 400 >=> text msg) next ctx
-          | Ok model -> task {
-                let doc = {
-                  Id = Util.newGuid () |> string
-                  ItemDocumentType = itemDocumentType
-                  ItemId = itemId
-                  Text = model.Text
-                  DateAdded = DateTimeOffset.UtcNow
-                }
-                let doc = doc |> microblogAssignmentToJObject
-                let! id = Database.insertDocument ctx doc
-                return! (setStatusCode 200 >=> text id) next ctx
-          }
-      }
-  }
-
-let microblogs_get itemDocumentType itemId : HttpHandler =
-  fun next ctx -> task {
-    let! blogs = loadMicroblogsForDocument itemDocumentType itemId ctx
-
-    let blogs = blogs |> List.map microblogToJObject
-
-    return! json blogs next ctx
-  }
-
-let microblogs_delete itemDocumentType itemId blogId : HttpHandler =
-  fun next ctx -> task {
-    do! deleteMicroblogFromItem itemDocumentType itemId blogId ctx
-    return! setStatusCode 200 next ctx
-  }
-
 let private editView (microblog: MicroblogAssignment) =
   let pageTitle = "Edit Microblog"
   Items.layout pageTitle Map.empty [
@@ -235,36 +185,89 @@ let private editView (microblog: MicroblogAssignment) =
     ]
   ]
 
-let microblogs_edit_get id : HttpHandler =
-  fun next ctx -> task {
-    let! existing =
-      Database.getDocumentByTypeAndId documentType id ctx
-      |> Task.map (Option.map JObjectToMicroblogAssignment)
+module Handlers =
+  let addHandler_post itemDocumentType itemId : HttpHandler =
+    fun next ctx -> task {
+      let! item = Database.getDocumentByTypeAndId itemDocumentType itemId ctx
 
-    return! match existing with
-            | None -> (setStatusCode 404 >=> text "Microblog not found") next ctx
-            | Some existing -> htmlView (editView existing) next ctx
+      return!
+        match item with
+        | None -> (setStatusCode 404 >=> text $"Unable to find %s{itemDocumentType} with id %s{itemId}") next ctx
+        | Some _ -> task {
+          let! model =
+            postBodyFromContext ctx
+            |> Task.map (Result.bind (fun m ->
+                if System.String.IsNullOrWhiteSpace(m.Text) then
+                  Error "Text is required"
+                else
+                  Ok m
+              ))
 
-  }
+          return!
+            match model with
+            | Error msg -> (setStatusCode 400 >=> text msg) next ctx
+            | Ok model -> task {
+                  let doc = {
+                    Id = Util.newGuid () |> string
+                    ItemDocumentType = itemDocumentType
+                    ItemId = itemId
+                    Text = model.Text
+                    DateAdded = DateTimeOffset.UtcNow
+                  }
+                  let doc = doc |> microblogAssignmentToJObject
+                  let! id = Database.insertDocument ctx doc
+                  return! (setStatusCode 200 >=> text id) next ctx
+            }
+        }
+    }
 
-let microblogs_edit_post id : HttpHandler =
-  fun next ctx -> task {
-    let! existing =
-      Database.getDocumentByTypeAndId documentType id ctx
-      |> Task.map (Option.map JObjectToMicroblogAssignment)
+  let microblogs_get itemDocumentType itemId : HttpHandler =
+    fun next ctx -> task {
+      let! blogs = loadMicroblogsForDocument itemDocumentType itemId ctx
 
-    return! match existing with
-            | None -> (setStatusCode 404 >=> text "Microblog not found") next ctx
-            | Some existing ->
-                let newText = Util.getFormString ctx "text"
-                match newText with
-                | None -> (setStatusCode 400 >=> text "Invalid request; missing text") next ctx
-                | Some newText ->
-                    let updatedRecord = { existing with Text = newText }
-                    let updatedRecord = updatedRecord |> microblogAssignmentToJObject
-                    task {
-                      do! Database.upsertDocument ctx updatedRecord
-                      return! (redirectTo false $"/admin/microblog/%s{id}") next ctx
-                    }
+      let blogs = blogs |> List.map microblogToJObject
 
-  }
+      return! json blogs next ctx
+    }
+
+  let microblogs_delete itemDocumentType itemId blogId : HttpHandler =
+    fun next ctx -> task {
+      do! deleteMicroblogFromItem itemDocumentType itemId blogId ctx
+      return! setStatusCode 200 next ctx
+    }
+
+
+
+  let microblogs_edit_get id : HttpHandler =
+    fun next ctx -> task {
+      let! existing =
+        Database.getDocumentByTypeAndId documentType id ctx
+        |> Task.map (Option.map JObjectToMicroblogAssignment)
+
+      return! match existing with
+              | None -> (setStatusCode 404 >=> text "Microblog not found") next ctx
+              | Some existing -> htmlView (editView existing) next ctx
+
+    }
+
+  let microblogs_edit_post id : HttpHandler =
+    fun next ctx -> task {
+      let! existing =
+        Database.getDocumentByTypeAndId documentType id ctx
+        |> Task.map (Option.map JObjectToMicroblogAssignment)
+
+      return! match existing with
+              | None -> (setStatusCode 404 >=> text "Microblog not found") next ctx
+              | Some existing ->
+                  let newText = Util.getFormString ctx "text"
+                  match newText with
+                  | None -> (setStatusCode 400 >=> text "Invalid request; missing text") next ctx
+                  | Some newText ->
+                      let updatedRecord = { existing with Text = newText }
+                      let updatedRecord = updatedRecord |> microblogAssignmentToJObject
+                      task {
+                        do! Database.upsertDocument ctx updatedRecord
+                        return! (redirectTo false $"/admin/microblog/%s{id}") next ctx
+                      }
+
+    }

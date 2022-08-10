@@ -179,86 +179,86 @@ let makeJObjectFromModel (g: Game) =
     |> RequiredFields.setJObject g Fields.slug
     |> OptionalFields.setJObject g Fields.coverImagePaths
 
+let allGames ctx =
+    Database.getDocumentsByType documentType (makeModelFromJObject >> Some) Database.NoLimit ctx
 
-let addHandler_get =
-    fun next (ctx: HttpContext) -> task {
-        let! allTags = Tag.getExistingTags ctx
+module Handlers =
+    let addHandler_get =
+        fun next (ctx: HttpContext) -> task {
+            let! allTags = Tag.getExistingTags ctx
 
-        return! htmlView (addEditView None allTags []) next ctx
-    }
+            return! htmlView (addEditView None allTags []) next ctx
+        }
 
 
-let addHandler_post : HttpHandler = 
-    fun next (ctx: HttpContext) -> task {
-        let! g = makeAndValidateModelFromContext None ctx
-        
-        match g with
-        | Ok g ->
-            let! coverImageUploadResult =
-                Items.handleImageUpload ctx documentType g.Id Fields.coverImagePaths.Key g.CoverImagePaths (fun newPaths -> { g with CoverImagePaths = newPaths})
-
-            match coverImageUploadResult with
-            | Error msg -> return! (setStatusCode 400 >=> text msg) next ctx
-            | Ok g ->
-                let data = makeJObjectFromModel g
-                let! id = Database.insertDocument ctx data
-                do! Tag.saveTagsForForm documentType id Tag.formKey ctx
-
-                return! (redirectTo false $"/admin/game/%s{id}") next ctx
-        | Error msg -> return! (setStatusCode 400 >=> text msg) next ctx
-    }
-
-let editHandler_get id =
-    fun next (ctx: HttpContext) -> task {
-        let! existing = Database.getDocumentById id ctx
-        let existing = existing |> Option.map makeModelFromJObject
-
-        let! allTags = Tag.getExistingTags ctx
-        let! documentTags = Tag.loadTagsForDocument documentType id ctx
-
-        return! htmlView (addEditView existing allTags documentTags) next ctx
-    }
-
-let editHandler_post id : HttpHandler =
-    fun next (ctx: HttpContext) -> task {
-        let! existing = Database.getDocumentById id ctx
-        match existing with
-        | None -> return! (setStatusCode 404) next ctx
-        | Some existing ->
-            let existing = makeModelFromJObject existing
-            let! g = makeAndValidateModelFromContext (Some existing) ctx
+    let addHandler_post : HttpHandler = 
+        fun next (ctx: HttpContext) -> task {
+            let! g = makeAndValidateModelFromContext None ctx
+            
             match g with
             | Ok g ->
-                let! coverImageUploadResult = 
+                let! coverImageUploadResult =
                     Items.handleImageUpload ctx documentType g.Id Fields.coverImagePaths.Key g.CoverImagePaths (fun newPaths -> { g with CoverImagePaths = newPaths})
 
                 match coverImageUploadResult with
                 | Error msg -> return! (setStatusCode 400 >=> text msg) next ctx
-                | Ok g -> 
+                | Ok g ->
                     let data = makeJObjectFromModel g
-                    do! Database.upsertDocument ctx data
-                    do! Tag.saveTagsForForm documentType g.Id Tag.formKey ctx
+                    let! id = Database.insertDocument ctx data
+                    do! Tag.saveTagsForForm documentType id Tag.formKey ctx
 
                     return! (redirectTo false $"/admin/game/%s{id}") next ctx
             | Error msg -> return! (setStatusCode 400 >=> text msg) next ctx
-    }
+        }
 
-let deleteHandler_delete id =
-    fun next ctx -> task {
-        let! existing = Database.getDocumentById id ctx
-        let existing = existing |> Option.map makeModelFromJObject
-        let existingCoverImage = existing |> Option.map (fun e -> e.CoverImagePaths) |> Option.flatten
+    let editHandler_get id =
+        fun next (ctx: HttpContext) -> task {
+            let! existing = Database.getDocumentById id ctx
+            let existing = existing |> Option.map makeModelFromJObject
 
-        match existingCoverImage with
-        | Some existingCoverImage -> Image.deleteAllImages existingCoverImage ctx
-        | None -> ()
+            let! allTags = Tag.getExistingTags ctx
+            let! documentTags = Tag.loadTagsForDocument documentType id ctx
 
-        do! Tag.clearTagsForDocument documentType id ctx
-        do! Microblog.deleteAllMicroblogsFromItem documentType id ctx
-        do! Database.deleteDocument ctx id
-        return! setStatusCode 200 next ctx
-    }
-    
-let allGames ctx =
-    Database.getDocumentsByType documentType (makeModelFromJObject >> Some) Database.NoLimit ctx
+            return! htmlView (addEditView existing allTags documentTags) next ctx
+        }
 
+    let editHandler_post id : HttpHandler =
+        fun next (ctx: HttpContext) -> task {
+            let! existing = Database.getDocumentById id ctx
+            match existing with
+            | None -> return! (setStatusCode 404) next ctx
+            | Some existing ->
+                let existing = makeModelFromJObject existing
+                let! g = makeAndValidateModelFromContext (Some existing) ctx
+                match g with
+                | Ok g ->
+                    let! coverImageUploadResult = 
+                        Items.handleImageUpload ctx documentType g.Id Fields.coverImagePaths.Key g.CoverImagePaths (fun newPaths -> { g with CoverImagePaths = newPaths})
+
+                    match coverImageUploadResult with
+                    | Error msg -> return! (setStatusCode 400 >=> text msg) next ctx
+                    | Ok g -> 
+                        let data = makeJObjectFromModel g
+                        do! Database.upsertDocument ctx data
+                        do! Tag.saveTagsForForm documentType g.Id Tag.formKey ctx
+
+                        return! (redirectTo false $"/admin/game/%s{id}") next ctx
+                | Error msg -> return! (setStatusCode 400 >=> text msg) next ctx
+        }
+
+    let deleteHandler_delete id =
+        fun next ctx -> task {
+            let! existing = Database.getDocumentById id ctx
+            let existing = existing |> Option.map makeModelFromJObject
+            let existingCoverImage = existing |> Option.map (fun e -> e.CoverImagePaths) |> Option.flatten
+
+            match existingCoverImage with
+            | Some existingCoverImage -> Image.deleteAllImages existingCoverImage ctx
+            | None -> ()
+
+            do! Tag.clearTagsForDocument documentType id ctx
+            do! Microblog.deleteAllMicroblogsFromItem documentType id ctx
+            do! Database.deleteDocument ctx id
+            return! setStatusCode 200 next ctx
+        }
+        

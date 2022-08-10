@@ -106,39 +106,6 @@ let saveImageToDataStore (originalFile: IFormFile) documentType (documentId: str
     return r |> Result.map (fun r -> fst r)
 }
 
-let imageRouter (paths: string seq) =
-     fun next (ctx: HttpContext) -> task {
-        let fullPath = paths |> Seq.head
-        let components = paths |> Seq.skip 1 |> Seq.toArray
-
-        if components.Length <> 4 then
-            return! setStatusCode 401 next ctx
-        else
-            let documentType = components.[0]
-            let imageKey = components.[1]
-            let idOrSlug = components.[2]
-            let fileName = components.[3]
-            
-            let! id = 
-                if not (Id.isId idOrSlug) then task {
-                    let! id = Database.getIdForDocumentTypeAndSlug documentType idOrSlug ctx
-                    return id |> Option.map Id.compressId
-                }
-                else 
-                    Some (idOrSlug |> Id.compressId) |> Task.fromResult
-
-            match id with
-            | Some id ->
-                let path = $"{documentType}/{imageKey}/{id}/{fileName}"
-                let path = path.Replace("/", System.IO.Path.DirectorySeparatorChar.ToString())
-                let path = System.IO.Path.Join((Util.dataPath ctx), path)
-
-                match System.IO.File.Exists(path) with
-                | true -> return! streamFile false path None None next ctx
-                | false -> return! setStatusCode 401 next ctx
-            | None -> return! setStatusCode 401 next ctx
-     }
-
 let deleteAllImages coverImage ctx =
     deleteRelativePathIfExists coverImage.Original ctx
     deleteRelativePathIfExists coverImage.Size1024 ctx
@@ -146,3 +113,38 @@ let deleteAllImages coverImage ctx =
     deleteRelativePathIfExists coverImage.Size256 ctx
     deleteRelativePathIfExists coverImage.Size128 ctx
     deleteRelativePathIfExists coverImage.Size64 ctx
+
+module Handlers =
+    let imageRouter (paths: string seq) =
+        fun next (ctx: HttpContext) -> task {
+            let fullPath = paths |> Seq.head
+            let components = paths |> Seq.skip 1 |> Seq.toArray
+
+            if components.Length <> 4 then
+                return! setStatusCode 401 next ctx
+            else
+                let documentType = components.[0]
+                let imageKey = components.[1]
+                let idOrSlug = components.[2]
+                let fileName = components.[3]
+                
+                let! id = 
+                    if not (Id.isId idOrSlug) then task {
+                        let! id = Database.getIdForDocumentTypeAndSlug documentType idOrSlug ctx
+                        return id |> Option.map Id.compressId
+                    }
+                    else 
+                        Some (idOrSlug |> Id.compressId) |> Task.fromResult
+
+                match id with
+                | Some id ->
+                    let path = $"{documentType}/{imageKey}/{id}/{fileName}"
+                    let path = path.Replace("/", System.IO.Path.DirectorySeparatorChar.ToString())
+                    let path = System.IO.Path.Join((Util.dataPath ctx), path)
+
+                    match System.IO.File.Exists(path) with
+                    | true -> return! streamFile false path None None next ctx
+                    | false -> return! setStatusCode 401 next ctx
+                | None -> return! setStatusCode 401 next ctx
+        }
+

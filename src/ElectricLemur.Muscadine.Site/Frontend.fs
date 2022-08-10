@@ -169,28 +169,28 @@ let aboutMeContent recentMicroblogs =
     ]
   ]
 
+module Handlers =
+  let indexHandler =
+    fun next (ctx: HttpContext) -> task {
+      let lineCount =
+        match ctx.GetQueryStringValue "lines" with
+        | Ok lines -> Some lines
+        | _ -> None
+        |> Option.bind (fun x -> match System.Int32.TryParse(x) with
+                                | true, i -> Some i
+                                | false, _ -> None)
+        |> Option.defaultValue 100
 
-let indexHandler =
-  fun next (ctx: HttpContext) -> task {
-    let lineCount =
-      match ctx.GetQueryStringValue "lines" with
-      | Ok lines -> Some lines
-      | _ -> None
-      |> Option.bind (fun x -> match System.Int32.TryParse(x) with
-                               | true, i -> Some i
-                               | false, _ -> None)
-      |> Option.defaultValue 100
+      let! recentMicroblogs = Microblog.loadRecentMicroblogs (System.DateTimeOffset.UtcNow) (Database.Limit 7) ctx
+      let recentMicroblogs =
+        recentMicroblogs
+        |> Seq.map (fun (name, icon, mb, itemInfo) ->
 
-    let! recentMicroblogs = Microblog.loadRecentMicroblogs (System.DateTimeOffset.UtcNow) (Database.Limit 7) ctx
-    let recentMicroblogs =
-      recentMicroblogs
-      |> Seq.map (fun (name, icon, mb, itemInfo) ->
+          name, icon, mb.DateAdded, mb.Text, itemInfo
+        )
 
-        name, icon, mb.DateAdded, mb.Text, itemInfo
-      )
+      let content = aboutMeContent recentMicroblogs
+      let pageHtml = layout PageDefinitions.AboutMe content [ "frontend/about_me.scss" ] ctx
 
-    let content = aboutMeContent recentMicroblogs
-    let pageHtml = layout PageDefinitions.AboutMe content [ "frontend/about_me.scss" ] ctx
-
-    return! htmlView pageHtml next ctx
-  }
+      return! htmlView pageHtml next ctx
+    }

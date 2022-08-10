@@ -16,55 +16,56 @@ let private writeJObjectArray (objects: Newtonsoft.Json.Linq.JObject seq) (ctx: 
     do! writer.WriteLineAsync("]")
 }
 
-let allDocumentsHandler: HttpHandler =
-    fun next ctx -> task {
-        let! documents = Database.getAllDocuments Database.NoLimit ctx
-        do! writeJObjectArray documents ctx
+module Handlers =
+    let allDocumentsHandler: HttpHandler =
+        fun next ctx -> task {
+            let! documents = Database.getAllDocuments Database.NoLimit ctx
+            do! writeJObjectArray documents ctx
 
-        return Some ctx
-    }
+            return Some ctx
+        }
 
-let orphanedTagsGetHandler: HttpHandler =
-    fun next ctx -> task {
-        let! tags = Tag.orphanedTagsAsJObjects ctx
-        do! writeJObjectArray tags ctx
-        return Some ctx
-    }
+    let orphanedTagsGetHandler: HttpHandler =
+        fun next ctx -> task {
+            let! tags = Tag.orphanedTagsAsJObjects ctx
+            do! writeJObjectArray tags ctx
+            return Some ctx
+        }
 
-let orphanedTagsDeleteHandler: HttpHandler =
-    fun next ctx -> task {
-        do! Tag.deleteOrphanedTags ctx
-        return Some ctx
-    }
+    let orphanedTagsDeleteHandler: HttpHandler =
+        fun next ctx -> task {
+            do! Tag.deleteOrphanedTags ctx
+            return Some ctx
+        }
 
-let resetDatabase: HttpHandler =
-        htmlView (html [] [
-            script [ _type "application/javascript" ] [
-                rawText """
-                    window.resetDatabase = function () {
-                        fetch("/debug/reset", {
-                            method: "DELETE",
-                            mode: "same-origin",
-                            cache: "no-cache",
-                            credentials: "same-origin"
-                        }).then(() => alert("Done"));
-                    }
-                """
-            ]
-            body [] [
-                button [ _onclick "resetDatabase();" ] [ encodedText "Reset Database" ]
-            ]
-        ]) 
+    let resetDatabase: HttpHandler =
+            htmlView (html [] [
+                script [ _type "application/javascript" ] [
+                    rawText """
+                        window.resetDatabase = function () {
+                            fetch("/debug/reset", {
+                                method: "DELETE",
+                                mode: "same-origin",
+                                cache: "no-cache",
+                                credentials: "same-origin"
+                            }).then(() => alert("Done"));
+                        }
+                    """
+                ]
+                body [] [
+                    button [ _onclick "resetDatabase();" ] [ encodedText "Reset Database" ]
+                ]
+            ]) 
 
-let resetDatabaseDeleteHandler: HttpHandler =
-    fun next (ctx: HttpContext) -> task {
-        let! documents = Database.getAllDocuments Database.NoLimit ctx
-        let ids = documents |> Seq.map (fun d -> d.Value<string>("_id"))
+    let resetDatabaseDeleteHandler: HttpHandler =
+        fun next (ctx: HttpContext) -> task {
+            let! documents = Database.getAllDocuments Database.NoLimit ctx
+            let ids = documents |> Seq.map (fun d -> d.Value<string>("_id"))
 
-        for id in ids do
-            do! Database.deleteDocument ctx id
+            for id in ids do
+                do! Database.deleteDocument ctx id
 
-        do! Database.resetIndexes ctx
+            do! Database.resetIndexes ctx
 
-        return Some ctx
-    }
+            return Some ctx
+        }
