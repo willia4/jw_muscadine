@@ -44,7 +44,12 @@
     <Compile Include="Book.fs" />
     <Compile Include="Project.fs" />
     <Compile Include="Debug.fs" />
-    <Compile Include="Frontend.fs" />
+    <Compile Include="FrontendHelpers.fs" />
+    <Compile Include="FrontendColophon.fs" />
+    <Compile Include="FrontendBook.fs" />
+    <Compile Include="FrontendProject.fs" />
+    <Compile Include="FrontendGame.fs" />
+    <Compile Include="FrontendAboutMe.fs" />
     <Compile Include="Admin.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>

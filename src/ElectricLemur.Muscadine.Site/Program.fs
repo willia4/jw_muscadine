@@ -72,8 +72,23 @@ let webApp =
         choose [
             GET >=>
                 choose [
-                    route "/dev" >=> redirectTo true "/dev/"
-                    route "/dev/" >=> Frontend.Handlers.GET_index
+                    route "/dev" >=> redirectTo true "/about/"
+                    route "/dev/" >=> redirectTo true "/about/"
+
+                    route "/about" >=> redirectTo true "/about/"
+                    route "/about/" >=> Frontend.AboutMe.Handlers.GET_index
+
+                    route "/colophon" >=> redirectTo true "/colophon/"
+                    route "/colophon/" >=> Frontend.Colophon.Handlers.GET_index
+
+                    route "/games" >=> redirectTo true "/game/"
+                    route "/games/" >=> Frontend.Game.Handlers.GET_index
+
+                    route "/projects" >=> redirectTo true "/project/"
+                    route "/projects/" >=> Frontend.Project.Handlers.GET_index
+
+                    route "/books" >=> redirectTo true "/books/"
+                    route "/books/" >=> Frontend.Book.Handlers.GET_index
 
                     route "/" >=> htmlView (Views.underConstruction ctx)
                     route "/admin/login" >=> Login.getHandler
