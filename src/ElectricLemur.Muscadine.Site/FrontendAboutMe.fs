@@ -79,7 +79,6 @@ module Handlers =
       let recentMicroblogs =
         recentMicroblogs
         |> Seq.map (fun (name, icon, mb, itemInfo) ->
-
           name, icon, mb.DateAdded, mb.Text, itemInfo
         )
 
