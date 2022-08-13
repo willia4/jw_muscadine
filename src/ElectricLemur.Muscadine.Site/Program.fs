@@ -81,10 +81,10 @@ let webApp =
                     route "/colophon" >=> redirectTo true "/colophon/"
                     route "/colophon/" >=> Frontend.Colophon.Handlers.GET_index
 
-                    route "/games" >=> redirectTo true "/game/"
+                    route "/games" >=> redirectTo true "/games/"
                     route "/games/" >=> Frontend.Game.Handlers.GET_index
 
-                    route "/projects" >=> redirectTo true "/project/"
+                    route "/projects" >=> redirectTo true "/projects/"
                     route "/projects/" >=> Frontend.Project.Handlers.GET_index
 
                     route "/books" >=> redirectTo true "/books/"
