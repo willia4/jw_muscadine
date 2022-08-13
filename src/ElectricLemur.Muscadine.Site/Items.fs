@@ -544,13 +544,11 @@ let tryReadDocumentType (itemData: JObject option) =
     itemData
     |> Option.bind (fun itemData -> JObj.getter<string> itemData Database.documentTypeField)
 
-let readItemImageOrDefault itemData chooseSize =
+let readItemImageOrDefault itemData =
     itemData
     |> tryReadItemImagePaths
-    |> Option.map chooseSize
-    |> Util.addRootPath "/images"
     |> function
-       | Some path -> Image.UrlPath path
+       | Some imagePaths -> Image.Image imagePaths
        | None ->
             itemData
             |> tryReadDocumentType

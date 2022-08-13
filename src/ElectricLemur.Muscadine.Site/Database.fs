@@ -28,6 +28,7 @@ module Filters =
             EqualTo: seq<string * BsonValue>;
             NotEqualTo: seq<string * BsonValue>;
             In: seq<string * seq<BsonValue>>;
+            NotIn: seq<string * seq<BsonValue>>;
             LessThanOrEqualTo: seq<string * BsonValue>;
         } 
         override this.ToString() = 
@@ -49,6 +50,11 @@ module Filters =
             let a = (new BsonArray()).AddRange(vs)
             filter.[k] <- new BsonDocument("$in", a))
 
+        filterBuilder.NotIn
+        |> Seq.iter(fun (k, vs) ->
+            let a = (new BsonArray()).AddRange(vs)
+            filter.[k] <- new BsonDocument("$nin", a))
+
         filterBuilder.LessThanOrEqualTo
         |> Seq.iter(fun (k, v) ->
             filter.[k] <- new BsonDocument("$lte", v))
@@ -65,7 +71,7 @@ module Filters =
         let newIn = 
             current.In 
             |> Map.ofSeq
-            |> Map.change k (fun existing -> 
+            |> Map.change k (fun existing ->
                 match existing with
                 | Some existing -> existing |> Seq.append [ v ]
                 | None -> [ v ]
@@ -73,6 +79,19 @@ module Filters =
             )
             |> Map.toSeq
         { current with In = newIn }
+
+    let addNotIn k (v: BsonValue) current =
+        let newNin =
+            current.NotIn
+            |> Map.ofSeq
+            |> Map.change k (fun existing ->
+                match existing with
+                | Some existing -> existing |> Seq.append [ v ]
+                | None -> [ v ]
+                |> Some
+            )
+            |> Map.toSeq
+        { current with NotIn = newNin }
 
     let addInSeq k (v: seq<BsonValue>) current =
         v
@@ -83,7 +102,7 @@ module Filters =
     let addLessThanOrEqualTo k v current =
         { current with LessThanOrEqualTo = (Seq.append current.LessThanOrEqualTo [ (k, v) ])}
 
-    let empty = { EqualTo = Seq.empty; NotEqualTo = Seq.empty; In = Seq.empty; LessThanOrEqualTo = Seq.empty }
+    let empty = { EqualTo = Seq.empty; NotEqualTo = Seq.empty; In = Seq.empty; NotIn = Seq.empty; LessThanOrEqualTo = Seq.empty }
 
     let byMap (m: Map<string, BsonValue>) current =
         m 

@@ -128,3 +128,16 @@ let deleteOrphanedTags ctx =
     getOrphanedTags ctx
     |> Task.map (Seq.map (fun tag -> tag.Id))
     |> Task.bind (Seq.iterAsync (fun id -> Database.deleteDocument ctx id))
+
+let itemIdsContainingTags itemDocumentType (tags: seq<string>) ctx =
+    let filter =
+        Database.Filters.empty
+        |> Database.Filters.byDocumentType documentType
+        |> Database.Filters.addEquals AssociatedItem.itemDocumentTypeField itemDocumentType
+
+    let filter =
+        tags |> Seq.fold (fun filter nextTag -> Database.Filters.addIn "tag" nextTag filter) filter
+
+    Database.getDocumentsForFilter filter (Database.NoLimit) ctx
+    |> Task.map (Seq.map JObjectToTagAssignment)
+    |> Task.map (Seq.map (fun t -> t.ItemId))

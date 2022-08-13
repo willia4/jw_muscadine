@@ -5,16 +5,13 @@ open Microsoft.AspNetCore.Http
 open Newtonsoft.Json.Linq
 open ElectricLemur.Muscadine.Site
 
-let makeMicroblogsContent (recentMicroblogs: (string * Image.Icon * System.DateTimeOffset * string * (string * string * JObject option)) seq) =
+let makeMicroblogsContent (recentMicroblogs: Microblog.EnrichedMicroblog seq) =
   recentMicroblogs
-  |> Seq.map (fun (name, icon, date, text, itemInfo) ->
-    let d = date.ToString("o")
-    let markdownHtml = Markdig.Markdown.ToHtml(text)
+  |> Seq.map (fun mb ->
+    let d = mb.Microblog.DateAdded.ToString("o")
+    let markdownHtml = Markdig.Markdown.ToHtml(mb.Microblog.Text)
 
-    let icon =
-      match icon with
-      | Image.FontAwesome iconClass -> i [ _class iconClass ] []
-      | Image.UrlPath path -> img [ _src path ]
+    let icon = Image.xmlElementFromIcon mb.ItemIcon (fun i -> i.Size512)
 
     div [ _class "microblog" ] [
       a [ _class "icon" ] [
@@ -22,7 +19,7 @@ let makeMicroblogsContent (recentMicroblogs: (string * Image.Icon * System.DateT
       ]
       div [ _class "microblog-text-container" ] [
         div [ _class "header" ] [
-          span [ _class "header-text" ] [ encodedText name ]
+          span [ _class "header-text" ] [ encodedText mb.ItemName ]
 
           span [ _class "timestamp" ] [
             script [] [ rawText $"document.write(formatUtcDate(\"%s{d}\"));" ]
@@ -76,11 +73,6 @@ module Handlers =
   let GET_index =
     fun next (ctx: HttpContext) -> task {
       let! recentMicroblogs = Microblog.loadRecentMicroblogs (System.DateTimeOffset.UtcNow) (Database.Limit 7) ctx
-      let recentMicroblogs =
-        recentMicroblogs
-        |> Seq.map (fun (name, icon, mb, itemInfo) ->
-          name, icon, mb.DateAdded, mb.Text, itemInfo
-        )
 
       let content = aboutMeContent recentMicroblogs
       let pageHtml = FrontendHelpers.layout FrontendHelpers.PageDefinitions.AboutMe content [ "frontend/about_me.scss" ] ctx

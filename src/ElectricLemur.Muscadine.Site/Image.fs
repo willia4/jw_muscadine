@@ -6,11 +6,9 @@ open SixLabors.ImageSharp.Processing
 open SixLabors.ImageSharp.Formats
 open Util
 open Giraffe
+open Giraffe.ViewEngine
 open ElectricLemur.Muscadine.Site
 
-type Icon =
-    | FontAwesome of string
-    | UrlPath of string
 type ImagePaths = {
     Original: string
     Size1024: string
@@ -19,6 +17,22 @@ type ImagePaths = {
     Size128: string
     Size64: string
 }
+
+type Icon =
+    | FontAwesome of string
+    | Image of ImagePaths
+
+let rec xmlElementFromIcon icon sizeChooser =
+    match icon with
+    | FontAwesome iconClass -> i [ _class iconClass ] []
+    | Image imagePath ->
+        imagePath
+        |> sizeChooser
+        |> Some
+        |> Util.addRootPath "/images"
+        |> Option.map (fun path -> img [ _src path ])
+        |> Option.defaultValue (xmlElementFromIcon (FontAwesome "fa-solid fa-cloud-exclamation") sizeChooser)
+
 
 let private loadImageFromBytes (img: byte array) = 
     try

@@ -31,6 +31,11 @@ let chunkByPredicate (predicate: 'a -> bool)  (s: seq<'a>) = seq {
     yield (copyToImmutableSeq chunk)
 }
 
+let flatten (s: seq<seq<'a>>) = seq {
+  for outer in s do
+    yield! outer
+}
+
 let mapAsync (mapper: 'a -> System.Threading.Tasks.Task<'b>) (s: seq<'a>) = task {
   let results = new System.Collections.Generic.List<'b>()
 

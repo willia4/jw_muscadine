@@ -21,6 +21,15 @@ type Microblog = {
   Text: string
 }
 
+type EnrichedMicroblog = {
+  ItemName: string
+  ItemIcon: Image.Icon
+  ItemDocumentType: string
+  ItemId: string
+  Item: Newtonsoft.Json.Linq.JObject option
+  Microblog: Microblog
+}
+
 let sortMicroblogs (blogs: Microblog list) = blogs |> List.sortByDescending (fun b -> b.DateAdded)
 let private sortMicroblogAssignments (blogs: MicroblogAssignment list) = blogs |> List.sortBy (fun b -> b.DateAdded)
 
@@ -80,16 +89,27 @@ let loadMicroblogsForDocument itemDocumentType itemId ctx = task {
        | None -> []
 }
 
-let private readItemData microblogAssignment itemData =
+let private readItemData itemData =
   let itemName = Items.readNameOrDefault itemData
-  let itemIcon = Items.readItemImageOrDefault itemData (fun i -> i.Size512)
+  let itemIcon = Items.readItemImageOrDefault itemData
 
   itemName, itemIcon
 
-let private loadItemDataForMicroblogAssignment (microblogAssignment: MicroblogAssignment) ctx = task {
-  let! item = Database.getDocumentByTypeAndId microblogAssignment.ItemDocumentType microblogAssignment.ItemId ctx
-  return (readItemData microblogAssignment item)
-}
+let private enrichMicroblog (microblogAssignment: MicroblogAssignment) itemData =
+  let (name, icon) = readItemData itemData
+  {
+    ItemName = name
+    ItemIcon = icon
+    ItemDocumentType = microblogAssignment.ItemDocumentType
+    ItemId = microblogAssignment.ItemId
+    Item = itemData
+    Microblog = MicroblogAssignmentToMicroblog microblogAssignment
+  }
+
+let private loadItemDataForMicroblogAssignment (microblogAssignment: MicroblogAssignment) ctx =
+  Database.getDocumentByTypeAndId microblogAssignment.ItemDocumentType microblogAssignment.ItemId ctx
+  |> Task.map readItemData
+
 
 let private loadLinkedItemsData linkedItemIds ctx = task {
   let! linkedItems = Database.getDocumentsById Database.idField linkedItemIds Database.Filters.empty ctx
@@ -100,11 +120,17 @@ let private loadLinkedItemsData linkedItemIds ctx = task {
     |> Map.ofSeq
   return linkedItems
 }
-let loadRecentMicroblogs (since: System.DateTimeOffset) limit ctx = task {
+
+let loadRecentMicroblogsForItem (since: System.DateTimeOffset) (itemId: string option) limit ctx = task {
   let filter =
     Database.Filters.empty
     |> Database.Filters.byDocumentType documentType
     |> Database.Filters.addLessThanOrEqualTo "_dateAdded" (since.ToOffset(System.TimeSpan.Zero).ToString("o"))
+
+  let filter =
+    match itemId with
+    | Some itemId -> filter |> Database.Filters.addEquals AssociatedItem.itemIdField itemId
+    | None -> filter
 
   let sort =
     Database.Sort.empty
@@ -122,12 +148,18 @@ let loadRecentMicroblogs (since: System.DateTimeOffset) limit ctx = task {
     documents
     |> Seq.map (fun assignment ->
       let linkedItem = linkedItems |> Map.tryFind assignment.ItemId
-      let (name, icon) = readItemData assignment linkedItem
-      (name, icon, MicroblogAssignmentToMicroblog assignment, (assignment.ItemDocumentType, assignment.ItemId, linkedItem))
+      enrichMicroblog assignment linkedItem
     )
 
   return documents
 }
+
+let loadRecentMicroblogs (since: System.DateTimeOffset) limit ctx =
+  loadRecentMicroblogsForItem since None limit ctx
+
+let loadMostRecentMicroblogForItem itemId ctx =
+  loadRecentMicroblogsForItem (System.DateTimeOffset.UtcNow) (Some itemId) (Database.Limit 1) ctx
+  |> Task.map (Seq.tryHead)
 
 let addMicroblogToDocument itemDocumentType itemId text ctx = task {
   let microblogAssignment = {
