@@ -142,8 +142,8 @@ module Handlers =
         fun (next: HttpFunc) (ctx: HttpContext) ->
             let user = ctx.User
             let role = match user.FindFirst(ClaimTypes.Role) with
-                    | null -> "No Role"
-                    | claim -> claim.Value
+                       | null -> "No Role"
+                       | claim -> claim.Value
 
             text role next ctx
 
