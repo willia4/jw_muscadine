@@ -93,7 +93,7 @@ module Handlers =
 
         let content = Views.makeContentView inProgressCards backlogCards otherCards
 
-        let pageHtml = FrontendHelpers.layout FrontendHelpers.PageDefinitions.Games content ["frontend/item_cards.scss"] ctx
+        let pageHtml = FrontendHelpers.layout FrontendHelpers.PageDefinitions.Projects content ["frontend/item_cards.scss"] ctx
 
         return! htmlView pageHtml next ctx
           }
