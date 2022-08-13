@@ -54,7 +54,22 @@ let makeItemCard ctx (item: Game.Game) = task {
 
 
 module Views =
-  let makeContentView = []
+  let makeContentView inProgressCards backlogCards otherCards =
+    ([
+      section [ _id "in-progress-section" ] [
+        div [ _class "in-progress-container item-card-container" ] inProgressCards
+      ]
+    ])
+    |> List.appendIf (backlogCards |> (Seq.isEmpty >> not)) (
+        section [ _id "backlog-section" ] [
+          h2 [ ] [ encodedText "Backlog" ]
+          div [ _class "backlog-container item-card-container" ] backlogCards
+        ])
+    |> List.appendIf (otherCards |> (Seq.isEmpty >> not)) (
+      section [ _id "other-section" ] [
+        h2 [ ] [ encodedText "Other" ]
+        div [ _class "other-container item-card-container" ] otherCards
+      ])
 
 module Handlers =
   let GET_index =
@@ -77,23 +92,7 @@ module Handlers =
         let! others = getOther [inProgress; backlog] ctx
         let! otherCards = others |> makeAndSortCards
 
-        let content =
-          ([
-            section [ _id "in-progress-section" ] [
-              div [ _class "in-progress-container item-card-container" ] inProgressCards
-            ]
-          ])
-          |> List.appendIf (backlogCards |> (Seq.isEmpty >> not)) (
-              section [ _id "backlog-section" ] [
-                h2 [ ] [ encodedText "Backlog" ]
-                div [ _class "backlog-container item-card-container" ] backlogCards
-              ])
-          |> List.appendIf (otherCards |> (Seq.isEmpty >> not)) (
-            section [ _id "other-section" ] [
-              h2 [ ] [ encodedText "Other" ]
-              div [ _class "other-container item-card-container" ] otherCards
-            ])
-
+        let content = Views.makeContentView inProgressCards backlogCards otherCards
 
         let pageHtml = FrontendHelpers.layout FrontendHelpers.PageDefinitions.Games content ["frontend/item_cards.scss"] ctx
 
