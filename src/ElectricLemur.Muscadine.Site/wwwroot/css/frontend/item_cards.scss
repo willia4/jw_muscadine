@@ -6,7 +6,11 @@ section {
   margin-bottom: 100px;
 
   @include breakpoints.phone {
-    margin-bottom: 30px;
+    margin-bottom: 50px;
+
+    &:not(:first-child) {
+      border-top: solid 1px colors.$heading;
+    }
   }
 
   h2 {
@@ -48,13 +52,25 @@ section {
         width: 100%;
         margin-left: 0px;
         margin-right: 0px;
-        margin-bottom: 5px;
+        margin-bottom: 15px;
 
         min-height: 220px;
         height: auto;
 
         display: flex;
         flex-direction: row;
+        border-top: 0;
+        border-left: 0;
+        border-right: 0;
+        border-bottom: 0;
+
+        &:not(:first-child) {
+          border-top-style: solid;
+          border-top-width: 1px;
+          border-top-color: colors.$heading;
+          border-radius: 0;
+          padding-top: 15px;
+        }
       }
 
       .item-image {
@@ -94,12 +110,15 @@ section {
             max-width: 250px;
             max-height: 360px;
 
+            filter: drop-shadow(2px 2px 5px colors.$heading);
+
             @include breakpoints.tablet {
               max-width: 200px;
             }
 
             @include breakpoints.phone {
               max-width: 150px;
+              filter: drop-shadow(0 0 0 colors.$heading);
             }
           }
 
