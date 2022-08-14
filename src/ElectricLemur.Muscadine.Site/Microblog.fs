@@ -379,11 +379,12 @@ module Handlers =
         )
 
 
-      let subtitle =  $"James Williams' thoughts about {pluralTopic}"
+      let textInfo = (new System.Globalization.CultureInfo("en-US", false)).TextInfo
+      let titleCasePluralTopic = textInfo.ToTitleCase(pluralTopic)
 
       let feed = tag "feed" [ (attr "xmlns" "http://www.w3.org/2005/Atom")] ([
-        tag "title" [] [ rawText "Microblog Entries" ]
-        tag "subtitle" [] [ rawText subtitle ]
+        tag "title" [] [ rawText $"James Williams - Microblog Entries - %s{titleCasePluralTopic}" ]
+        tag "subtitle" [] [ rawText $"James Williams' thoughts about {pluralTopic}" ]
         tag "id" [] [ rawText "urn:uuid:cd30bdd1-a3c3-4fde-87fc-8b66b147d1c6" ]
         link [ (_rel "self"); (_href (ctx |> selfLinkMaker |> string)) ]
         tag "icon" [] [ rawText (Util.makeUrl "/img/head_logo_256.png" ctx |> string)]
