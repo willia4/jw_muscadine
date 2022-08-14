@@ -59,6 +59,7 @@ module PageDefinitions =
     ]
 
 let layout pageDefinition content extraCss ctx =
+  let homeUrl = Util.baseUrl ctx
   let pageHeader = PageDefinitions.pageTitle pageDefinition
   let sidebarOrder = [ PageDefinitions.AboutMe; PageDefinitions.Projects; PageDefinitions.Books; PageDefinitions.Games; PageDefinitions.Colophon ]
 
@@ -88,9 +89,16 @@ let layout pageDefinition content extraCss ctx =
       head [] headNodes
       body [] [
         div [ _id "content-wrapper" ] [
-          div [ _id "main-logo"] [ img [ (_src "/img/head_logo_512.png"); (_alt "Site logo") ] ]
+          div [ _id "main-logo"] [
+            a [ _href homeUrl ] [
+              img [ (_src "/img/head_logo_512.png"); (_alt "Site logo") ]
+              ]
+          ]
           header [ _id "main-header" ] [
-            img [ (_src "/img/head_logo_512.png"); (_alt "Site Logo"); (_class "mini-logo") ]
+            a [ (_href homeUrl); (_class "mini-logo") ] [
+              img [ (_src "/img/head_logo_512.png"); (_alt "Site Logo"); (_class "mini-logo") ]
+            ]
+
             encodedText pageHeader
             button [ (_class "menu-button"); ] [
               i [ _class "fa-solid fa-bars" ] []
