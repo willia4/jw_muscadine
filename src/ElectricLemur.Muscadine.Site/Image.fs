@@ -18,20 +18,29 @@ type ImagePaths = {
     Size64: string
 }
 
+let choose64 i = i.Size64
+let choose128 i = i.Size128
+let choose256 i = i.Size256
+let choose512 i = i.Size512
+let choose1024 i = i.Size1024
+let chooseOriginal i = i.Original
+
 type Icon =
     | FontAwesome of string
     | Image of ImagePaths
 
-let rec xmlElementFromIcon icon sizeChooser =
+let rec xmlElementFromIcon icon sizeChooser ctx =
     match icon with
     | FontAwesome iconClass -> i [ _class iconClass ] []
     | Image imagePath ->
+        let makeUrl = (Util.flip Util.makeUrl) ctx
         imagePath
         |> sizeChooser
         |> Some
         |> Util.addRootPath "/images"
-        |> Option.map (fun path -> img [ _src path ])
-        |> Option.defaultValue (xmlElementFromIcon (FontAwesome "fa-solid fa-cloud-exclamation") sizeChooser)
+        |> Option.map makeUrl
+        |> Option.map (fun path -> img [ _src (path.ToString()) ])
+        |> Option.defaultValue (xmlElementFromIcon (FontAwesome "fa-solid fa-cloud-exclamation") sizeChooser ctx)
 
 
 let private loadImageFromBytes (img: byte array) = 

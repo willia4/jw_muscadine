@@ -48,7 +48,7 @@ let makeItemCard ctx (item: Project.Project) = task {
     |> Task.map (Option.map (fun mb -> mb.Microblog.DateAdded, mb.Microblog.Text))
 
   let sortDate = mostRecentMicroblog |> Option.map fst |> Option.defaultValue System.DateTimeOffset.MinValue
-  let card = FrontendHelpers.makeItemCard title mostRecentMicroblog icon
+  let card = FrontendHelpers.makeItemCard title mostRecentMicroblog icon ctx
   return  sortDate, card
 }
 

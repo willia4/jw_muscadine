@@ -66,6 +66,12 @@ let layout pageDefinition content extraCss ctx =
         meta [ (_name "viewport"); (_content "width=device-width, initial-scale=1") ]
         link [ (_rel "shortcut icon"); (_type "image/png"); (_href "/img/head_logo_32.png") ]
         link [ (_rel "icon"); (_type "image/png"); (_href "/img/head_logo_256.png") ]
+
+        link [ (_rel "alternate"); (_type "application/atom+xml"); (_title "All Microblogs - Atom Feed"); (_href (Util.makeUrl "/feed/microblogs/" ctx |> string))]
+        link [ (_rel "alternate"); (_type "application/atom+xml"); (_title "Book Microblogs - Atom Feed"); (_href (Util.makeUrl "/feed/microblogs/books/" ctx |> string))]
+        link [ (_rel "alternate"); (_type "application/atom+xml"); (_title "Project Microblogs - Atom Feed"); (_href (Util.makeUrl "/feed/microblogs/projects/" ctx |> string))]
+        link [ (_rel "alternate"); (_type "application/atom+xml"); (_title "Game Microblogs - Atom Feed"); (_href (Util.makeUrl "/feed/microblogs/games/" ctx |> string))]
+
         title [] [ encodedText $"James Williams.me - %s{ pageHeader }" ]
         (Util.cssLinkTag "remedy.css" ctx)
         (Util.cssLinkTag "frontend.scss" ctx)
@@ -101,7 +107,7 @@ let layout pageDefinition content extraCss ctx =
       ]
     ]
 
-let makeItemCard title (microblog: (System.DateTimeOffset * string) option) (image: Image.Icon) =
+let makeItemCard title (microblog: (System.DateTimeOffset * string) option) (image: Image.Icon) ctx =
 
   let microblogDiv =
     match microblog with
@@ -126,7 +132,7 @@ let makeItemCard title (microblog: (System.DateTimeOffset * string) option) (ima
   div [ _class "item-card" ] [
     div [ _class "item-image"] [
       div [ _class "item-image-container" ] [
-        (Image.xmlElementFromIcon image (fun i -> i.Size1024))
+        (Image.xmlElementFromIcon image (fun i -> i.Size1024) ctx)
       ]
     ]
     div [ _class "item-text-container" ] ([

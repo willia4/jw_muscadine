@@ -118,6 +118,16 @@ let webApp =
                     routef "/project/%s/microblog" (fun id -> Microblog.Handlers.GET_list Project.documentType id)
 
                     routexp "/images/(.*?)/(.*?)/(.*?)/(.*)" Image.Handlers.GET_imageRouter
+
+                    route "/feed/microblogs" >=> redirectTo true "/feed/microblogs/"
+                    route "/feed/microblogs/games" >=> redirectTo true "/feed/microblogs/games/"
+                    route "/feed/microblogs/books" >=> redirectTo true "/feed/microblogs/books/"
+                    route "/feed/microblogs/projects" >=> redirectTo true "/feed/microblogs/projects/"
+
+                    route "/feed/microblogs/" >=> (Microblog.Handlers.GET_atomFeed None "everything" (Util.makeUrl "/feed/microblogs/"))
+                    route "/feed/microblogs/games/" >=> (Microblog.Handlers.GET_atomFeed (Some Game.documentType) "games" (Util.makeUrl "/feed/microblogs/games/"))
+                    route "/feed/microblogs/books/" >=> (Microblog.Handlers.GET_atomFeed (Some Book.documentType) "books" (Util.makeUrl "/feed/microblogs/books/"))
+                    route "/feed/microblogs/projects/" >=> (Microblog.Handlers.GET_atomFeed (Some Project.documentType) "projects" (Util.makeUrl "/feed/microblogs/projects/"))
                 ]
             POST >=>
                 choose [

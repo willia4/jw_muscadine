@@ -154,6 +154,35 @@ let loadRecentMicroblogsForItem (since: System.DateTimeOffset) (itemId: string o
   return documents
 }
 
+let loadRecentMicroblogsForItemType (since: System.DateTimeOffset) (itemDocumentType: string) limit ctx = task {
+  let filter =
+    Database.Filters.empty
+    |> Database.Filters.byDocumentType documentType
+    |> Database.Filters.addLessThanOrEqualTo "_dateAdded" (since.ToOffset(System.TimeSpan.Zero).ToString("o"))
+    |> Database.Filters.addEquals AssociatedItem.itemDocumentTypeField itemDocumentType
+
+  let sort =
+    Database.Sort.empty
+    |> Database.Sort.byDescending "_dateAdded"
+
+  let! documents = Database.getDocumentsForFilterAndSort filter sort limit ctx
+  let documents =
+    documents
+    |> Seq.map JObjectToMicroblogAssignment
+
+  let linkedItems = documents |> Seq.map (fun d -> d.ItemId)
+  let! linkedItems = loadLinkedItemsData linkedItems ctx
+
+  let documents =
+    documents
+    |> Seq.map (fun assignment ->
+      let linkedItem = linkedItems |> Map.tryFind assignment.ItemId
+      enrichMicroblog assignment linkedItem
+    )
+
+  return documents
+}
+
 let loadRecentMicroblogs (since: System.DateTimeOffset) limit ctx =
   loadRecentMicroblogsForItem since None limit ctx
 
@@ -302,4 +331,71 @@ module Handlers =
                         return! (redirectTo false $"/admin/microblog/%s{id}") next ctx
                       }
 
+    }
+
+  let GET_atomFeed (documentType: string option) (pluralTopic: string) selfLinkMaker : HttpHandler =
+    fun next ctx -> task {
+      let since = System.DateTimeOffset.UtcNow
+
+      let! entries =
+        match documentType with
+        | Some documentType -> loadRecentMicroblogsForItemType since documentType (Database.Limit 100) ctx
+        | None -> loadRecentMicroblogs since (Database.Limit 100) ctx
+
+      let entries = entries |> Seq.sortByDescending (fun e -> e.Microblog.DateAdded)
+      let dateUpdated = entries |> Seq.tryHead |> Option.map (fun e -> e.Microblog.DateAdded) |> Option.defaultValue (System.DateTimeOffset.UtcNow)
+
+      let currentYear = System.DateTime.Now.Year
+      let copyrightDate = if currentYear > 2021 then $"2021 - %d{currentYear}" else "2022"
+      let entries =
+        entries
+        |> Seq.toList
+        |> List.map (fun e ->
+          tag "entry" [] [
+            tag "title" [] [ rawText e.ItemName ]
+            tag "id" [] [ rawText $"urn:uuid:%s{e.Microblog.Id}" ]
+            tag "published" [] [ rawText (e.Microblog.DateAdded.ToString("o")) ]
+            tag "updated" [] [ rawText (e.Microblog.DateAdded.ToString("o")) ]
+            tag "summary" [ (attr "type" "html" )] [ encodedText (Markdig.Markdown.ToPlainText(e.Microblog.Text)) ]
+            tag "content" [ (attr "type" "xhtml") ] [
+              div [ (attr "xmlns" "http://www.w3.org/1999/xhtml") ] [
+                yield (h3 [] [ encodedText e.ItemName ])
+
+                // only include actual images in the atom feed
+                match e.ItemIcon with
+                | Image.Image _ -> yield! [
+                    Image.xmlElementFromIcon e.ItemIcon Image.choose256 ctx
+                    br []
+                  ]
+                | _ -> yield! []
+
+                yield rawText (Markdig.Markdown.ToHtml(e.Microblog.Text))
+              ]
+            ]
+            tag "author" [] [
+              tag "name" [] [ encodedText "James Williams" ]
+            ]
+          ]
+        )
+
+
+      let subtitle =  $"James Williams' thoughts about {pluralTopic}"
+
+      let feed = tag "feed" [ (attr "xmlns" "http://www.w3.org/2005/Atom")] ([
+        tag "title" [] [ rawText "Microblog Entries" ]
+        tag "subtitle" [] [ rawText subtitle ]
+        tag "id" [] [ rawText "urn:uuid:cd30bdd1-a3c3-4fde-87fc-8b66b147d1c6" ]
+        link [ (_rel "self"); (_href (ctx |> selfLinkMaker |> string)) ]
+        tag "icon" [] [ rawText (Util.makeUrl "/img/head_logo_256.png" ctx |> string)]
+        tag "rights" [] [ rawText $"© {copyrightDate} James Williams"]
+        tag "updated" [] [ rawText (dateUpdated.ToString("o")) ]
+
+      ] |> List.prepend entries)
+
+      let bytes = RenderView.AsBytes.xmlNode feed
+      //let s = RenderView.AsString.xmlNode feed
+
+      //return! text s next ctx
+      ctx.SetContentType "text/html; charset=utf-8"
+      return! (ctx.WriteBytesAsync bytes)
     }

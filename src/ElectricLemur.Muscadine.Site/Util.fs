@@ -43,6 +43,18 @@ let uploadedFiles (ctx: HttpContext) =
     } |> Seq.toList
 
 let dataPath (ctx: HttpContext) = ctx.GetService<IConfiguration>().GetValue<string>("DataDirectory")
+let baseUrl (ctx: HttpContext) =
+    let b = ctx.GetService<IConfiguration>().GetValue<string>("BaseUrl")
+    if b.EndsWith("/") then b else $"%s{b}/"
+
+let makeUrl (path: string) ctx =
+    let path =
+        if path.StartsWith("/") then
+            path.Substring(1)
+        else path
+    let path = path.Replace("\\", "/")
+    let b = baseUrl ctx
+    (new System.Uri($"%s{b}%s{path}"))
 
 let joinPath (a: string) b = System.IO.Path.Join(a, b)
 let joinPath3 (a: string) b c = System.IO.Path.Join(a, b, c)
