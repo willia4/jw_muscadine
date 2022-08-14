@@ -1,0 +1,48 @@
+@use "../colors";
+@use "../fonts";
+@use "../breakpoints";
+
+.colophon {
+
+  .text {
+    width: 40%;
+
+    @include breakpoints.tablet {
+      width: 80%;
+    }
+
+    @include breakpoints.phone {
+      width: 100%;
+    }
+  }
+
+  img {
+    width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 50px;
+
+    @include breakpoints.phone {
+      float: left;
+      width: 200px;
+      margin-left: 0;
+      margin-right: 15px;
+      margin-bottom: 15px;
+    }
+  }
+
+  a {
+    text-decoration: underline;
+    color: colors.$text;
+    &:visited {
+      color: colors.$text;
+    }
+    &:hover {
+      color: colors.$primary;
+    }
+  }
+
+  h3 {
+    color: colors.$heading;
+  }
+}

@@ -74,5 +74,6 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="biography.html" />
+    <EmbeddedResource Include="colophon.html" />
   </ItemGroup>
 </Project>

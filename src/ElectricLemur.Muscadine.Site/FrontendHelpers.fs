@@ -29,7 +29,10 @@ module PageDefinitions =
     | Games -> Some (i [ _class Constants.Icons.Game ] [])
     | Colophon -> Some (i [ _class Constants.Icons.Colophon ] [])
 
-  let pageTitle = sidebarButtonTitle >> fst
+  let pageTitle page =
+    match page with
+    | Colophon -> "About This Site"
+    | _ -> sidebarButtonTitle page |> fst
 
   let pageRoute page =
     match page with
