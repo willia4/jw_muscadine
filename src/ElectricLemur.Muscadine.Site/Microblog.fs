@@ -349,7 +349,7 @@ module Handlers =
       let dateUpdated = entries |> Seq.tryHead |> Option.map (fun e -> e.Microblog.DateAdded) |> Option.defaultValue (System.DateTimeOffset.UtcNow)
 
       let currentYear = System.DateTime.Now.Year
-      let copyrightDate = if currentYear > 2021 then $"2021 - %d{currentYear}" else "2022"
+      let copyrightDate = if currentYear > 2022 then $"2022 - %d{currentYear}" else "2022"
       let entries =
         entries
         |> Seq.toList
