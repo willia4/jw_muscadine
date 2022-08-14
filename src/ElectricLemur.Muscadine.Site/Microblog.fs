@@ -354,13 +354,19 @@ module Handlers =
         entries
         |> Seq.toList
         |> List.map (fun e ->
+          let url = e.Link
           tag "entry" [] [
-            tag "title" [] [ rawText e.ItemName ]
-            tag "id" [] [ rawText $"urn:uuid:%s{e.Microblog.Id}" ]
-            tag "published" [] [ rawText (e.Microblog.DateAdded.ToString("o")) ]
-            tag "updated" [] [ rawText (e.Microblog.DateAdded.ToString("o")) ]
-            tag "summary" [ (attr "type" "html" )] [ encodedText (Markdig.Markdown.ToPlainText(e.Microblog.Text)) ]
-            tag "content" [ (attr "type" "xhtml") ] [
+            yield (tag "title" [] [ rawText e.ItemName ])
+            yield (tag "id" [] [ rawText $"urn:uuid:%s{e.Microblog.Id}" ])
+
+            match url with
+            | Some url -> yield! [ (link [ _href url ]) ]
+            | None -> yield![]
+
+            yield (tag "published" [] [ rawText (e.Microblog.DateAdded.ToString("o")) ])
+            yield (tag "updated" [] [ rawText (e.Microblog.DateAdded.ToString("o")) ])
+            yield (tag "summary" [ (attr "type" "html" )] [ encodedText (Markdig.Markdown.ToPlainText(e.Microblog.Text)) ])
+            yield (tag "content" [ (attr "type" "xhtml") ] [
               div [ (attr "xmlns" "http://www.w3.org/1999/xhtml") ] [
                 yield (h3 [] [ encodedText e.ItemName ])
 
@@ -374,10 +380,10 @@ module Handlers =
 
                 yield rawText (Markdig.Markdown.ToHtml(e.Microblog.Text))
               ]
-            ]
-            tag "author" [] [
+            ])
+            yield (tag "author" [] [
               tag "name" [] [ encodedText "James Williams" ]
-            ]
+            ])
           ]
         )
 
