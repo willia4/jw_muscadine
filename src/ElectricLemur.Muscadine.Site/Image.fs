@@ -139,6 +139,7 @@ let deleteAllImages coverImage ctx =
     Task.fromResult ()
 
 module Handlers =
+    open Microsoft.Extensions.Configuration
     let GET_imageRouter (paths: string seq) =
         fun next (ctx: HttpContext) -> task {
             let fullPath = paths |> Seq.head
@@ -167,7 +168,14 @@ module Handlers =
                     let path = System.IO.Path.Join((Util.dataPath ctx), path)
 
                     match System.IO.File.Exists(path) with
-                    | true -> return! streamFile false path None None next ctx
+                    | true ->
+                        let config = ctx.GetService<IConfiguration>()
+                        let cacheEnabled = config.GetValue<bool>("webOptimizer:enableCaching", false)
+                        if cacheEnabled then
+                            let cacheAge = System.TimeSpan.FromDays(30).TotalSeconds |> int
+                            ctx.Response.Headers.Append("Cache-Control", $"max-age=%d{cacheAge}, public")
+
+                        return! streamFile false path None None next ctx
                     | false -> return! setStatusCode 401 next ctx
                 | None -> return! setStatusCode 401 next ctx
         }

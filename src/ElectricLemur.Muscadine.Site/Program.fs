@@ -240,14 +240,23 @@ let main args =
 
     let staticFilesOptions = new StaticFileOptions()
     staticFilesOptions.OnPrepareResponse <- (fun ctx ->
+        let isImage (fileName: string) =
+            let fileName = fileName.ToLowerInvariant()
+            fileName.EndsWith(".ico") || fileName.EndsWith(".jpg") || fileName.EndsWith(".png")
+
         let config = ctx.Context.GetService<IConfiguration>()
         let cacheEnabled = config.GetValue<bool>("webOptimizer:enableCaching", false)
         if cacheEnabled then
-            let cacheAge = System.TimeSpan.FromDays(30).TotalSeconds |> int
+            let fileName = ctx.File.Name
 
-            if (ctx.File.Name.EndsWith(".ttf")) then
+            if (fileName.EndsWith(".ttf")) || (isImage fileName) then
+                let cacheAge = System.TimeSpan.FromDays(30).TotalSeconds |> int
+
                 ctx.Context.Response.Headers.Append(
                     "Cache-Control", $"max-age=%d{cacheAge}, public"))
+
+
+
 
     app
         .UseStaticFiles(staticFilesOptions)
