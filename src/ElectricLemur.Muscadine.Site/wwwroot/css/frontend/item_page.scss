@@ -26,6 +26,15 @@
         max-height: 250px;
       }
     }
+
+    i {
+      font-size: 250px;
+      color: colors.$heading;
+
+      @include breakpoints.tablet {
+        font-size: 175px;
+      }
+    }
   }
 
   .item-text-container {
@@ -131,6 +140,11 @@
         margin: 0;
         max-width: 150px;
         max-height: 150px;
+      }
+
+      i {
+        color: colors.$heading;
+        font-size: 50px;
       }
     }
 
