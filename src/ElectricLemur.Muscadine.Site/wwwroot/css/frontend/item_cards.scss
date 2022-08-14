@@ -149,6 +149,26 @@ section {
           color: colors.$heading;
         }
 
+        .item-tags {
+          display: flex;
+          flex-wrap: wrap;
+          margin-bottom: 5px;
+
+          .item-tag {
+            font-size: 13px;
+            height: 21px;
+            background-color: colors.$primary;
+            color: white;
+            padding-top: 3px;
+            padding-bottom: 3px;
+            padding-left: 5px;
+            padding-right: 5px;
+            margin-right: 3px;
+            margin-top: 3px;
+            border-radius: 5px;
+          }
+        }
+
         .item-microblog {
           font-family: "Ubuntu Regular";
           font-size: 15px;

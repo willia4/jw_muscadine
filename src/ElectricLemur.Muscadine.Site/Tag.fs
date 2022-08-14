@@ -141,3 +141,28 @@ let itemIdsContainingTags itemDocumentType (tags: seq<string>) ctx =
     Database.getDocumentsForFilter filter (Database.NoLimit) ctx
     |> Task.map (Seq.map JObjectToTagAssignment)
     |> Task.map (Seq.map (fun t -> t.ItemId))
+
+let sortTagsForDisplay (tags: seq<string>) =
+    let neverShown = [ "in-progress"; "backlog" ]
+    let sortFirst = [ "finished"; "did-not-finish" ]
+    let sortFirstOrder =
+        sortFirst
+        |> List.mapi (fun i t -> t, i)
+        |> Map.ofList
+
+    let (left, right) =
+        tags
+        |> Seq.filter (fun t -> neverShown |> List.contains t |> not )
+        |> Seq.fold (fun (left, right) t ->
+            let goLeft = sortFirst |> List.contains t
+            let left = if goLeft then (List.append left [t]) else left
+            let right = if (goLeft) then right else (List.append right [t])
+
+            left, right) (List.empty, List.empty)
+
+    let left =
+        left
+        |> List.sortBy (fun t -> Map.tryFind t sortFirstOrder |> Option.defaultValue (System.Int32.MaxValue))
+    let right = right |> List.sort
+
+    List.append left right

@@ -107,11 +107,12 @@ let layout pageDefinition content extraCss ctx =
       ]
     ]
 
-let makeItemCard title (microblog: (System.DateTimeOffset * string) option) (image: Image.Icon) ctx =
+let makeItemCard title tags (microblog: (System.DateTimeOffset * string) option) (image: Image.Icon) ctx =
+  let tags = Tag.sortTagsForDisplay tags
 
   let microblogDiv =
     match microblog with
-    | Some (date, text) -> [
+    | Some (date, text) ->
         let date = date.ToString("o")
         let markdownHtml = Markdig.Markdown.ToHtml(text)
 
@@ -122,12 +123,16 @@ let makeItemCard title (microblog: (System.DateTimeOffset * string) option) (ima
           ]
           span [ _class "text"] [ rawText markdownHtml ]
         ]
-      ]
-    | None -> [
+    | None ->
       div [ _class "item-microblog" ] [
         span [ _class "no-update" ] [ encodedText "No Updates Yet..." ]
       ]
-    ]
+
+  let tagsDiv =
+    div [ _class "item-tags" ] (
+      tags |> List.map (fun t ->
+        span [ _class "item-tag" ] [ encodedText t ]))
+
 
   div [ _class "item-card" ] [
     div [ _class "item-image"] [
@@ -137,7 +142,9 @@ let makeItemCard title (microblog: (System.DateTimeOffset * string) option) (ima
     ]
     div [ _class "item-text-container" ] ([
       div [ _class "item-title" ] [encodedText title]
-    ] |> List.prepend microblogDiv)
+    ]
+    |> List.prepend [ tagsDiv ]
+    |> List.prepend [ microblogDiv ])
   ]
 
 
