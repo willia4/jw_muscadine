@@ -137,7 +137,7 @@ let makeItemCard title tags (microblog: (System.DateTimeOffset * string) option)
   div [ _class "item-card" ] [
     div [ _class "item-image"] [
       div [ _class "item-image-container" ] [
-        (Image.xmlElementFromIcon image (fun i -> i.Size1024) ctx)
+        (Image.xmlElementFromIcon image Image.choose512 ctx)
       ]
     ]
     div [ _class "item-text-container" ] ([
