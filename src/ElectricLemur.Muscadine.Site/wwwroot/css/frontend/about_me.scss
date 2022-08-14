@@ -155,7 +155,8 @@
 
       margin-bottom: 40px;
 
-      a.icon {
+      .icon {
+
         display: flex;
         grid-row-start: 1;
         grid-row-end: 3;
@@ -208,6 +209,15 @@
           @include breakpoints.phone {
             display: flex;
             flex-direction: column;
+          }
+
+          a {
+            color: colors.$heading;
+            text-decoration: none;
+
+            &:visited {
+              color: colors.$heading;
+            }
           }
 
           .header-text {

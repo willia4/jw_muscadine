@@ -55,7 +55,6 @@ module PageDefinitions =
         a [ (_class smallButtonClass); (_href (pageRoute buttonPage)); (attr "role" "menuitem") ] (List.append buttonIcon [ encodedText (snd title) ])
     ]
 
-
 let layout pageDefinition content extraCss ctx =
   let pageHeader = PageDefinitions.pageTitle pageDefinition
   let sidebarOrder = [ PageDefinitions.AboutMe; PageDefinitions.Projects; PageDefinitions.Books; PageDefinitions.Games; PageDefinitions.Colophon ]
@@ -107,7 +106,12 @@ let layout pageDefinition content extraCss ctx =
       ]
     ]
 
-let makeItemCard title tags (microblog: (System.DateTimeOffset * string) option) (image: Image.Icon) ctx =
+let wrapNodeInLinkIfHrefExists href node =
+  match href with
+  | Some href -> a [ _href href ] [ node ]
+  | None -> node
+
+let makeItemCard title link tags (microblog: (System.DateTimeOffset * string) option) (image: Image.Icon) ctx =
   let tags = Tag.sortTagsForDisplay tags
 
   let microblogDiv =
@@ -137,14 +141,80 @@ let makeItemCard title tags (microblog: (System.DateTimeOffset * string) option)
   div [ _class "item-card" ] [
     div [ _class "item-image"] [
       div [ _class "item-image-container" ] [
-        (Image.xmlElementFromIcon image Image.choose512 ctx)
+        wrapNodeInLinkIfHrefExists link (Image.xmlElementFromIcon image Image.choose512 ctx)
       ]
     ]
     div [ _class "item-text-container" ] ([
-      div [ _class "item-title" ] [encodedText title]
+      div [ _class "item-title" ] [ wrapNodeInLinkIfHrefExists link (encodedText title) ]
     ]
     |> List.prepend [ tagsDiv ]
     |> List.prepend [ microblogDiv ])
   ]
 
 
+let makeItemPage title (description: string) icon tags microblogEntries ctx =
+
+  let makeMicroblogContent (microblogEntries: Microblog.Microblog seq) ctx =
+    microblogEntries
+    |> Seq.map (fun mb ->
+        let d = mb.DateAdded.ToString("o")
+        let markdownHtml = Markdig.Markdown.ToHtml(mb.Text)
+
+        div [ _class "microblog" ] [
+          div [ _class "microblog-text-container" ] [
+            div [ _class "header" ] [
+              i [ _class "fa-solid fa-diamond" ] []
+
+              span [ _class "timestamp" ] [
+                script [] [ rawText $"document.write(formatUtcDate(\"%s{d}\"));" ]
+                noscript [] [ encodedText d ]
+              ]
+            ]
+            div [ _class "text" ] [ rawText markdownHtml]
+          ]
+        ])
+    |> Seq.toList
+
+  let iconNode = Image.xmlElementFromIcon icon Image.choose1024 ctx
+
+  let tags = Tag.sortTagsForDisplay tags
+  let tagsDiv =
+    div [ _class "item-tags" ] (
+      tags |> List.map (fun t ->
+        span [ _class "item-tag" ] [ encodedText t ]))
+
+  let descriptionDiv = div [ _class "item-description" ] [
+    rawText (Markdig.Markdown.ToHtml(description))
+  ]
+
+  [
+    div [ (_class "page-content item"); (_id "desktop-content") ] [
+      div [ _class "item-text-container" ] [
+        h1 [ _class "title" ] [ encodedText title ]
+        tagsDiv
+        descriptionDiv
+      ]
+
+      div [ _class "item-photo-container" ] [
+        iconNode
+      ]
+    ]
+
+    div [ (_class "page-content item"); (_id "phone-content") ] [
+      div [ _class "phone-header" ] [
+        div [ _class "phone-header-image" ] [ iconNode]
+        div [ _class "item-text-container" ] [
+          h1 [ _class "title" ] [ encodedText title ]
+          tagsDiv
+        ]
+      ]
+      div [ _class "phone-description" ] [
+        descriptionDiv
+      ]
+    ]
+
+    div [ _class "page-content activity" ] [
+      h2 [ _class "activity-title" ] [ encodedText "Activity" ]
+      div [ _class "microblogs-container" ] (makeMicroblogContent microblogEntries ctx)
+    ]
+  ]

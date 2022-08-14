@@ -28,6 +28,7 @@ type EnrichedMicroblog = {
   ItemId: string
   Item: Newtonsoft.Json.Linq.JObject option
   Microblog: Microblog
+  Link: string option
 }
 
 let sortMicroblogs (blogs: Microblog list) = blogs |> List.sortByDescending (fun b -> b.DateAdded)
@@ -92,11 +93,12 @@ let loadMicroblogsForDocument itemDocumentType itemId ctx = task {
 let private readItemData itemData =
   let itemName = Items.readNameOrDefault itemData
   let itemIcon = Items.readItemImageOrDefault itemData
+  let slug =  Items.tryReadSlug itemData
 
-  itemName, itemIcon
+  itemName, itemIcon, slug
 
-let private enrichMicroblog (microblogAssignment: MicroblogAssignment) itemData =
-  let (name, icon) = readItemData itemData
+let private enrichMicroblog (microblogAssignment: MicroblogAssignment) itemData ctx =
+  let (name, icon, slug) = readItemData itemData
   {
     ItemName = name
     ItemIcon = icon
@@ -104,6 +106,7 @@ let private enrichMicroblog (microblogAssignment: MicroblogAssignment) itemData 
     ItemId = microblogAssignment.ItemId
     Item = itemData
     Microblog = MicroblogAssignmentToMicroblog microblogAssignment
+    Link = slug |> Option.bind (fun slug -> Items.getLinkToItem microblogAssignment.ItemDocumentType slug ctx)
   }
 
 let private loadItemDataForMicroblogAssignment (microblogAssignment: MicroblogAssignment) ctx =
@@ -148,7 +151,7 @@ let loadRecentMicroblogsForItem (since: System.DateTimeOffset) (itemId: string o
     documents
     |> Seq.map (fun assignment ->
       let linkedItem = linkedItems |> Map.tryFind assignment.ItemId
-      enrichMicroblog assignment linkedItem
+      enrichMicroblog assignment linkedItem ctx
     )
 
   return documents
@@ -177,7 +180,7 @@ let loadRecentMicroblogsForItemType (since: System.DateTimeOffset) (itemDocument
     documents
     |> Seq.map (fun assignment ->
       let linkedItem = linkedItems |> Map.tryFind assignment.ItemId
-      enrichMicroblog assignment linkedItem
+      enrichMicroblog assignment linkedItem ctx
     )
 
   return documents

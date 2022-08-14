@@ -1,0 +1,145 @@
+@use "../colors";
+@use "../fonts";
+@use "../breakpoints";
+
+#desktop-content {
+  @include breakpoints.phone {
+    display: none;
+  }
+}
+
+
+.page-content.item {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+
+  .item-photo-container {
+    margin-right: 30px;
+
+    img {
+      max-width: 500px;
+      max-height: 500px;
+
+      @include breakpoints.tablet {
+        max-width: 250px;
+        max-height: 250px;
+      }
+    }
+  }
+
+  .item-text-container {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    padding: 0;
+    margin-right: 50px;
+    min-width: 50%;
+
+    @include breakpoints.tablet {
+      margin-right: 30px;
+    }
+
+    h1.title {
+      font-family: "Ubuntu Bold";
+      font-size: 32px;
+      color: colors.$heading;
+      margin-top: 0;
+
+    }
+    .item-tags {
+      display: flex;
+      flex-wrap: wrap;
+      margin-bottom: 5px;
+
+      .item-tag {
+        font-size: 13px;
+        height: 21px;
+        background-color: colors.$primary;
+        color: white;
+        padding-top: 3px;
+        padding-bottom: 3px;
+        padding-left: 5px;
+        padding-right: 5px;
+        margin-right: 3px;
+        margin-top: 3px;
+        border-radius: 5px;
+      }
+    }
+  }
+}
+
+.page-content.activity {
+  margin-top: 100px;
+  max-width: 60%;
+
+  @include breakpoints.phone {
+    border-top: solid 1px colors.$heading;
+    margin-top: 30px;
+    max-width: 100%;
+  }
+
+  h2.activity-title {
+    font-family: "Ubuntu Bold";
+    font-size: 32px;
+    color: colors.$heading;
+
+    @include breakpoints.phone {
+      font-size: 23px;
+    }
+  }
+
+  .microblogs-container {
+    .microblog {
+      margin-bottom: 35px;
+
+      .header {
+        color: colors.$heading;
+
+        i {
+          margin-right: 10px;
+          font-size: 16px;
+        }
+
+        .timestamp {
+          font-family: "Ubuntu Medium";
+          font-size: 18px;
+        }
+      }
+
+      .text {
+        margin-left: 32px;
+      }
+    }
+  }
+}
+
+#phone-content {
+  display: none;
+  @include breakpoints.phone {
+    display: block;
+  }
+
+  .phone-header {
+    display: grid;
+    grid-template-columns: auto 1fr;
+
+    .phone-header-image {
+      grid-column: 1;
+      margin: 0;
+      img {
+        margin: 0;
+        max-width: 150px;
+        max-height: 150px;
+      }
+    }
+
+    .item-text-container {
+      grid-column: 2;
+      padding-left: 15px;
+      h1 {
+        margin: 0;
+      }
+    }
+  }
+}

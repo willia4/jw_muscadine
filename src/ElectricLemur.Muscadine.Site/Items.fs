@@ -520,6 +520,15 @@ let handleImageUpload ctx documentType documentId key (existingPath: Image.Image
 
 }
 
+let getLinkToItem itemDocumentType slug ctx =
+    match itemDocumentType with
+    | s when s = Constants.Database.DocumentTypes.Book -> Some "books"
+    | s when s = Constants.Database.DocumentTypes.Project -> Some "projects"
+    | s when s = Constants.Database.DocumentTypes.Game -> Some "games"
+    | _ -> None
+    |> Option.map (fun itemDocumentType ->
+        Util.makeUrl $"/%s{itemDocumentType}/%s{slug}/" ctx |> string)
+
 let getDefaultIcon documentType =
     match documentType with
     | s when s = Constants.Database.DocumentTypes.Book -> Constants.Icons.Book
@@ -540,6 +549,10 @@ let tryReadName (itemData: JObject option) =
       (fun obj -> Option.bind (fun obj -> JObj.getter<string> obj "title") obj)
     ]
 
+let tryReadSlug (itemData: JObject option) =
+    itemData
+    |> Option.bind (fun obj -> JObj.getter<string> obj "slug")
+
 let tryReadDocumentType (itemData: JObject option) =
     itemData
     |> Option.bind (fun itemData -> JObj.getter<string> itemData Database.documentTypeField)
@@ -556,3 +569,14 @@ let readItemImageOrDefault itemData =
             |> getDefaultIcon
 
 let readNameOrDefault (itemData: JObject option) = itemData |> tryReadName |> Option.defaultValue "Unknown"
+
+let tryLookupBySlug (slug: string) documentType projection ctx =
+    let filter =
+        Database.Filters.empty
+        |> Database.Filters.byDocumentType documentType
+        |> Database.Filters.addEquals "slug" slug
+
+    Database.getDocumentsForFilter filter (Database.Limit 1) ctx
+    |> Task.map Seq.tryHead
+    |> Task.map (Option.map projection)
+

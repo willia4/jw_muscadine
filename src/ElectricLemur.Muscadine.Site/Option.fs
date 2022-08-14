@@ -40,3 +40,11 @@ let choosef (fs: seq<('a option -> 'b option)>) (o: 'a option) =
     fs
     |> Seq.map (fun f -> f o)
     |> choose
+
+let mapAsync (f: ('a -> System.Threading.Tasks.Task<'b>)) (o: 'a option) = task {
+  match o with
+  | None -> return None
+  | Some o ->
+    let! answer = f o
+    return (Some answer)
+}

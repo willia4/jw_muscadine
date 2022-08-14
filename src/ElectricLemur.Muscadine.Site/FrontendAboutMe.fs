@@ -14,12 +14,13 @@ let makeMicroblogsContent (recentMicroblogs: Microblog.EnrichedMicroblog seq) ct
     let icon = Image.xmlElementFromIcon mb.ItemIcon Image.choose256 ctx
 
     div [ _class "microblog" ] [
-      a [ _class "icon" ] [
+      FrontendHelpers.wrapNodeInLinkIfHrefExists mb.Link (div [ _class "icon" ] [
         icon
-      ]
+      ])
+
       div [ _class "microblog-text-container" ] [
         div [ _class "header" ] [
-          span [ _class "header-text" ] [ encodedText mb.ItemName ]
+          span [ _class "header-text" ] [ FrontendHelpers.wrapNodeInLinkIfHrefExists mb.Link (encodedText mb.ItemName) ]
 
           span [ _class "timestamp" ] [
             script [] [ rawText $"document.write(formatUtcDate(\"%s{d}\"));" ]

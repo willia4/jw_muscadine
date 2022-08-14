@@ -142,6 +142,15 @@ section {
         }
 
         .item-title {
+          a {
+            text-decoration: none;
+            color: colors.$heading;
+
+            &:visited {
+              color: colors.$heading;
+            }
+          }
+
           margin-top: 5px;
           font-size: 20px;
           font-weight: bold;

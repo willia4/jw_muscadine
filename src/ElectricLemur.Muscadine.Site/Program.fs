@@ -83,12 +83,18 @@ let webApp =
 
                     route "/games" >=> redirectTo true "/games/"
                     route "/games/" >=> Frontend.Game.Handlers.GET_index
+                    routef "/games/%s/" (fun slug -> Frontend.Game.Handlers.GET_itemPage slug)
+                    routef "/games/%s" (fun slug -> redirectTo true $"/games/%s{slug}/")
 
                     route "/projects" >=> redirectTo true "/projects/"
                     route "/projects/" >=> Frontend.Project.Handlers.GET_index
+                    routef "/projects/%s/" (fun slug -> Frontend.Project.Handlers.GET_itemPage slug)
+                    routef "/projects/%s" (fun slug -> redirectTo true $"/projects/%s{slug}/")
 
                     route "/books" >=> redirectTo true "/books/"
                     route "/books/" >=> Frontend.Book.Handlers.GET_index
+                    routef "/books/%s/" (fun slug -> Frontend.Book.Handlers.GET_itemPage slug)
+                    routef "/books/%s" (fun slug -> redirectTo true $"/books/%s{slug}/")
 
                     route "/" >=> htmlView (Views.underConstruction ctx)
                     route "/admin/login" >=> Login.getHandler
