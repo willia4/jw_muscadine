@@ -155,6 +155,15 @@
 
       margin-bottom: 40px;
 
+      a {
+        color: colors.$heading;
+        text-decoration: none;
+
+        &:visited {
+          color: colors.$heading;
+        }
+      }
+
       .icon {
 
         display: flex;

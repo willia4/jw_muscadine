@@ -103,6 +103,15 @@ section {
             width: 155px;
           }
 
+          a {
+            text-decoration: none;
+            color: colors.$heading;
+
+            &:visited {
+              color: colors.$heading;
+            }
+          }
+
           img {
             display: inline-block;
             margin-left: auto;
