@@ -45,6 +45,7 @@
     <Compile Include="Project.fs" />
     <Compile Include="Debug.fs" />
     <Compile Include="FrontendHelpers.fs" />
+    <Compile Include="ItemHelper.fs" />
     <Compile Include="FrontendColophon.fs" />
     <Compile Include="FrontendBook.fs" />
     <Compile Include="FrontendProject.fs" />

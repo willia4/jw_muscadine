@@ -5,6 +5,11 @@ let ofResult (r: Result<'a, 'e>) =
   | Ok v -> Some v
   | Error _ -> None
 
+let toResult (errorValue: 'e) o =
+  match o with
+  | Some v -> Ok v
+  | None -> Error errorValue
+
 /// Takes a Sequence of Options and returns Some of a Sequence of unwrapped values
 /// iff all Options in the Sequence were Some.
 /// If any Option in the Sequence was None, None is returned

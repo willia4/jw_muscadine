@@ -103,33 +103,4 @@ module Handlers =
         return! htmlView pageHtml next ctx
       }
 
-  let GET_itemPage slug : HttpHandler =
-    fun next (ctx: HttpContext) -> task {
-      let! item = Items.tryLookupBySlug slug Game.documentType Game.makeModelFromJObject ctx
-
-      let! content =
-        item
-        |> Option.map (fun item ->
-            let icon = match item.CoverImagePaths with
-                       | Some paths -> Image.Icon.Image paths
-                       | None -> Items.getDefaultIcon Game.documentType
-
-            icon, item)
-        |> Option.mapAsync (fun (icon, item) -> task {
-          let! microblogEntries = Microblog.loadMicroblogsForDocument Game.documentType item.Id ctx
-          return (icon, microblogEntries, item)
-        })
-        |> Task.bind (Option.mapAsync (fun (icon, microblogEntries, item) -> task {
-          let! tags = Tag.loadTagsForDocument Game.documentType item.Id ctx
-          return (icon, tags, microblogEntries, item)
-        }))
-        |> Task.map (Option.map (fun (icon, tags, microblogEntries, item) ->
-            FrontendHelpers.makeItemPage item.Name item.Description icon tags microblogEntries ctx))
-
-      match content with
-      | None -> return! (setStatusCode 404 >=> text "Page not found") next ctx
-      | Some content ->
-          let pageHtml = FrontendHelpers.layout FrontendHelpers.PageDefinitions.Games content [ "frontend/item_page.scss" ] ctx
-          return! (htmlView pageHtml next ctx)
-
-    }
+  let GET_itemPage slug : HttpHandler = ItemHelper.Handlers.GET_itemPage Game.documentType slug
