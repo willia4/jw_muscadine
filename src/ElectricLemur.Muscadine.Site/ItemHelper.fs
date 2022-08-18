@@ -15,9 +15,24 @@ let tryWrapItem (item: obj) =
   | _ -> None
 
 let wrapItem (item: obj) =
-  match tryWrapItem obj with
+  match tryWrapItem item with
   | Some i -> i
   | _ -> failwith $"Unable to unwrap type {item.GetType().FullName}"
+
+let tryUnwrapGame (item) =
+  match item with
+  | Game g -> Some g
+  | _ -> None
+
+let tryUnwrapProject (item) =
+  match item with
+  | Project p -> Some p
+  | _ -> None
+
+let tryUnwrapBook (item) =
+  match item with
+  | Book b -> Some b
+  | _ -> None
 
 let fromJObject obj =
     Database.documentTypeField |> JObj.getter<string> obj
@@ -34,6 +49,22 @@ let toJObject item =
   | Game g -> Game.makeJObjectFromModel g
   | Project p -> Project.makeJObjectFromModel p
   | Book b -> Book.makeJObjectFromModel b
+
+let fromContextForm itemDocumentType existing ctx =
+  match itemDocumentType with
+  | s when s = Game.documentType ->
+      let existing = existing |> Option.bind tryUnwrapGame
+      Game.makeAndValidateModelFromContext existing ctx
+      |> Task.map (Result.map wrapItem)
+  | s when s = Project.documentType ->
+      let existing = existing |> Option.bind tryUnwrapProject
+      Project.makeAndValidateModelFromContext existing ctx
+      |> Task.map (Result.map wrapItem)
+  | s when s = Book.documentType ->
+      let existing = existing |> Option.bind tryUnwrapBook
+      Book.makeAndValidateModelFromContext existing ctx
+      |> Task.map (Result.map wrapItem)
+  | _ -> Task.fromResult (Error $"Could not parse fields for document type %s{itemDocumentType}")
 
 let documentType item =
   match item with
@@ -163,6 +194,21 @@ module Views =
         h2 [ ] [ encodedText "Other" ]
         div [ _class "other-container item-card-container" ] otherCards
       ])
+
+  module Admin =
+    let addView itemDocumentType allTags =
+      match itemDocumentType with
+      | s when s = Game.documentType -> Game.addEditView None allTags []
+      | s when s = Project.documentType -> Project.addEditView None allTags []
+      | s when s = Book.documentType -> Book.addEditView None allTags []
+      | _ -> failwith $"Could not determine addView for document type {itemDocumentType}"
+
+    let editView item =
+      match item with
+      | Game g -> Game.addEditView (Some g)
+      | Project p -> Project.addEditView (Some p)
+      | Book b -> Book.addEditView (Some b)
+
 module Handlers =
   let Get_listIndex itemDocumentType : HttpHandler =
     fun next ctx ->
@@ -213,4 +259,142 @@ module Handlers =
       | Some content ->
           let pageHtml = FrontendHelpers.layout FrontendHelpers.PageDefinitions.Games content [ "frontend/item_page.scss" ] ctx
           return! (htmlView pageHtml next ctx)
+    }
+
+module AdminHandlers =
+  let private adminSlug item =
+    match item with
+    | Game _ -> "/admin/game/"
+    | Project _ -> "/admin/project/"
+    | Book _ -> "/admin/book/"
+
+  let private coverImageKey item =
+    match item with
+    | Game _ -> Game.Fields.coverImagePaths.Key
+    | Project _ -> Project.Fields.coverImagePaths.Key
+    | Book _ -> Book.Fields.coverImagePaths.Key
+
+  let private handleGameImageUpload item ctx =
+    let unwrapped = (tryUnwrapGame >> Option.get) item
+    Items.handleImageUpload ctx
+      (documentType item) (itemId item)
+      (coverImageKey item) (coverImages item)
+      (fun n -> { unwrapped with CoverImagePaths = n})
+    |> Task.map (Result.map wrapItem)
+
+  let private handleProjectImageUpload item ctx =
+    let unwrapped = (tryUnwrapProject >> Option.get) item
+    Items.handleImageUpload ctx
+      (documentType item) (itemId item)
+      (coverImageKey item) (coverImages item)
+      (fun n -> { unwrapped with IconImagePaths = n})
+    |> Task.map (Result.map wrapItem)
+
+  let private handleBookImageUpload item ctx =
+    let unwrapped = (tryUnwrapBook >> Option.get) item
+    Items.handleImageUpload ctx
+      (documentType item) (itemId item)
+      (coverImageKey item) (coverImages item)
+      (fun n -> { unwrapped with CoverImagePaths = n})
+    |> Task.map (Result.map wrapItem)
+
+  let GET_add itemDocumentType : HttpHandler =
+    fun next ctx -> 
+      Tag.getExistingTags ctx
+      |> Task.map (fun allTags -> Views.Admin.addView itemDocumentType allTags)
+      |> Task.bind (fun view -> htmlView view next ctx)
+
+  let POST_add itemDocumentType : HttpHandler =
+    fun next ctx -> task {
+      let! item = fromContextForm itemDocumentType None ctx
+
+      match item with
+      | Ok item ->
+          let! coverImageUploadResult =
+            match item with
+            | Game _ -> handleGameImageUpload item ctx
+            | Project _ -> handleProjectImageUpload item ctx
+            | Book _ -> handleBookImageUpload item ctx
+
+          match coverImageUploadResult with
+          | Error msg -> return! (setStatusCode 400 >=> text msg) next ctx
+          | Ok item ->
+              let data = toJObject item
+              do! Database.upsertDocument ctx data
+              do! Tag.saveTagsForForm (documentType item) (itemId item) Tag.formKey ctx
+
+              let redirectUrl = $"%s{adminSlug item}%s{itemId item}"
+              return! (redirectTo false redirectUrl) next ctx
+      | Error msg ->
+          return! (setStatusCode 400 >=> text msg) next ctx
+    }
+
+  let GET_edit itemDocumentType id : HttpHandler =
+    fun next ctx -> task {
+      let! existing =
+        Database.getDocumentById id ctx
+        |> Task.map (Option.bind fromJObject)
+
+      let! allTags = Tag.getExistingTags ctx
+      let! documentTags = Tag.loadTagsForDocument itemDocumentType id ctx
+
+      match existing with
+      | Some existing ->
+          let view = Views.Admin.editView existing allTags documentTags
+          return! htmlView view next ctx
+      | None ->
+          return! (setStatusCode 404 >=> text "Page not found") next ctx
+    }
+
+  let POST_edit itemDocumentType id : HttpHandler =
+    fun next ctx -> task {
+      let! existing =
+        Database.getDocumentById id ctx
+        |> Task.map (Option.bind fromJObject)
+
+      match existing with
+      | None -> return! (setStatusCode 404) next ctx
+      | Some existing ->
+          let! newModel = fromContextForm itemDocumentType (Some existing) ctx
+          match newModel with
+          | Ok newModel ->
+              let! coverImageUploadResult =
+                match newModel with
+                | Game _ -> handleGameImageUpload newModel ctx
+                | Project _ -> handleProjectImageUpload newModel ctx
+                | Book _ -> handleBookImageUpload newModel ctx
+
+              match coverImageUploadResult with
+              | Error msg -> return! (setStatusCode 400 >=> text msg) next ctx
+              | Ok newModel ->
+                  let data = toJObject newModel
+                  do! Database.upsertDocument ctx data
+                  do! Tag.saveTagsForForm (documentType newModel) (itemId newModel) Tag.formKey ctx
+
+                  let redirectUrl = $"%s{adminSlug newModel}%s{itemId newModel}"
+                  return! (redirectTo false redirectUrl) next ctx
+          | Error msg -> return! (setStatusCode 400 >=> text msg) next ctx
+    }
+
+  let DELETE id : HttpHandler =
+    fun next ctx -> task {
+      let! existing =
+        Database.getDocumentById id ctx
+        |> Task.map (Option.bind fromJObject)
+
+      let existingCoverImage = existing |> Option.bind coverImages
+
+      do! match existingCoverImage with
+          | Some existingCoverImage -> Image.deleteAllImages existingCoverImage ctx
+          | None -> Task.fromResult ()
+
+      do! match existing with
+          | Some existing -> task {
+              do! Tag.clearTagsForDocument (documentType existing) (itemId existing) ctx
+              do! Microblog.deleteAllMicroblogsFromItem (documentType existing) (itemId existing) ctx
+              do! Database.deleteDocument ctx (itemId existing)
+            }
+          | None -> Task.fromResult ()
+
+      return! setStatusCode 200 next ctx
     }
