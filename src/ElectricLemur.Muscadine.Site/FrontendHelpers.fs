@@ -132,15 +132,20 @@ let makeItemCard title link tags (microblog: (System.DateTimeOffset * string) op
         let markdownHtml = Markdig.Markdown.ToHtml(text)
 
         div [ _class "item-microblog"] [
-          span [ _class "date" ] [
-            script [] [ rawText $"document.write(formatUtcDate(\"%s{date}\"));" ]
-            noscript [] [ encodedText date ]
+          div [ _class "item-microblog-heading" ] [
+              span [ _class "item-microblog-heading-text"] [ rawText "Most Recent Update" ]
+              span [ _class "date" ] [
+                script [] [ rawText $"document.write(formatUtcDate(\"%s{date}\"));" ]
+                noscript [] [ encodedText date ]
+            ]
           ]
           span [ _class "text"] [ rawText markdownHtml ]
         ]
     | None ->
       div [ _class "item-microblog" ] [
-        span [ _class "no-update" ] [ encodedText "No Updates Yet..." ]
+        div [ _class "item-microblog-heading" ] [
+          span [ _class "no-update" ] [ encodedText "No Updates Yet..." ]
+        ]
       ]
 
   let tagsDiv =

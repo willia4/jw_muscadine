@@ -193,18 +193,36 @@ section {
           font-family: "Ubuntu Regular";
           font-size: 15px;
 
-          .date {
-            font-size: 12px;
-            font-style: italic;
+          .item-microblog-heading {
+            //border: solid 1px black;
+            display: block;
+            border-top: 1px solid black;
+            margin-top: 8px;
+            padding-top: 3px;
+
+            .item-microblog-heading-text {
+              font-weight: bold;
+              margin-right: 5px;
+              font-size: 12px;
+
+            }
+
+            .date {
+              display: block;
+              font-size: 12px;
+              font-style: italic;
+            }
           }
+
 
           .text {
 
           }
 
           .no-update {
+            font-weight: bold;
             font-size: 12px;
-            font-style: italic;
+
           }
         }
       }
