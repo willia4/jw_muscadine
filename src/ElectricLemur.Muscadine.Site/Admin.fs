@@ -159,9 +159,9 @@ module Handlers =
 
     let GET_index: HttpHandler =
         fun next ctx -> task {
-            let! games = Game.allGames ctx
-            let! books = Book.allBooks ctx
-            let! projects = Project.allProjects ctx
+            let! games = ItemHelper.loadAllItems Game.documentType ctx |> Task.map (Seq.map ItemHelper.unwrapGame)
+            let! books = ItemHelper.loadAllItems Book.documentType ctx |> Task.map (Seq.map ItemHelper.unwrapBook)
+            let! projects = ItemHelper.loadAllItems Project.documentType ctx |> Task.map (Seq.map ItemHelper.unwrapProject)
 
             let! gameTags = Tag.loadTagsForDocuments Game.documentType (games |> Seq.map (fun x -> x.Id)) ctx
             let! bookTags = Tag.loadTagsForDocuments Book.documentType (books |> Seq.map (fun x -> x.Id)) ctx

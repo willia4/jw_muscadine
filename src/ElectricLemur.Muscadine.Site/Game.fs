@@ -169,7 +169,7 @@ let makeModelFromJObject (obj: JObject) =
 
 let makeJObjectFromModel (g: Game) =
     (new JObject())
-    |> (fun obj -> 
+    |> (fun obj ->
             obj.["_documentType"] <- documentType
             obj)
     |> RequiredFields.setJObject g Fields._id
@@ -178,6 +178,3 @@ let makeJObjectFromModel (g: Game) =
     |> RequiredFields.setJObject g Fields.description
     |> RequiredFields.setJObject g Fields.slug
     |> OptionalFields.setJObject g Fields.coverImagePaths
-
-let allGames ctx =
-    Database.getDocumentsByType documentType (makeModelFromJObject >> Some) Database.NoLimit ctx

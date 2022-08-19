@@ -34,6 +34,10 @@ let tryUnwrapBook (item) =
   | Book b -> Some b
   | _ -> None
 
+let unwrapGame = tryUnwrapGame >> Option.get
+let unwrapProject = tryUnwrapProject >> Option.get
+let unwrapBook = tryUnwrapBook >> Option.get
+
 let fromJObject obj =
     Database.documentTypeField |> JObj.getter<string> obj
     |> Option.bind (
@@ -162,7 +166,6 @@ let loadInProgressItems itemDocumentType = loadItemsContainingTags itemDocumentT
 let loadBacklogItems itemDocumentType = loadItemsContainingTags itemDocumentType [ "backlog" ]
 
 let makeItemCard ctx item = task {
-  let jObj = item |> toJObject |> Some
   let title = (name item)
   let icon = (icon item)
   let link = Items.getLinkToItem (documentType item) (slug item) ctx
@@ -176,6 +179,13 @@ let makeItemCard ctx item = task {
   let card = FrontendHelpers.makeItemCard title link tags mostRecentMicroblog icon ctx
   return sortDate, card
 }
+
+let loadAllItems itemDocumentType ctx =
+      Database.getDocumentsByType itemDocumentType Some Database.NoLimit ctx
+      |> Task.map (Seq.map fromJObject)
+      |> Task.map (Seq.filter Option.isSome)
+      |> Task.map (Seq.map Option.get)
+
 
 module Views =
   let makeContentView inProgressCards backlogCards otherCards =

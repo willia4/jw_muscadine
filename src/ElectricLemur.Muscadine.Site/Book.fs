@@ -179,25 +179,3 @@ let makeJObjectFromModel (g: Book) =
     |> RequiredFields.setJObject g Fields.description
     |> RequiredFields.setJObject g Fields.slug
     |> OptionalFields.setJObject g Fields.coverImagePaths
-
-
-let allBooks ctx =
-    Database.getDocumentsByType documentType (makeModelFromJObject >> Some) Database.NoLimit ctx
-
-module Handlers =
-    let DELETE id =
-        fun next ctx -> task {
-            let! existing = Database.getDocumentById id ctx
-            let existing = existing |> Option.map makeModelFromJObject
-            let existingCoverImage = existing |> Option.map (fun e -> e.CoverImagePaths) |> Option.flatten
-
-            do! match existingCoverImage with
-                | Some existingCoverImage -> Image.deleteAllImages existingCoverImage ctx
-                | None -> Task.fromResult ()
-
-            do! Tag.clearTagsForDocument documentType id ctx
-            do! Microblog.deleteAllMicroblogsFromItem documentType id ctx
-            do! Database.deleteDocument ctx id
-            return! setStatusCode 200 next ctx
-        }
-
