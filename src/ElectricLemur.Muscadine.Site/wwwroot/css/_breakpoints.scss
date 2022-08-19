@@ -1,7 +1,14 @@
 $_phone-max: 800px;
+$_small-phone-max: 475px;
 $_tablet-max: 1366px;
 
 $_phone-minus-one: $_phone-max - 1;
+
+@mixin small-phone {
+  @media screen and (max-width: $_small-phone-max) {
+    @content
+  }
+}
 
 @mixin phone {
   @media screen and (max-width: $_phone-minus-one) {

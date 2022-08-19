@@ -93,6 +93,10 @@ section {
           margin-right: 15px;
         }
 
+        @include breakpoints.small-phone {
+          width: 100px;
+        }
+
         .item-image-container {
           margin-top: auto;
           margin-bottom: auto;
@@ -103,6 +107,10 @@ section {
             width: auto;
             margin-right: 15px;
             width: 155px;
+          }
+
+          @include breakpoints.small-phone {
+            width: 105px;
           }
 
           a {
@@ -131,6 +139,10 @@ section {
               max-width: 150px;
               filter: drop-shadow(0 0 0 colors.$heading);
             }
+
+            @include breakpoints.small-phone {
+              width: 100px;
+            }
           }
 
           i {
@@ -139,6 +151,10 @@ section {
 
             @include breakpoints.phone {
               font-size: 100px;
+            }
+
+            @include breakpoints.small-phone {
+              font-size: 75px;
             }
           }
         }
