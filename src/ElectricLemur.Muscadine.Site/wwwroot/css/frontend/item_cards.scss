@@ -212,18 +212,19 @@ section {
               font-size: 12px;
               font-style: italic;
             }
-          }
 
+            .no-update {
+              font-weight: bold;
+              font-size: 12px;
+              display: block;
+            }
+          }
 
           .text {
 
           }
 
-          .no-update {
-            font-weight: bold;
-            font-size: 12px;
 
-          }
         }
       }
     }
