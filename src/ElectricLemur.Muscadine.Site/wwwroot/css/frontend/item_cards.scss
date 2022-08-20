@@ -133,15 +133,18 @@ section {
 
             @include breakpoints.tablet {
               max-width: 200px;
+              max-height: 275px;
             }
 
             @include breakpoints.phone {
               max-width: 150px;
+              max-height: 250px;
               filter: drop-shadow(0 0 0 colors.$heading);
             }
 
             @include breakpoints.small-phone {
-              width: 100px;
+              max-width: 100px;
+              max-height: 170px;
             }
           }
 
