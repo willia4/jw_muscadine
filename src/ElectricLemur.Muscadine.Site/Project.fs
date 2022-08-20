@@ -187,6 +187,16 @@ let makeModelFromJObject (obj: JObject) =
         GitHubLink = Fields.gitHubLink |> getOptionalValue
     }
 
+let tryMakeModelFromJObject (obj: JObject) =
+    let objectType = Database.documentTypeField |> JObj.getter<string> obj
+    match objectType with
+    | Some o when o = documentType ->
+        try
+            Some (makeModelFromJObject obj)
+        with
+        | _ -> None
+    | _ -> None
+
 let makeJObjectFromModel (p: Project) =
     (new JObject())
     |> (fun obj -> 

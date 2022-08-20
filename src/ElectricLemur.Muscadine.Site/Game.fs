@@ -171,6 +171,16 @@ let makeModelFromJObject (obj: JObject) =
         CoverImagePaths = Fields.coverImagePaths |> getOptionalValue
     }
 
+let tryMakeModelFromJObject (obj: JObject) =
+    let objectType = Database.documentTypeField |> JObj.getter<string> obj
+    match objectType with
+    | Some o when o = documentType ->
+        try
+            Some (makeModelFromJObject obj)
+        with
+        | _ -> None
+    | _ -> None
+
 let makeJObjectFromModel (g: Game) =
     (new JObject())
     |> (fun obj ->

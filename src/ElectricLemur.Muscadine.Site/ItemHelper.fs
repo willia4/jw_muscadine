@@ -7,6 +7,19 @@ type ItemWrapper =
   | Project of Project.Project
   | Book of Book.Book
 
+type ItemDocumentType =
+  | GameDocumentType
+  | ProjectDocumentType
+  | BookDocumentType
+
+module ItemDocumentType =
+  let fromString s =
+    match s with
+    | s when s = Game.documentType -> Some GameDocumentType
+    | s when s = Project.documentType -> Some ProjectDocumentType
+    | s when s = Book.documentType -> Some BookDocumentType
+    | _ -> None
+
 let tryWrapItem (item: obj) =
   match item with
   | :? Game.Game as g -> Some (Game g)
@@ -38,15 +51,12 @@ let unwrapGame = tryUnwrapGame >> Option.get
 let unwrapProject = tryUnwrapProject >> Option.get
 let unwrapBook = tryUnwrapBook >> Option.get
 
-let fromJObject obj =
-    Database.documentTypeField |> JObj.getter<string> obj
-    |> Option.bind (
-        function
-        | s when s = Game.documentType -> Some (Game.makeModelFromJObject obj |> Game)
-        | s when s = Project.documentType -> Some (Project.makeModelFromJObject obj |> Project)
-        | s when s = Book.documentType -> Some (Book.makeModelFromJObject obj |> Book)
-        | s -> None
-    )
+let fromJObject (obj: Newtonsoft.Json.Linq.JObject) =
+    Some obj |> Option.choosef [
+      Option.bind (Game.tryMakeModelFromJObject >> (Option.map Game))
+      Option.bind (Project.tryMakeModelFromJObject >> (Option.map Project))
+      Option.bind (Book.tryMakeModelFromJObject >> (Option.map Book))
+    ]
 
 let toJObject item =
   match item with
@@ -55,20 +65,20 @@ let toJObject item =
   | Book b -> Book.makeJObjectFromModel b
 
 let fromContextForm itemDocumentType existing ctx =
-  match itemDocumentType with
-  | s when s = Game.documentType ->
+  match ItemDocumentType.fromString itemDocumentType with
+  | Some GameDocumentType ->
       let existing = existing |> Option.bind tryUnwrapGame
       Game.makeAndValidateModelFromContext existing ctx
       |> Task.map (Result.map wrapItem)
-  | s when s = Project.documentType ->
+  | Some ProjectDocumentType ->
       let existing = existing |> Option.bind tryUnwrapProject
       Project.makeAndValidateModelFromContext existing ctx
       |> Task.map (Result.map wrapItem)
-  | s when s = Book.documentType ->
+  | Some BookDocumentType ->
       let existing = existing |> Option.bind tryUnwrapBook
       Book.makeAndValidateModelFromContext existing ctx
       |> Task.map (Result.map wrapItem)
-  | _ -> Task.fromResult (Error $"Could not parse fields for document type %s{itemDocumentType}")
+  | None -> Task.fromResult (Error $"Could not parse fields for document type %s{itemDocumentType}")
 
 let documentType item =
   match item with
@@ -138,11 +148,11 @@ let pageDefinition item =
   | Book b -> FrontendHelpers.PageDefinitions.Books
 
 let pageDefinitionForDocumentType itemDocumentType =
-  match itemDocumentType with
-  | s when s = Game.documentType ->FrontendHelpers.PageDefinitions.Games
-  | s when s = Project.documentType -> FrontendHelpers.PageDefinitions.Projects
-  | s when s = Book.documentType -> FrontendHelpers.PageDefinitions.Books
-  | _ -> failwith $"Could not determine page definition for document type {itemDocumentType}"
+  match ItemDocumentType.fromString itemDocumentType with
+  | Some GameDocumentType ->FrontendHelpers.PageDefinitions.Games
+  | Some ProjectDocumentType -> FrontendHelpers.PageDefinitions.Projects
+  | Some BookDocumentType -> FrontendHelpers.PageDefinitions.Books
+  | None -> failwith $"Could not determine page definition for document type {itemDocumentType}"
 
 let loadItemsContainingTags (itemDocumentType: string) tags ctx =
   Tag.itemIdsContainingTags itemDocumentType tags ctx
@@ -221,11 +231,11 @@ module Views =
 
   module Admin =
     let addView itemDocumentType allTags =
-      match itemDocumentType with
-      | s when s = Game.documentType -> Game.addEditView None allTags []
-      | s when s = Project.documentType -> Project.addEditView None allTags []
-      | s when s = Book.documentType -> Book.addEditView None allTags []
-      | _ -> failwith $"Could not determine addView for document type {itemDocumentType}"
+      match ItemDocumentType.fromString itemDocumentType with
+      | Some GameDocumentType -> Game.addEditView None allTags []
+      | Some ProjectDocumentType -> Project.addEditView None allTags []
+      | Some BookDocumentType -> Book.addEditView None allTags []
+      | None -> failwith $"Could not determine addView for document type {itemDocumentType}"
 
     let editView item =
       match item with
