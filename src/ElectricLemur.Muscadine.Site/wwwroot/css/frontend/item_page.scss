@@ -61,7 +61,7 @@
       display: flex;
       flex-wrap: wrap;
       margin-bottom: 5px;
-
+      border-top: 1px solid black;
       .item-tag {
         font-size: 13px;
         height: 21px;
@@ -74,6 +74,28 @@
         margin-right: 3px;
         margin-top: 3px;
         border-radius: 5px;
+      }
+    }
+
+    .item-links-container {
+      font-size: 15px;
+      font-family: "Lora";
+
+      margin-bottom: 5px;
+      a {
+        i {
+          margin-right: 5px;
+          margin-left: 3px;
+        }
+
+        color: colors.$heading;
+        text-decoration: none;
+
+        &:visited {
+          color: colors.$heading;
+        }
+
+
       }
     }
   }

@@ -117,6 +117,20 @@ let slug item =
   | Project p -> p.Slug
   | Book b -> b.Slug
 
+let githubLink item =
+  match item with
+  | Project p -> p.GitHubLink |> Option.map (fun url -> FrontendHelpers.GitHubLink url)
+  | _ -> None
+
+let itemLinks item =
+  let appendItemLink link links =
+    match link with
+    | Some l -> List.append links [l]
+    | None -> links
+
+  []
+  |> appendItemLink (githubLink item)
+
 let pageDefinition item =
   match item with
   | Game g -> FrontendHelpers.PageDefinitions.Games
@@ -262,7 +276,7 @@ module Handlers =
           return (tags, microblogEntries, item)
         }))
         |> Task.map (Option.map (fun (tags, microblogEntries, item) ->
-        FrontendHelpers.makeItemPage (name item) (description item) (icon item) tags microblogEntries ctx))
+          FrontendHelpers.makeItemPage (name item) (description item) (icon item) (itemLinks item) tags microblogEntries ctx))
 
       match content with
       | None -> return! (setStatusCode 404 >=> text "Page not found") next ctx

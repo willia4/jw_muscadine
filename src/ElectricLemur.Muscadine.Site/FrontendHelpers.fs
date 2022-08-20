@@ -58,6 +58,9 @@ module PageDefinitions =
         a [ (_class smallButtonClass); (_href (pageRoute buttonPage)); (attr "role" "menuitem") ] (List.append buttonIcon [ encodedText (snd title) ])
     ]
 
+type ItemLink =
+  | GitHubLink of string
+
 let layout pageDefinition content extraCss ctx =
   let homeUrl = Util.baseUrl ctx
   let pageHeader = PageDefinitions.pageTitle pageDefinition
@@ -168,7 +171,7 @@ let makeItemCard title link tags (microblog: (System.DateTimeOffset * string) op
   ]
 
 
-let makeItemPage title (description: string) icon tags microblogEntries ctx =
+let makeItemPage title (description: string) icon itemLinks tags microblogEntries ctx =
 
   let makeMicroblogContent (microblogEntries: Microblog.Microblog seq) ctx =
     microblogEntries
@@ -199,6 +202,24 @@ let makeItemPage title (description: string) icon tags microblogEntries ctx =
       tags |> List.map (fun t ->
         span [ _class "item-tag" ] [ encodedText t ]))
 
+  let itemLinks =
+    itemLinks
+    |> Seq.map (
+        function
+        | GitHubLink url ->
+            div [ _class "item-link" ] [
+              a [ _href url ] [
+                i [ _class "fa-brands fa-github" ] []
+                encodedText "Browse on GitHub"
+              ]
+            ])
+    |> Seq.toList
+    |> fun itemLinks ->
+        if itemLinks |> List.isEmpty then
+          None
+        else
+          Some (div [ _class "item-links-container" ] itemLinks)
+
   let descriptionDiv = div [ _class "item-description" ] [
     rawText (Markdig.Markdown.ToHtml(description))
   ]
@@ -206,9 +227,10 @@ let makeItemPage title (description: string) icon tags microblogEntries ctx =
   [
     div [ (_class "page-content item"); (_id "desktop-content") ] [
       div [ _class "item-text-container" ] [
-        h1 [ _class "title" ] [ encodedText title ]
-        tagsDiv
-        descriptionDiv
+        yield h1 [ _class "title" ] [ encodedText title ]
+        if Option.isSome itemLinks then yield (itemLinks |> Option.get)
+        yield tagsDiv
+        yield descriptionDiv
       ]
 
       div [ _class "item-photo-container" ] [
@@ -220,8 +242,9 @@ let makeItemPage title (description: string) icon tags microblogEntries ctx =
       div [ _class "phone-header" ] [
         div [ _class "phone-header-image" ] [ iconNode]
         div [ _class "item-text-container" ] [
-          h1 [ _class "title" ] [ encodedText title ]
-          tagsDiv
+          yield h1 [ _class "title" ] [ encodedText title ]
+          if Option.isSome itemLinks then yield (itemLinks |> Option.get)
+          yield tagsDiv
         ]
       ]
       div [ _class "phone-description" ] [
