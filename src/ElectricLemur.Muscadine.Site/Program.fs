@@ -72,6 +72,10 @@ let webApp =
         choose [
             GET >=>
                 choose [
+                    route "/" >=> Frontend.AboutMe.Handlers.GET_index
+                    route "/under-construction" >=> redirectTo true "/under-construction/"
+                    route "/under-construction/" >=> htmlView (Views.underConstruction ctx)
+
                     route "/dev" >=> redirectTo true "/about/"
                     route "/dev/" >=> redirectTo true "/about/"
 
@@ -96,7 +100,6 @@ let webApp =
                     routef "/books/%s/" (fun slug -> Frontend.Book.Handlers.GET_itemPage slug)
                     routef "/books/%s" (fun slug -> redirectTo true $"/books/%s{slug}/")
 
-                    route "/" >=> htmlView (Views.underConstruction ctx)
                     route "/admin/login" >=> Login.getHandler
                     route "/admin/logout" >=> Login.logoutHandler "/admin/login"
                     route "/admin/status" >=> Login.requiresAdminRedirect "/admin/status" >=> Admin.Handlers.GET_status
