@@ -239,6 +239,10 @@ body {
   border-left: $grid-border;
   padding: $main-padding;
 
+  @include breakpoints.tablet {
+    padding: 15px;
+  }
+
   @include breakpoints.phone {
     border-left: 0;
     flex-grow: 1;

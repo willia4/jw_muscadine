@@ -14,19 +14,34 @@
 
   .about-text-container {
     flex-grow: 1.5;
-    .subtitle {
-      font-family: "Ubuntu Medium";
-      font-size: 20px;
-      color: colors.$heading;
-    }
 
-    .title {
-      font-family: "Lora";
-      font-weight: bold;
-      font-size: 64px;
-      color: colors.$heading;
-      margin-bottom: 30px;
-      margin-top: auto;
+    .header {
+      display: flex;
+
+      header {
+        .subtitle {
+          font-family: "Ubuntu Medium";
+          font-size: 20px;
+          color: colors.$heading;
+        }
+
+        .title {
+          font-family: "Lora";
+          font-weight: bold;
+          font-size: 64px;
+          color: colors.$heading;
+          margin-bottom: 30px;
+          margin-top: auto;
+        }
+      }
+
+      .about-photo-container {
+        display: none;
+
+        @include breakpoints.tablet {
+          display: block;
+        }
+      }
     }
 
     margin-right: 60px;
@@ -113,6 +128,10 @@
     img {
       max-height: 50vh;
 
+    }
+
+    @include breakpoints.tablet {
+      display: none;
     }
 
     @include breakpoints.phone {

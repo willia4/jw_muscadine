@@ -39,9 +39,14 @@ let aboutMeContent recentMicroblogs ctx =
   [
     main [ _class "page-content about-me" ] [
       div [ _class "about-text-container" ]  [
-        header [] [
-          div [ _class "subtitle" ] [ encodedText "Hello, I am"]
-          h1 [ _class "title" ] [ encodedText "James Williams"]
+        div [ _class "header" ] [
+          header [] [
+            div [ _class "subtitle" ] [ encodedText "Hello, I am"]
+            h1 [ _class "title" ] [ encodedText "James Williams"]
+          ]
+          div [ _class "about-photo-container"] [
+            img [ _src "/img/james_and_gary.jpg" ]
+          ]
         ]
         div [ _class "biography" ] [ rawText biographyParagraphs ]
         div [ _class "buttons" ] [
