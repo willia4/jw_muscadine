@@ -569,14 +569,3 @@ let readItemImageOrDefault itemData =
             |> getDefaultIcon
 
 let readNameOrDefault (itemData: JObject option) = itemData |> tryReadName |> Option.defaultValue "Unknown"
-
-let tryLookupBySlug (slug: string) documentType projection ctx =
-    let filter =
-        Database.Filters.empty
-        |> Database.Filters.byDocumentType documentType
-        |> Database.Filters.addEquals "slug" slug
-
-    Database.getDocumentsForFilter filter (Database.Limit 1) ctx
-    |> Task.map Seq.tryHead
-    |> Task.map (Option.map projection)
-

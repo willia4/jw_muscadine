@@ -210,6 +210,16 @@ let loadAllItems itemDocumentType ctx =
       |> Task.map (Seq.filter Option.isSome)
       |> Task.map (Seq.map Option.get)
 
+let tryLookupItemBySlug (slug: string) documentType  ctx =
+  let filter =
+      Database.Filters.empty
+      |> Database.Filters.byDocumentType documentType
+      |> Database.Filters.addEquals "slug" slug
+
+  Database.getDocumentsForFilter filter (Database.Limit 1) ctx
+  |> Task.map Seq.tryHead
+  |> Task.map (Option.bind fromJObject)
+
 
 module Views =
   let makeContentView inProgressCards backlogCards otherCards =
@@ -271,9 +281,7 @@ module Handlers =
 
   let GET_itemPage itemDocumentType slug : HttpHandler =
     fun next ctx -> task {
-      let! item =
-        Items.tryLookupBySlug slug itemDocumentType id ctx
-        |> Task.map (Option.bind fromJObject)
+      let! item = tryLookupItemBySlug slug itemDocumentType ctx
 
       let! content =
         item
