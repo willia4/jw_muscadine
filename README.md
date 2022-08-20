@@ -14,7 +14,7 @@ I can imagine automatic cross-posting to Twitter or even implementing the [Masto
 
 I also think that a system for publishing longer essay-level non-micro blogs is inevitable, but I want to actually build up a backlog of essays to publish before starting that work.
 
-The publishing interface is a little rough today. One day, I'd like to polish that if only as a treat for myself (since I'm the only that ever uses it). And, if there's any enthusiasm from others, possibly even rework the data model to be multi-user.
+The publishing interface is a little rough today. One day, I'd like to polish that if only as a treat for myself (since I'm the only that ever uses it). And, if there's any traction from others, possibly even rework the data model to be multi-user.
 
 [mastodon]: https://joinmastodon.org/
 
