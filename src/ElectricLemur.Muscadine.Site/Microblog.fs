@@ -239,7 +239,7 @@ let private editView (microblog: MicroblogAssignment) =
     form [ _name "form"; _method "post" ] [
       table [ ] [
         Items.makeInputRow "Timestamp" (encodedText (microblog.DateAdded.ToString("g")))
-        Items.makeTextAreaInputRow "Text" "text" (Some microblog.Text)
+        Items.makeTextAreaInputRow "Text" "text" 5 (Some microblog.Text)
 
         tr [] [
           td [] []

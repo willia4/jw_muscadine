@@ -397,12 +397,12 @@ let makeImageInputRow label key pathToDisplay =
                 ]
     makeInputRow label el
 
-let makeTextAreaInputRow label key value =
+let makeTextAreaInputRow label key lineCount value =
     let el =
         textarea [
             _id key
             _name key
-            _rows "5"
+            _rows $"%d{lineCount}"
             _cols "30"
         ] [ encodedText (value |> Option.defaultValue "")]
 

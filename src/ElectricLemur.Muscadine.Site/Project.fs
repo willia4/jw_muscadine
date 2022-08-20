@@ -83,8 +83,12 @@ let addEditView (p: Project option) allTags documentTags =
         | None -> Map.empty
 
     let makeTextRow ff =
-        let v = p |> Option.map (RequiredFields.modelGetter ff) 
+        let v = p |> Option.map (RequiredFields.modelGetter ff)
         Items.makeTextInputRow (RequiredFields.label ff) (RequiredFields.key ff) v
+
+    let makeTextAreaRow ff lines =
+        let v = p |> Option.map (RequiredFields.modelGetter ff)
+        Items.makeTextAreaInputRow (RequiredFields.label ff) (RequiredFields.key ff) lines v
 
     let makeOptionalTextRow ff =
         let v = p |> Option.map (OptionalFields.modelGetter ff) |> Option.flatten
@@ -107,7 +111,7 @@ let addEditView (p: Project option) allTags documentTags =
         form [ _name "book-form"; _method "post"; _enctype "multipart/form-data" ] [
                 table [] [
                     makeTextRow Fields.name
-                    makeTextRow Fields.description
+                    makeTextAreaRow Fields.description 5
                     makeOptionalTextRow Fields.gitHubLink
                     makeTextRow Fields.slug
                     makeImageRow Fields.coverImagePaths

@@ -74,7 +74,9 @@ body {
   padding-bottom: 10px;
 }
 
-.body-content form td.form-label {}
+.body-content form td.form-label {
+  vertical-align: top;
+}
 
 .body-content form td.form-input {
   width: 70%;
@@ -82,6 +84,10 @@ body {
 }
 
 .body-content form input[type="text"] {
+  width: 100%;
+}
+
+.body-content form textarea {
   width: 100%;
 }
 

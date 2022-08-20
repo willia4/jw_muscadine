@@ -79,7 +79,11 @@ let addEditView (b: Book option) allTags documentTags =
         let v = b |> Option.map (RequiredFields.modelGetter ff) 
         Items.makeTextInputRow (RequiredFields.label ff) (RequiredFields.key ff) v
 
-    let makecheckboxRow ff = 
+    let makeTextAreaRow ff lines =
+        let v = b |> Option.map (RequiredFields.modelGetter ff)
+        Items.makeTextAreaInputRow (RequiredFields.label ff) (RequiredFields.key ff) lines v
+
+    let makecheckboxRow ff =
         let v = b |> Option.map (RequiredFields.modelGetter ff)
         Items.makeCheckboxInputRow (RequiredFields.label ff) (RequiredFields.key ff) v
 
@@ -96,7 +100,7 @@ let addEditView (b: Book option) allTags documentTags =
         form [ _name "book-form"; _method "post"; _enctype "multipart/form-data" ] [
                 table [] [
                     makeTextRow Fields.title
-                    makeTextRow Fields.description  
+                    makeTextAreaRow Fields.description 5
                     makeTextRow Fields.slug
                     makeImageRow Fields.coverImagePaths
 

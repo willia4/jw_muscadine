@@ -79,7 +79,11 @@ let addEditView (g: Game option) allTags documentTags =
         let v = g |> Option.map (RequiredFields.modelGetter ff) 
         Items.makeTextInputRow (RequiredFields.label ff) (RequiredFields.key ff) v
 
-    let makecheckboxRow ff = 
+    let makeTextAreaRow ff lines =
+        let v = g |> Option.map (RequiredFields.modelGetter ff)
+        Items.makeTextAreaInputRow (RequiredFields.label ff) (RequiredFields.key ff) lines v
+
+    let makecheckboxRow ff =
         let v = g |> Option.map (RequiredFields.modelGetter ff)
         Items.makeCheckboxInputRow (RequiredFields.label ff) (RequiredFields.key ff) v
 
@@ -96,7 +100,7 @@ let addEditView (g: Game option) allTags documentTags =
         form [ _name "game-form"; _method "post"; _enctype "multipart/form-data" ] [
                 table [] [
                     makeTextRow Fields.name
-                    makeTextRow Fields.description  
+                    makeTextAreaRow Fields.description 5
                     makeTextRow Fields.slug
                     makeImageRow Fields.coverImagePaths
                     Items.makeTagsInputRow "Tags" Tag.formKey allTags documentTags
