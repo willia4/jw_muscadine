@@ -104,7 +104,7 @@ module Handlers =
     fun next (ctx: HttpContext) -> task {
       let! recentMicroblogs = Microblog.loadRecentMicroblogs (System.DateTimeOffset.UtcNow) (Database.NoLimit) ctx
       let content = allMicroblogsContent recentMicroblogs ctx
-      let pageHtml = FrontendHelpers.layout (FrontendHelpers.PageDefinitions.Custom ("updates", "All Updates", "All Updates") ) content [ "frontend/about_me.scss" ] ctx
+      let pageHtml = FrontendHelpers.layout (FrontendHelpers.PageDefinitions.Custom ("updates", "All Updates", "All Updates", FrontendHelpers.PageDefinitions.AboutMe) ) content [ "frontend/about_me.scss" ] ctx
 
       return! htmlView pageHtml next ctx
     }
@@ -125,7 +125,13 @@ module Handlers =
         let longTitle = $"All Updates - %s{pluralTitle}"
         let shortTitle = $"%s{singularTitle} Updates"
 
-        let pageHtml = FrontendHelpers.layout (FrontendHelpers.PageDefinitions.Custom ($"updates/%s{slugString}", longTitle, shortTitle) ) content [ "frontend/about_me.scss" ] ctx
+        let activeButtonPage =
+          match itemDocumentType with
+          | ItemHelper.ItemDocumentType.GameDocumentType -> FrontendHelpers.PageDefinitions.Games
+          | ItemHelper.ItemDocumentType.ProjectDocumentType -> FrontendHelpers.PageDefinitions.Projects
+          | ItemHelper.ItemDocumentType.BookDocumentType -> FrontendHelpers.PageDefinitions.Books
+
+        let pageHtml = FrontendHelpers.layout (FrontendHelpers.PageDefinitions.Custom ($"updates/%s{slugString}", longTitle, shortTitle, activeButtonPage)) content [ "frontend/about_me.scss" ] ctx
 
         return! htmlView pageHtml next ctx
       | None ->

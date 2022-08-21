@@ -12,7 +12,7 @@ module PageDefinitions =
     | Books
     | Games
     | Colophon
-    | Custom of slug: string * longName: string * shortName: string
+    | Custom of slug: string * longName: string * shortName: string * selectedPage: Page
 
   let sidebarButtonTitle page =
     match page with
@@ -21,7 +21,7 @@ module PageDefinitions =
     | Books -> "What Am I Reading?", "Books"
     | Games -> "What Am I Playing?", "Games"
     | Colophon -> "Colophon", "Colophon"
-    | Custom (_, longName, shortName) -> longName, shortName
+    | Custom (_, longName, shortName, _) -> longName, shortName
 
   let sidebarButtonIcon page =
     match page with
@@ -44,11 +44,15 @@ module PageDefinitions =
     | Books -> "/books/"
     | Games -> "/games/"
     | Colophon -> "/colophon/"
-    | Custom (slug, _, _) -> $"/%s{slug}/"
+    | Custom (slug, _, _, _) -> $"/%s{slug}/"
 
   let makeSidebarButton currentPage buttonPage =
     let title = sidebarButtonTitle buttonPage
-    let active = currentPage = buttonPage
+    let active =
+      match currentPage with
+      | Custom (_, _, _, currentPage) -> currentPage = buttonPage
+      | _ -> currentPage = buttonPage
+
     let largeButtonClass = if active then "sidebar-button large-button active" else "sidebar-button large-button"
     let smallButtonClass = if active then "sidebar-button small-button active" else "sidebar-button small-button"
 
