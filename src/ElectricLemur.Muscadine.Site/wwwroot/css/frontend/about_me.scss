@@ -7,9 +7,12 @@
   display: flex;
   flex-direction: row;
   width: 100%;
+  padding-bottom: 100px;
 
   @include breakpoints.phone {
     flex-direction: column-reverse;
+    padding-bottom: 30px;
+    border-bottom: solid 1px colors.$heading;
   }
 
   .about-text-container {
@@ -149,11 +152,8 @@
 
 .page-content.recent-activity {
   max-width: 60%;
-  margin-top: 100px;
 
   @include breakpoints.phone {
-    border-top: solid 1px colors.$heading;
-    margin-top: 30px;
     max-width: 100%;
   }
 
@@ -312,6 +312,20 @@
             font-size: 85%;
           }
         }
+      }
+    }
+  }
+
+  .microblogs-see-all {
+    a {
+      color: colors.$text;
+      text-decoration: none;
+      &:visited {
+        color: colors.$text;
+      }
+
+      i {
+        margin-right: 3px;
       }
     }
   }

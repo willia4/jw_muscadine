@@ -113,7 +113,7 @@ let makeCheckboxInputRow label key (value: bool option) =
             _name key
             _value "on"
         ]
-        |> List.appendIf value _checked
+        |> List.prependIf value _checked
 
     let el = input attributes
     makeInputRow label el
@@ -136,7 +136,7 @@ let makeTagsInputRow label key (allTags: string seq) (documentTags: string seq) 
                 |> List.map (fun t -> 
                     let attributes = 
                         [ _value t ]
-                        |> List.appendIf (tagIsSelected t) _selected
+                        |> List.prependIf (tagIsSelected t) _selected
 
                     option attributes [ encodedText t ]))
 

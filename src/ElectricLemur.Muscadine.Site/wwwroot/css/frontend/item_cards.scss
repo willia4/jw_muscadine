@@ -3,7 +3,9 @@
 @use "../breakpoints";
 
 section {
-  margin-bottom: 100px;
+  &:not(:last-child) {
+    margin-bottom: 100px;
+  }
 
   @include breakpoints.phone {
     margin-bottom: 50px;
@@ -246,6 +248,21 @@ section {
 
         }
       }
+    }
+  }
+}
+
+.microblogs-see-all {
+  margin-top: 30px;
+  a {
+    color: colors.$text;
+    text-decoration: none;
+    &:visited {
+      color: colors.$text;
+    }
+
+    i {
+      margin-right: 3px;
     }
   }
 }

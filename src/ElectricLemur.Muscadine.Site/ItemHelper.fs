@@ -20,6 +20,37 @@ module ItemDocumentType =
     | s when s = Book.documentType -> Some BookDocumentType
     | _ -> None
 
+  let fromSlug s =
+    match s with
+    | s when s = "games" -> Some GameDocumentType
+    | s when s = "projects" -> Some ProjectDocumentType
+    | s when s = "books" -> Some BookDocumentType
+    | _ -> None
+
+  let toDatabaseDocumentType itemDocumentType =
+    match itemDocumentType with
+    | GameDocumentType -> Game.documentType
+    | ProjectDocumentType -> Project.documentType
+    | BookDocumentType -> Book.documentType
+
+  let toSlug itemDocumentType =
+    match itemDocumentType with
+    | GameDocumentType -> "games"
+    | ProjectDocumentType -> "projects"
+    | BookDocumentType -> "books"
+
+  let toPluralTitleString itemDocumentType =
+    match itemDocumentType with
+    | GameDocumentType -> "Games"
+    | ProjectDocumentType -> "Projects"
+    | BookDocumentType -> "Books"
+
+  let toSingularTitleString itemDocumentType =
+    match itemDocumentType with
+    | GameDocumentType -> "Game"
+    | ProjectDocumentType -> "Project"
+    | BookDocumentType -> "Book"
+
 let tryWrapItem (item: obj) =
   match item with
   | :? Game.Game as g -> Some (Game g)
@@ -148,24 +179,23 @@ let pageDefinition item =
   | Book b -> FrontendHelpers.PageDefinitions.Books
 
 let pageDefinitionForDocumentType itemDocumentType =
-  match ItemDocumentType.fromString itemDocumentType with
-  | Some GameDocumentType ->FrontendHelpers.PageDefinitions.Games
-  | Some ProjectDocumentType -> FrontendHelpers.PageDefinitions.Projects
-  | Some BookDocumentType -> FrontendHelpers.PageDefinitions.Books
-  | None -> failwith $"Could not determine page definition for document type {itemDocumentType}"
+  match itemDocumentType with
+  | GameDocumentType ->FrontendHelpers.PageDefinitions.Games
+  | ProjectDocumentType -> FrontendHelpers.PageDefinitions.Projects
+  | BookDocumentType -> FrontendHelpers.PageDefinitions.Books
 
-let loadItemsContainingTags (itemDocumentType: string) tags ctx =
-  Tag.itemIdsContainingTags itemDocumentType tags ctx
+let loadItemsContainingTags itemDocumentType tags ctx =
+  Tag.itemIdsContainingTags (ItemDocumentType.toDatabaseDocumentType itemDocumentType) tags ctx
   |> Task.bind (fun ids -> Database.getDocumentsById Database.idField ids Database.Filters.empty ctx)
   |> Task.map (Seq.map fromJObject)
   |> Task.map (Seq.filter Option.isSome)
   |> Task.map (Seq.map Option.get)
 
-let loadItemsExcludingItems (itemDocumentType: string) excludedItems ctx = task {
+let loadItemsExcludingItems itemDocumentType excludedItems ctx = task {
   let ids = excludedItems |> Seq.map itemId
   let filter =
     Database.Filters.empty
-    |> Database.Filters.byDocumentType itemDocumentType
+    |> Database.Filters.byDocumentType (ItemDocumentType.toDatabaseDocumentType itemDocumentType)
 
   // we should only do "not in" on around 30 or less
   let filter =
@@ -222,22 +252,42 @@ let tryLookupItemBySlug (slug: string) documentType  ctx =
 
 
 module Views =
-  let makeContentView inProgressCards backlogCards otherCards =
-    ([
-      section [ _id "in-progress-section" ] [
-        div [ _class "in-progress-container item-card-container" ] inProgressCards
-      ]
-    ])
-    |> List.appendIf (backlogCards |> (Seq.isEmpty >> not)) (
-        section [ _id "backlog-section" ] [
-          h2 [ ] [ encodedText "Backlog" ]
-          div [ _class "backlog-container item-card-container" ] backlogCards
-        ])
-    |> List.appendIf (otherCards |> (Seq.isEmpty >> not)) (
-      section [ _id "other-section" ] [
-        h2 [ ] [ encodedText "Other" ]
-        div [ _class "other-container item-card-container" ] otherCards
-      ])
+  let makeContentView itemDocumentType inProgressCards backlogCards otherCards =
+    let notEmpty = List.isEmpty >> not
+
+    let sections = div [ _class "sections" ] [
+      if (notEmpty inProgressCards) then
+        yield section [ _id "in-progress-section" ] [
+                div [ _class "in-progress-container item-card-container" ] inProgressCards
+              ]
+
+      if (notEmpty backlogCards) then
+        yield section [ _id "backlog-section" ] [
+                h2 [ ] [ encodedText "Backlog" ]
+                div [ _class "backlog-container item-card-container" ] backlogCards
+              ]
+
+      if (notEmpty otherCards) then
+        yield section [ _id "other-section" ] [
+                h2 [ ] [ encodedText "Other" ]
+                div [ _class "other-container item-card-container" ] otherCards
+              ]
+    ]
+
+    [
+      yield sections
+
+      let slug = ItemDocumentType.toSlug itemDocumentType
+      yield div [ _class "microblogs-see-all" ] [
+              a [ _href $"/updates/%s{slug}" ] [
+                i [ _class "fa-solid fa-angles-right" ] []
+                encodedText "All Activity"
+                ]
+            ]
+    ]
+    // |> List.prepend [
+
+    // ]
 
   module Admin =
     let addView itemDocumentType allTags =
@@ -273,7 +323,7 @@ module Handlers =
         let! others = loadItemsExcludingItems itemDocumentType (Seq.append inProgress backlog) ctx
         let! otherCards = others |> makeAndSortCards
 
-        let content = Views.makeContentView inProgressCards backlogCards otherCards
+        let content = Views.makeContentView itemDocumentType inProgressCards backlogCards otherCards
         let pageHtml = FrontendHelpers.layout (pageDefinitionForDocumentType itemDocumentType) content [ "frontend/item_cards.scss" ] ctx
 
         return! htmlView pageHtml next ctx
@@ -281,7 +331,7 @@ module Handlers =
 
   let GET_itemPage itemDocumentType slug : HttpHandler =
     fun next ctx -> task {
-      let! item = tryLookupItemBySlug slug itemDocumentType ctx
+      let! item = tryLookupItemBySlug slug (ItemDocumentType.toDatabaseDocumentType itemDocumentType) ctx
 
       let! content =
         item

@@ -72,8 +72,22 @@ let aboutMeContent recentMicroblogs ctx =
     div [ _class "page-content recent-activity" ] [
       h2 [ _class "activity-title" ] [ encodedText "My Recent Activity" ]
       div [ _class "microblogs-container" ] (makeMicroblogsContent recentMicroblogs ctx)
+      div [ _class "microblogs-see-all" ] [
+        a [ _href "/updates/" ] [
+          i [ _class "fa-solid fa-angles-right" ] []
+          encodedText "All Activity"
+          ]
+      ]
     ]
   ]
+
+let allMicroblogsContent microblogs ctx = [
+  main [ _class "page-content all-microblogs" ] [
+    div [ _class "page-content recent-activity" ] [
+      div [ _class "microblogs-container" ] (makeMicroblogsContent microblogs ctx)
+    ]
+  ]
+]
 
 module Handlers =
   let GET_index =
@@ -84,4 +98,36 @@ module Handlers =
       let pageHtml = FrontendHelpers.layout FrontendHelpers.PageDefinitions.AboutMe content [ "frontend/about_me.scss" ] ctx
 
       return! htmlView pageHtml next ctx
+    }
+
+  let GET_all =
+    fun next (ctx: HttpContext) -> task {
+      let! recentMicroblogs = Microblog.loadRecentMicroblogs (System.DateTimeOffset.UtcNow) (Database.NoLimit) ctx
+      let content = allMicroblogsContent recentMicroblogs ctx
+      let pageHtml = FrontendHelpers.layout (FrontendHelpers.PageDefinitions.Custom ("updates", "All Updates", "All Updates") ) content [ "frontend/about_me.scss" ] ctx
+
+      return! htmlView pageHtml next ctx
+    }
+
+  let GET_allForItemType itemDocumentTypeSlug : HttpHandler =
+    fun next (ctx: HttpContext) -> task {
+      match ItemHelper.ItemDocumentType.fromSlug itemDocumentTypeSlug with
+      | Some itemDocumentType ->
+        let databaseDocumentType = ItemHelper.ItemDocumentType.toDatabaseDocumentType itemDocumentType
+        let slugString = ItemHelper.ItemDocumentType.toSlug itemDocumentType
+
+        let! recentMicroblogs = Microblog.loadRecentMicroblogsForItemType (System.DateTimeOffset.UtcNow) databaseDocumentType Database.NoLimit ctx
+        let content = allMicroblogsContent recentMicroblogs ctx
+
+        let pluralTitle = ItemHelper.ItemDocumentType.toPluralTitleString itemDocumentType
+        let singularTitle = ItemHelper.ItemDocumentType.toSingularTitleString itemDocumentType
+
+        let longTitle = $"All Updates - %s{pluralTitle}"
+        let shortTitle = $"%s{singularTitle} Updates"
+
+        let pageHtml = FrontendHelpers.layout (FrontendHelpers.PageDefinitions.Custom ($"updates/%s{slugString}", longTitle, shortTitle) ) content [ "frontend/about_me.scss" ] ctx
+
+        return! htmlView pageHtml next ctx
+      | None ->
+        return! (setStatusCode 404 >=> text "Page Not Found") next ctx
     }

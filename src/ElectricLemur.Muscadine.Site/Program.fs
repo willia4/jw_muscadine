@@ -82,6 +82,11 @@ let webApp =
                     route "/about" >=> redirectTo true "/about/"
                     route "/about/" >=> Frontend.AboutMe.Handlers.GET_index
 
+                    route "/updates" >=> redirectTo true "/updates/"
+                    route "/updates/" >=> Frontend.AboutMe.Handlers.GET_all
+                    routef "/updates/%s/" (fun slug -> Frontend.AboutMe.Handlers.GET_allForItemType slug)
+                    routef "/updates/%s" (fun slug -> redirectTo true $"/updates/%s{slug}/")
+
                     route "/colophon" >=> redirectTo true "/colophon/"
                     route "/colophon/" >=> Frontend.Colophon.Handlers.GET_index
 
