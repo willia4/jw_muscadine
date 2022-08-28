@@ -19,51 +19,54 @@ type Game = {
     CoverImagePaths: Image.ImagePaths option;
 }
 
-module Fields = 
-    let _id = FormFields.FormField.fromRequiredField ({
+module Fields =
+
+    let _id = FormFields.FormField.RequiredStringField ({
         Key = "_id"
         Label = "Id"
-        getValueFromModel = (fun g -> g.Id)
+        getValueFromModel = (fun g -> Some g.Id)
         getValueFromContext = (fun ctx -> None)
-        getValueFromJObject = (fun obj -> JObj.getter<string> obj "_id" |> Option.get) })
+        getValueFromJObject = (fun obj -> JObj.getter<string> obj "_id") })
 
-    let _dateAdded = FormFields.FormField.fromRequiredField ({
+    let _dateAdded = FormFields.FormField.RequiredDateTimeField({
         Key = "_dateAdded"
         Label = "Date Added"
-        getValueFromModel = (fun g -> g.DateAdded)
+        getValueFromModel = (fun g -> Some g.DateAdded)
         getValueFromContext = (fun ctx -> None)
-        getValueFromJObject = (fun obj -> JObj.getter<System.DateTimeOffset> obj "_dateAdded" |> Option.get) })
+        getValueFromJObject = (fun obj -> JObj.getter<System.DateTimeOffset> obj "_dateAdded") })
 
-    let name = FormFields.FormField.fromRequiredField ({
+    let name = FormFields.FormField.RequiredStringField ({
         Key = "name"
         Label = "Name"
-        getValueFromModel = (fun g -> g.Name)
+        getValueFromModel = (fun g -> Some g.Name)
         getValueFromContext = (fun ctx -> HttpFormFields.fromContext ctx |> HttpFormFields.stringOptionValue "name")
-        getValueFromJObject = (fun obj -> JObj.getter<string> obj "name" |> Option.get) })
+        getValueFromJObject = (fun obj -> JObj.getter<string> obj "name") })
 
-    let description = FormFields.FormField.fromRequiredField ({
+    let description = FormFields.FormField.RequiredStringField ({
         Key = "description"
         Label = "Description"
-        getValueFromModel = (fun g -> g.Description)
+        getValueFromModel = (fun g -> Some g.Description)
         getValueFromContext = (fun ctx -> HttpFormFields.fromContext ctx |> HttpFormFields.stringOptionValue "description")
-        getValueFromJObject = (fun obj -> JObj.getter<string> obj "description" |> Option.get) })
+        getValueFromJObject = (fun obj -> JObj.getter<string> obj "description") })
 
-    let slug = FormFields.FormField.fromRequiredField ({
+    let slug = FormFields.FormField.RequiredStringField ({
         Key = "slug"
         Label = "Slug"
-        getValueFromModel = (fun g -> g.Slug)
+        getValueFromModel = (fun g -> Some g.Slug)
         getValueFromContext = (fun ctx -> HttpFormFields.fromContext ctx |> HttpFormFields.stringOptionValue "slug")
-        getValueFromJObject = (fun obj -> JObj.getter<string> obj "slug" |> Option.get) })
+        getValueFromJObject = (fun obj -> JObj.getter<string> obj "slug") })
     
-    let coverImagePaths = FormFields.FormField.fromOptionalField ({
+    let coverImagePaths = FormFields.FormField.OptionalImagePathsField ({
         Key = "coverImage"
         Label = "Cover Image"
         getValueFromModel = (fun g -> g.CoverImagePaths)
         getValueFromContext = (fun _ -> raise (new NotImplementedException("Cannot get coverImage from form fields")))
-        getValueFromJObject = (fun obj -> JObj.getter<Image.ImagePaths> obj "coverImage"
-        )})
+        getValueFromJObject = (fun obj -> JObj.getter<Image.ImagePaths> obj "coverImage" )})
 
-let addEditView (g: Game option) allTags documentTags =
+    let viewFields = [
+        name; description; slug; coverImagePaths
+    ]
+let addEditView (g: Game option) fields allTags documentTags =
 
     let pageTitle = match g with
                     | None -> "Add Game" 
@@ -74,17 +77,16 @@ let addEditView (g: Game option) allTags documentTags =
         | Some g -> Map.ofList [ ("id", Items.pageDataType.String g.Id); ("slug", Items.pageDataType.String  "game")]
         | None -> Map.empty
 
+
     Items.layout pageTitle pageData [
         div [ _class "page-title" ] [ encodedText pageTitle ]
         form [ _name "game-form"; _method "post"; _enctype "multipart/form-data" ] [
                 table [] [
-                    FormFields.View.makeTextRow Fields.name g
-                    FormFields.View.makeTextAreaRow Fields.description 5 g
-                    FormFields.View.makeTextRow Fields.slug g
-                    FormFields.View.makeImageRow Fields.coverImagePaths g
+                    for ff in fields do
+                        yield FormFields.View.makeFormFieldRow ff g
 
-                    Items.makeTagsInputRow "Tags" Tag.formKey allTags documentTags
-                    tr [] [
+                    yield Items.makeTagsInputRow "Tags" Tag.formKey allTags documentTags
+                    yield tr [] [
                         td [] []
                         td [] [ input [ _type "submit"; _value "Save" ] ]
                     ]
@@ -119,36 +121,37 @@ let makeAndValidateModelFromContext (existing: Game option) (ctx: HttpContext): 
         |> HttpFormFields.checkRequiredStringField fields (FormFields.key Fields.name)
         |> HttpFormFields.checkRequiredStringField fields (FormFields.key Fields.description)
         |> HttpFormFields.checkRequiredStringField fields (FormFields.key Fields.slug)
-    
-    let o = ctx |> (FormFields.formGetter Fields.name) |> Option.get
+
     match requiredFieldsAreValid with
-    | Ok _ -> 
-        let getValue f = (f |> FormFields.formGetter) ctx |> Option.get
-        let getNonFormFieldValue f = existing |> Option.bind (fun g -> (f |> FormFields.modelGetter) g)
+    | Ok _ ->
+        let getFormStringValue f = FormFields.ContextValue.string f ctx |> Option.get
+        let getModelImagePathsValue f =
+            existing |> Option.bind (fun g -> FormFields.ModelValue.imagePaths f g)
 
         let g = {
             Id =            id
             DateAdded =     dateAdded
-            Name =          Fields.name |> getValue
-            Description =   Fields.description |> getValue
-            Slug =          Fields.slug |> getValue
-            CoverImagePaths = Fields.coverImagePaths |> getNonFormFieldValue
+            Name =          Fields.name |> getFormStringValue
+            Description =   Fields.description |> getFormStringValue
+            Slug =          Fields.slug |> getFormStringValue
+            CoverImagePaths = Fields.coverImagePaths |> getModelImagePathsValue
         }
         validateModel id g ctx
     | Error msg -> Task.fromResult (Error msg)
 
 
 let makeModelFromJObject (obj: JObject) =
-    let getValue f = (f |> FormFields.jobjGetter) obj |> Option.get
-    let getOptionalValue f = (f |> FormFields.jobjGetter) obj
+    let stringValue f = FormFields.DatabaseValue.string f obj |> Option.get
+    let dateValue f = FormFields.DatabaseValue.dateTime f obj |> Option.get
+    let getImagePathsValue f = FormFields.DatabaseValue.imagePaths f obj
 
     {
-        Id =            Fields._id |> getValue
-        DateAdded =     Fields._dateAdded |> getValue
-        Name =          Fields.name |> getValue
-        Description =   Fields.description |> getValue
-        Slug =          Fields.slug |> getValue
-        CoverImagePaths = Fields.coverImagePaths |> getOptionalValue
+        Id =            Fields._id |> stringValue
+        DateAdded =     Fields._dateAdded |> dateValue
+        Name =          Fields.name |> stringValue
+        Description =   Fields.description |> stringValue
+        Slug =          Fields.slug |> stringValue
+        CoverImagePaths = Fields.coverImagePaths |> getImagePathsValue
     }
 
 let tryMakeModelFromJObject (obj: JObject) =
