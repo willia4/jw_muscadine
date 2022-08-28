@@ -40,6 +40,7 @@
     <Compile Include="Microblog.fs" />
     <Compile Include="RequiredFields.fs" />
     <Compile Include="OptionalFields.fs" />
+    <Compile Include="FormFields.fs" />
     <Compile Include="Game.fs" />
     <Compile Include="Book.fs" />
     <Compile Include="Project.fs" />

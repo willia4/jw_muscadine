@@ -362,7 +362,7 @@ module AdminHandlers =
 
   let private coverImageKey item =
     match item with
-    | Game _ -> Game.Fields.coverImagePaths.Key
+    | Game _ -> (FormFields.key Game.Fields.coverImagePaths)
     | Project _ -> Project.Fields.coverImagePaths.Key
     | Book _ -> Book.Fields.coverImagePaths.Key
 
