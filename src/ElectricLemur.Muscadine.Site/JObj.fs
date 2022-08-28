@@ -58,7 +58,7 @@ let setValue<'a> (key: string) (v: 'a) (obj: JObject) =
     obj
 
 let setOptionalValue<'a> (key: string) (v: 'a option) (obj: JObject) =
-    match v with 
+    match v with
     | None -> obj
     | Some v -> setValue key v obj
 
