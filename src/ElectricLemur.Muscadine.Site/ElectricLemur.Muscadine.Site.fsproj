@@ -28,7 +28,7 @@
     <Compile Include="Option.fs" />
     <Compile Include="Map.fs" />
     <Compile Include="Id.fs" />
-    <Compile Include="FormFields.fs" />
+    <Compile Include="HttpFormFields.fs" />
     <Compile Include="JObj.fs" />
     <Compile Include="Util.fs" />
     <Compile Include="Login.fs" />

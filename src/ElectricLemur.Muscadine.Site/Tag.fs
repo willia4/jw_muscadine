@@ -104,7 +104,7 @@ let getExistingTagsForDocumentType itemDocumentType ctx =
     |> Task.map (Seq.toList)
 
 let saveTagsForForm itemDocumentType itemId key ctx =
-    let tags = FormFields.stringListValue key (ctx |> FormFields.fromContext)
+    let tags = HttpFormFields.stringListValue key (ctx |> HttpFormFields.fromContext)
     setTagsForDocument itemDocumentType itemId tags ctx
 
 let private getOrphanedTags ctx =

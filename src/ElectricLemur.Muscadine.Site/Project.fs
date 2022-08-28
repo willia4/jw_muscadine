@@ -39,21 +39,21 @@ module Fields =
         Key = "name"
         Label = "Name"
         getValueFromModel = (fun p -> p.Name)
-        getValueFromContext = (fun ctx -> FormFields.fromContext ctx |> FormFields.stringOptionValue "name")
+        getValueFromContext = (fun ctx -> HttpFormFields.fromContext ctx |> HttpFormFields.stringOptionValue "name")
         getValueFromJObject = (fun obj -> JObj.getter<string> obj "name" |> Option.get) }
 
     let description: RequiredFieldDescriptor<Project, string> = {
         Key = "description"
         Label = "Description"
         getValueFromModel = (fun p -> p.Description)
-        getValueFromContext = (fun ctx -> FormFields.fromContext ctx |> FormFields.stringOptionValue "description")
+        getValueFromContext = (fun ctx -> HttpFormFields.fromContext ctx |> HttpFormFields.stringOptionValue "description")
         getValueFromJObject = (fun obj -> JObj.getter<string> obj "description" |> Option.get) }
 
     let slug: RequiredFieldDescriptor<Project, string> = {
         Key = "slug"
         Label = "Slug"
         getValueFromModel = (fun p -> p.Slug)
-        getValueFromContext = (fun ctx -> FormFields.fromContext ctx |> FormFields.stringOptionValue "slug")
+        getValueFromContext = (fun ctx -> HttpFormFields.fromContext ctx |> HttpFormFields.stringOptionValue "slug")
         getValueFromJObject = (fun obj -> JObj.getter<string> obj "slug" |> Option.get) }
     
     let coverImagePaths: OptionalFieldDescriptor<Project, Image.ImagePaths> = {
@@ -68,7 +68,7 @@ module Fields =
         Key = "githubLink"
         Label = "Github Link"
         getValueFromModel = (fun p -> p.GitHubLink)
-        getValueFromContext = (fun ctx -> FormFields.fromContext ctx |> FormFields.stringOptionValue "githubLink")
+        getValueFromContext = (fun ctx -> HttpFormFields.fromContext ctx |> HttpFormFields.stringOptionValue "githubLink")
         getValueFromJObject = (fun obj -> JObj.getter<string> obj "githubLink")
     }
 
@@ -146,12 +146,12 @@ let makeAndValidateModelFromContext (existing: Project option) (ctx: HttpContext
     let id = existing |> Option.map (fun p -> p.Id) |> Option.defaultValue (string (Util.newGuid ()))
     let dateAdded = existing |> Option.map (fun p -> p.DateAdded) |> Option.defaultValue System.DateTimeOffset.UtcNow
 
-    let fields = FormFields.fromContext ctx
+    let fields = HttpFormFields.fromContext ctx
     let requiredFieldsAreValid = 
         Ok ()
-        |> FormFields.checkRequiredStringField fields (RequiredFields.key Fields.name)
-        |> FormFields.checkRequiredStringField fields (RequiredFields.key Fields.description)
-        |> FormFields.checkRequiredStringField fields (RequiredFields.key Fields.slug)
+        |> HttpFormFields.checkRequiredStringField fields (RequiredFields.key Fields.name)
+        |> HttpFormFields.checkRequiredStringField fields (RequiredFields.key Fields.description)
+        |> HttpFormFields.checkRequiredStringField fields (RequiredFields.key Fields.slug)
     
     let o = ctx |> (RequiredFields.formGetter Fields.name) |> Option.get
     match requiredFieldsAreValid with
