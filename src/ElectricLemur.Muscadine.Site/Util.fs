@@ -59,6 +59,12 @@ let makeUrl (path: string) ctx =
 let joinPath (a: string) b = System.IO.Path.Join(a, b)
 let joinPath3 (a: string) b c = System.IO.Path.Join(a, b, c)
 
+let joinUrlParts (a: string) (b: string) =
+    let a = if not (a.EndsWith("/")) then $"{a}/" else a
+    let b = if b.StartsWith("/") then b.Remove(0, 1) else b
+    let result = $"{a}{b}"
+    result
+
 let formFileToBytes (formFile: IFormFile) = task {
     use m = new System.IO.MemoryStream()
     do! formFile.CopyToAsync(m)

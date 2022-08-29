@@ -55,6 +55,16 @@
       color: colors.$heading;
       margin-top: 0;
       margin-bottom: 5px;
+
+      a {
+        color: colors.$heading;
+        text-decoration: none;
+
+        &:visited {
+          color: colors.$heading;
+          text-decoration: none;
+        }
+      }
     }
 
     .item-tags {
@@ -100,6 +110,21 @@
     }
 
     .item-description {
+      .item-subtitle {
+        margin-top: 5px;
+        
+        color: colors.$heading;
+
+        a {
+          color: colors.$heading;
+          text-decoration: none;
+
+          &:visited {
+            color: colors.$heading;
+          }
+        }
+      }
+
       h1, h2, h3, h4, h5 {
         color: colors.$heading;
       }
@@ -138,6 +163,13 @@
       margin-bottom: 35px;
 
       .header {
+        a {
+          color: colors.$heading;
+          text-decoration: none;
+          &:visited {
+            color: colors.$heading;
+          }
+        }
         color: colors.$heading;
 
         i {

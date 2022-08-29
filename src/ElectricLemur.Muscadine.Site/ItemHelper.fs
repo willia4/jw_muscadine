@@ -334,7 +334,7 @@ module Handlers =
       let! content =
         item
         |> Option.mapAsync (fun item -> task {
-          let! microblogEntries = Microblog.loadMicroblogsForDocument (documentType item) (itemId item) ctx
+          let! microblogEntries = Microblog.loadEnrichedMicroblogsForDocument (documentType item) (toJObject item |> Some) ctx
           return (microblogEntries, item)
         })
         |> Task.bind (Option.mapAsync (fun (microblogEntries, item) -> task {
@@ -342,13 +342,48 @@ module Handlers =
           return (tags, microblogEntries, item)
         }))
         |> Task.map (Option.map (fun (tags, microblogEntries, item) ->
-          FrontendHelpers.makeItemPage (name item) (description item) (icon item) (itemLinks item) tags microblogEntries ctx))
+          let microblogEntries = Some microblogEntries
+          let itemLink = Items.getLinkToItem (documentType item) slug ctx
+          FrontendHelpers.makeItemPage (name item) itemLink None (description item) (icon item) (itemLinks item) tags microblogEntries ctx))
 
       match content with
       | None -> return! (setStatusCode 404 >=> text "Page not found") next ctx
       | Some content ->
           let pageHtml = FrontendHelpers.layout FrontendHelpers.PageDefinitions.Games content [ "frontend/item_page.scss" ] ctx
           return! (htmlView pageHtml next ctx)
+    }
+
+  let GET_microblogPage itemDocumentType slug microblogId : HttpHandler =
+    fun next ctx -> task {
+      let! item = tryLookupItemBySlug slug (ItemDocumentType.toDatabaseDocumentType itemDocumentType) ctx
+      let! microblog = Microblog.loadById microblogId ctx
+
+      match microblog, item with
+      | Some microblog, Some item when (microblog.ItemId) = (itemId item) ->
+        let! tags = Tag.loadTagsForDocument (documentType item) (itemId item) ctx
+        let itemLink = Items.getLinkToItem (documentType item) slug ctx
+        let microblogLink = Microblog.permalink microblog ctx
+
+        let subtitle =
+          match microblogLink with
+          | Some microblogLink ->
+              Some (h3 [] [
+                a [ _href microblogLink ] [
+                  let d = microblog.Microblog.DateAdded.ToString("o")
+
+                  yield encodedText "Activity: "
+                  yield span [] [
+                    script [] [ rawText $"document.write(formatUtcDate(\"%s{d}\"));" ]
+                    noscript [] [ encodedText d ]
+                  ]
+                ]
+              ])
+          | None -> None
+
+        let content = FrontendHelpers.makeItemPage (name item) itemLink subtitle microblog.Microblog.Text (icon item) [] tags None ctx
+        let pageHtml = FrontendHelpers.layout FrontendHelpers.PageDefinitions.Games content [ "frontend/item_page.scss" ] ctx
+        return! (htmlView pageHtml next ctx)
+      | _ -> return! (setStatusCode 404 >=> text "Page not found") next ctx
     }
 
 module AdminHandlers =

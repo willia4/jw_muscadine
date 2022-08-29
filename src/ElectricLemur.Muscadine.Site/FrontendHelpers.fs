@@ -179,23 +179,37 @@ let makeItemCard title link tags (microblog: (System.DateTimeOffset * string) op
   ]
 
 
-let makeItemPage title (description: string) icon itemLinks tags microblogEntries ctx =
+let makeItemPage title titleLink (subtitle: XmlNode option) (description: string) icon itemLinks tags microblogEntries ctx =
 
-  let makeMicroblogContent (microblogEntries: Microblog.Microblog seq) ctx =
+  let makeMicroblogContent (microblogEntries: Microblog.EnrichedMicroblog seq) ctx =
     microblogEntries
     |> Seq.map (fun mb ->
-        let d = mb.DateAdded.ToString("o")
-        let markdownHtml = Markdig.Markdown.ToHtml(mb.Text)
+        let d = mb.Microblog.DateAdded.ToString("o")
+        let markdownHtml = Markdig.Markdown.ToHtml(mb.Microblog.Text)
 
         div [ _class "microblog" ] [
           div [ _class "microblog-text-container" ] [
             div [ _class "header" ] [
-              i [ _class "fa-solid fa-diamond" ] []
+              yield! match Microblog.permalink mb ctx with
+                     | Some permaLink ->
+                       [
+                         a [ _href permaLink ] [
+                            i [ _class "fa-solid fa-diamond" ] []
 
-              span [ _class "timestamp" ] [
-                script [] [ rawText $"document.write(formatUtcDate(\"%s{d}\"));" ]
-                noscript [] [ encodedText d ]
-              ]
+                            span [ _class "timestamp" ] [
+                              script [] [ rawText $"document.write(formatUtcDate(\"%s{d}\"));" ]
+                              noscript [] [ encodedText d ]
+                            ]
+                          ]
+                       ]
+                     | None -> [
+                            i [ _class "fa-solid fa-diamond" ] []
+
+                            span [ _class "timestamp" ] [
+                              script [] [ rawText $"document.write(formatUtcDate(\"%s{d}\"));" ]
+                              noscript [] [ encodedText d ]
+                            ]
+                     ]
             ]
             div [ _class "text" ] [ rawText markdownHtml]
           ]
@@ -229,39 +243,49 @@ let makeItemPage title (description: string) icon itemLinks tags microblogEntrie
           Some (div [ _class "item-links-container" ] itemLinks)
 
   let descriptionDiv = div [ _class "item-description" ] [
-    rawText (Markdig.Markdown.ToHtml(description))
+    if subtitle |> Option.isSome then
+      let subtitle = subtitle |> Option.get
+      yield div [ _class "item-subtitle" ] [ subtitle ]
+
+    yield rawText (Markdig.Markdown.ToHtml(description))
   ]
 
   [
-    div [ (_class "page-content item"); (_id "desktop-content") ] [
-      div [ _class "item-text-container" ] [
-        yield h1 [ _class "title" ] [ encodedText title ]
-        if Option.isSome itemLinks then yield (itemLinks |> Option.get)
-        yield tagsDiv
-        yield descriptionDiv
-      ]
-
-      div [ _class "item-photo-container" ] [
-        iconNode
-      ]
-    ]
-
-    div [ (_class "page-content item"); (_id "phone-content") ] [
-      div [ _class "phone-header" ] [
-        div [ _class "phone-header-image" ] [ iconNode]
+    yield div [ (_class "page-content item"); (_id "desktop-content") ] [
         div [ _class "item-text-container" ] [
-          yield h1 [ _class "title" ] [ encodedText title ]
+          yield h1 [ _class "title" ] [
+            yield match titleLink with
+                  | Some titleLink -> a [ _href titleLink ] [ encodedText title ]
+                  | None -> encodedText title
+          ]
           if Option.isSome itemLinks then yield (itemLinks |> Option.get)
           yield tagsDiv
+          yield descriptionDiv
+        ]
+
+        div [ _class "item-photo-container" ] [
+          iconNode
         ]
       ]
-      div [ _class "phone-description" ] [
-        descriptionDiv
-      ]
-    ]
 
-    div [ _class "page-content activity" ] [
-      h2 [ _class "activity-title" ] [ encodedText "Activity" ]
-      div [ _class "microblogs-container" ] (makeMicroblogContent microblogEntries ctx)
-    ]
+    yield div [ (_class "page-content item"); (_id "phone-content") ] [
+        div [ _class "phone-header" ] [
+          div [ _class "phone-header-image" ] [ iconNode]
+          div [ _class "item-text-container" ] [
+            yield h1 [ _class "title" ] [ encodedText title ]
+            if Option.isSome itemLinks then yield (itemLinks |> Option.get)
+            yield tagsDiv
+          ]
+        ]
+        div [ _class "phone-description" ] [
+          descriptionDiv
+        ]
+      ]
+
+    if microblogEntries |> Option.isSome then
+      let microblogEntries = microblogEntries |> Option.get
+      yield div [ _class "page-content activity" ] [
+          h2 [ _class "activity-title" ] [ encodedText "Activity" ]
+          div [ _class "microblogs-container" ] (makeMicroblogContent microblogEntries ctx)
+        ]
   ]

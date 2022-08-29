@@ -44,3 +44,11 @@ let mapAsync (f: ('a -> System.Threading.Tasks.Task<'b>)) (o: 'a option) = task 
     let! answer = f o
     return (Some answer)
 }
+
+let bindAsync (f: ('a -> System.Threading.Tasks.Task<'b option>)) (o: 'a option) = task {
+  match o with
+  | None -> return None
+  | Some o ->
+    let! answer = f o
+    return answer
+}

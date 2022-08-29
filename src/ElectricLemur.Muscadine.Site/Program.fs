@@ -92,16 +92,22 @@ let webApp =
 
                     route "/games" >=> redirectTo true "/games/"
                     route "/games/" >=> Frontend.Game.Handlers.GET_index
+                    routef "/games/%s/microblogs/%s" (fun (slug, microblogId) -> redirectTo true $"/games/%s{slug}/microblogs/%s{microblogId}/")
+                    routef "/games/%s/microblogs/%s/" (fun (slug, microblogId) -> ItemHelper.Handlers.GET_microblogPage ItemHelper.ItemDocumentType.GameDocumentType slug microblogId)
                     routef "/games/%s/" (fun slug -> Frontend.Game.Handlers.GET_itemPage slug)
                     routef "/games/%s" (fun slug -> redirectTo true $"/games/%s{slug}/")
 
                     route "/projects" >=> redirectTo true "/projects/"
                     route "/projects/" >=> Frontend.Project.Handlers.GET_index
+                    routef "/projects/%s/microblogs/%s" (fun (slug, microblogId) -> redirectTo true $"/projects/%s{slug}/microblogs/%s{microblogId}/")
+                    routef "/projects/%s/microblogs/%s/" (fun (slug, microblogId) -> ItemHelper.Handlers.GET_microblogPage ItemHelper.ItemDocumentType.ProjectDocumentType slug microblogId)
                     routef "/projects/%s/" (fun slug -> Frontend.Project.Handlers.GET_itemPage slug)
                     routef "/projects/%s" (fun slug -> redirectTo true $"/projects/%s{slug}/")
 
                     route "/books" >=> redirectTo true "/books/"
                     route "/books/" >=> Frontend.Book.Handlers.GET_index
+                    routef "/books/%s/microblogs/%s" (fun (slug, microblogId) -> redirectTo true $"/books/%s{slug}/microblogs/%s{microblogId}/")
+                    routef "/books/%s/microblogs/%s/" (fun (slug, microblogId) -> ItemHelper.Handlers.GET_microblogPage ItemHelper.ItemDocumentType.BookDocumentType slug microblogId)
                     routef "/books/%s/" (fun slug -> Frontend.Book.Handlers.GET_itemPage slug)
                     routef "/books/%s" (fun slug -> redirectTo true $"/books/%s{slug}/")
 

@@ -32,7 +32,7 @@ type EnrichedMicroblog = {
 }
 
 let sortMicroblogs (blogs: Microblog list) = blogs |> List.sortByDescending (fun b -> b.DateAdded)
-let private sortMicroblogAssignments (blogs: MicroblogAssignment list) = blogs |> List.sortBy (fun b -> b.DateAdded)
+let private sortMicroblogAssignments (blogs: MicroblogAssignment list) = blogs |> List.sortByDescending (fun b -> b.DateAdded)
 
 let private MicroblogAssignmentToMicroblog (a: MicroblogAssignment) =
   {
@@ -108,6 +108,17 @@ let private enrichMicroblog (microblogAssignment: MicroblogAssignment) itemData 
     Microblog = MicroblogAssignmentToMicroblog microblogAssignment
     Link = slug |> Option.bind (fun slug -> Items.getLinkToItem microblogAssignment.ItemDocumentType slug ctx)
   }
+
+let loadEnrichedMicroblogsForDocument itemDocumentType itemData ctx = task {
+  let itemId = Items.tryReadItemId itemData
+  let! blogs = itemId |> Option.mapAsync (fun itemId ->loadMicroblogAssignmentsForDocument itemDocumentType itemId ctx)
+
+  return blogs
+         |> Option.defaultValue Seq.empty
+         |> List.ofSeq
+         |> sortMicroblogAssignments
+         |> List.map (fun b -> enrichMicroblog b itemData ctx)
+}
 
 let private loadItemDataForMicroblogAssignment (microblogAssignment: MicroblogAssignment) ctx =
   Database.getDocumentByTypeAndId microblogAssignment.ItemDocumentType microblogAssignment.ItemId ctx
@@ -193,6 +204,16 @@ let loadMostRecentMicroblogForItem itemId ctx =
   loadRecentMicroblogsForItem (System.DateTimeOffset.UtcNow) (Some itemId) (Database.Limit 1) ctx
   |> Task.map (Seq.tryHead)
 
+let loadById id ctx = task {
+  let! existing = Database.getDocumentByTypeAndId documentType id ctx
+  let existing = existing |> Option.map JObjectToMicroblogAssignment
+  let! itemData = existing |> Option.bindAsync (fun e -> Database.getDocumentById e.ItemId ctx)
+
+  return match existing, itemData with
+         | Some existing, _ -> Some (enrichMicroblog existing itemData ctx)
+         | _ -> None
+}
+
 let addMicroblogToDocument itemDocumentType itemId text ctx = task {
   let microblogAssignment = {
     Id = Util.newGuid () |> string
@@ -219,6 +240,15 @@ let deleteMicroblogFromItem itemDocumentType itemId microblogId ctx = task {
       | Some m -> Database.deleteDocument ctx m.Id
       | None -> Task.fromResult ()
 }
+
+let permalink (microblog: EnrichedMicroblog) ctx =
+  let slug = Items.tryReadSlug microblog.Item
+  let itemLink = slug |> Option.bind (fun slug -> Items.getLinkToItem (microblog.ItemDocumentType) slug ctx)
+
+  let microblogLink =
+    itemLink
+    |> Option.map (fun itemLink -> Util.joinUrlParts itemLink $"/microblogs/{microblog.Microblog.Id}/")
+  microblogLink
 
 type PostBody = {
   Text: string
@@ -300,8 +330,6 @@ module Handlers =
       return! setStatusCode 200 next ctx
     }
 
-
-
   let GET_edit id : HttpHandler =
     fun next ctx -> task {
       let! existing =
@@ -354,7 +382,11 @@ module Handlers =
         entries
         |> Seq.toList
         |> List.map (fun e ->
-          let url = e.Link
+          let url =
+            match permalink e ctx with
+            | Some permalink -> Some permalink
+            | None -> e.Link
+
           tag "entry" [] [
             yield (tag "title" [] [ rawText e.ItemName ])
             yield (tag "id" [] [ rawText $"urn:uuid:%s{e.Microblog.Id}" ])

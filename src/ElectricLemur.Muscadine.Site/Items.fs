@@ -202,6 +202,10 @@ let tryReadItemImagePaths (itemData: JObject option) =
     | Some itemData -> "coverImage" |> JObj.getter<Image.ImagePaths> itemData
     | None -> None
 
+let tryReadItemId (itemData: JObject option) =
+    itemData
+    |> Option.bind (fun obj -> JObj.getter<string> obj Database.idField)
+
 let tryReadName (itemData: JObject option) =
     itemData
     |> Option.choosef [
