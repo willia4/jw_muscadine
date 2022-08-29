@@ -331,7 +331,7 @@ module Handlers =
     fun next ctx -> task {
       let! item = tryLookupItemBySlug slug (ItemDocumentType.toDatabaseDocumentType itemDocumentType) ctx
 
-      let! content =
+      let! processedContent =
         item
         |> Option.mapAsync (fun item -> task {
           let! microblogEntries = Microblog.loadEnrichedMicroblogsForDocument (documentType item) (toJObject item |> Some) ctx
@@ -344,13 +344,13 @@ module Handlers =
         |> Task.map (Option.map (fun (tags, microblogEntries, item) ->
           let microblogEntries = Some microblogEntries
           let itemLink = Items.getLinkToItem (documentType item) slug ctx
-          FrontendHelpers.makeItemPage (name item) itemLink None (description item) (icon item) (itemLinks item) tags microblogEntries ctx))
+          item, FrontendHelpers.makeItemPage (name item) itemLink None (description item) (icon item) (itemLinks item) tags microblogEntries ctx))
 
-      match content with
-      | None -> return! (setStatusCode 404 >=> text "Page not found") next ctx
-      | Some content ->
-          let pageHtml = FrontendHelpers.layout FrontendHelpers.PageDefinitions.Games content [ "frontend/item_page.scss" ] ctx
+      match processedContent with
+      | Some (item, content) ->
+          let pageHtml = FrontendHelpers.layout (pageDefinition item) content [ "frontend/item_page.scss" ] ctx
           return! (htmlView pageHtml next ctx)
+      | _ -> return! (setStatusCode 404 >=> text "Page not found") next ctx
     }
 
   let GET_microblogPage itemDocumentType slug microblogId : HttpHandler =
@@ -381,7 +381,7 @@ module Handlers =
           | None -> None
 
         let content = FrontendHelpers.makeItemPage (name item) itemLink subtitle microblog.Microblog.Text (icon item) [] tags None ctx
-        let pageHtml = FrontendHelpers.layout FrontendHelpers.PageDefinitions.Games content [ "frontend/item_page.scss" ] ctx
+        let pageHtml = FrontendHelpers.layout (pageDefinition item) content [ "frontend/item_page.scss" ] ctx
         return! (htmlView pageHtml next ctx)
       | _ -> return! (setStatusCode 404 >=> text "Page not found") next ctx
     }
