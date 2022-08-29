@@ -93,7 +93,7 @@ let toJObject item =
   match item with
   | Game g -> FormFields.makeJObjectFromModel g Game.documentType Game.Fields.allFields
   | Project p -> Project.makeJObjectFromModel p
-  | Book b -> Book.makeJObjectFromModel b
+  | Book b -> FormFields.makeJObjectFromModel b Book.documentType Book.Fields.allFields
 
 let fromContextForm itemDocumentType existing ctx =
   match ItemDocumentType.fromString itemDocumentType with
@@ -292,7 +292,7 @@ module Views =
       //| Some GameDocumentType -> Game.addEditView None Game.Fields.viewFields allTags []
       | Some GameDocumentType -> FormFields.View.addEditView None "Game" "game" Game.Fields.name Game.Fields.viewFields allTags []
       | Some ProjectDocumentType -> Project.addEditView None allTags []
-      | Some BookDocumentType -> Book.addEditView None allTags []
+      | Some BookDocumentType -> FormFields.View.addEditView None "Book" "book" Book.Fields.title Book.Fields.viewFields allTags []
       | None -> failwith $"Could not determine addView for document type {itemDocumentType}"
 
     let editView item =
@@ -300,7 +300,7 @@ module Views =
       //| Game g -> Game.addEditView (Some g) Game.Fields.viewFields
       | Game g -> FormFields.View.addEditView (Some g) "Game" "game" Game.Fields.name Game.Fields.viewFields
       | Project p -> Project.addEditView (Some p)
-      | Book b -> Book.addEditView (Some b)
+      | Book b -> FormFields.View.addEditView (Some b) "Book" "book" Book.Fields.title Book.Fields.viewFields
 
 module Handlers =
   let Get_listIndex itemDocumentType : HttpHandler =
@@ -363,7 +363,7 @@ module AdminHandlers =
     match item with
     | Game _ -> (FormFields.key Game.Fields.coverImagePaths)
     | Project _ -> Project.Fields.coverImagePaths.Key
-    | Book _ -> Book.Fields.coverImagePaths.Key
+    | Book _ -> (FormFields.key Book.Fields.coverImagePaths)
 
   let private handleGameImageUpload item ctx =
     let unwrapped = (tryUnwrapGame >> Option.get) item

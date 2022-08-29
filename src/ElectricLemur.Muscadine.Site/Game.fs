@@ -1,12 +1,8 @@
 ﻿module ElectricLemur.Muscadine.Site.Game
-open Giraffe
-open Giraffe.ViewEngine
 open System
 open Microsoft.AspNetCore.Http
 open System.Threading.Tasks
 open Newtonsoft.Json.Linq
-open RequiredFields
-open OptionalFields
 
 let documentType = Constants.Database.DocumentTypes.Game
 
@@ -20,7 +16,6 @@ type Game = {
 }
 
 module Fields =
-
     let _id = FormFields.FormField.RequiredStringField ({
         Key = "_id"
         Label = "Id"
@@ -69,9 +64,7 @@ module Fields =
         getValueFromJObject = (fun obj -> JObj.getter<Image.ImagePaths> obj "coverImage")
         isUnique = false})
 
-    let allFields = [
-        _id; _dateAdded; name; description; slug; coverImagePaths
-    ]
+    let allFields = [ _id; _dateAdded; name; description; slug; coverImagePaths ]
 
     let viewFields = allFields |> List.filter(fun f ->
         (FormFields.key f) <> (FormFields.key _id) &&
@@ -127,8 +120,3 @@ let tryMakeModelFromJObject (obj: JObject) =
         with
         | _ -> None
     | _ -> None
-
-// let makeJObjectFromModel (g: Game) =
-//     let empty = JObj.ofSeq [(Database.documentTypeField, documentType)]
-//     Seq.fold (fun obj ff -> FormFields.setJObject g ff obj) empty Fields.allFields
-
