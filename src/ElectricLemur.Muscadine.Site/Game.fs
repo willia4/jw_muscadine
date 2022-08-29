@@ -26,103 +26,63 @@ module Fields =
         Label = "Id"
         getValueFromModel = (fun g -> Some g.Id)
         getValueFromContext = (fun ctx -> None)
-        getValueFromJObject = (fun obj -> JObj.getter<string> obj "_id") })
+        getValueFromJObject = (fun obj -> JObj.getter<string> obj "_id")
+        isUnique = true})
 
     let _dateAdded = FormFields.FormField.RequiredDateTimeField({
         Key = "_dateAdded"
         Label = "Date Added"
         getValueFromModel = (fun g -> Some g.DateAdded)
         getValueFromContext = (fun ctx -> None)
-        getValueFromJObject = (fun obj -> JObj.getter<System.DateTimeOffset> obj "_dateAdded") })
+        getValueFromJObject = (fun obj -> JObj.getter<System.DateTimeOffset> obj "_dateAdded")
+        isUnique = false})
 
     let name = FormFields.FormField.RequiredStringField ({
         Key = "name"
         Label = "Name"
         getValueFromModel = (fun g -> Some g.Name)
         getValueFromContext = (fun ctx -> HttpFormFields.fromContext ctx |> HttpFormFields.stringOptionValue "name")
-        getValueFromJObject = (fun obj -> JObj.getter<string> obj "name") })
+        getValueFromJObject = (fun obj -> JObj.getter<string> obj "name")
+        isUnique = true})
 
     let description = FormFields.FormField.RequiredStringField ({
         Key = "description"
         Label = "Description"
         getValueFromModel = (fun g -> Some g.Description)
         getValueFromContext = (fun ctx -> HttpFormFields.fromContext ctx |> HttpFormFields.stringOptionValue "description")
-        getValueFromJObject = (fun obj -> JObj.getter<string> obj "description") })
+        getValueFromJObject = (fun obj -> JObj.getter<string> obj "description")
+        isUnique = false})
 
     let slug = FormFields.FormField.RequiredStringField ({
         Key = "slug"
         Label = "Slug"
         getValueFromModel = (fun g -> Some g.Slug)
         getValueFromContext = (fun ctx -> HttpFormFields.fromContext ctx |> HttpFormFields.stringOptionValue "slug")
-        getValueFromJObject = (fun obj -> JObj.getter<string> obj "slug") })
+        getValueFromJObject = (fun obj -> JObj.getter<string> obj "slug")
+        isUnique = true})
     
     let coverImagePaths = FormFields.FormField.OptionalImagePathsField ({
         Key = "coverImage"
         Label = "Cover Image"
         getValueFromModel = (fun g -> g.CoverImagePaths)
         getValueFromContext = (fun _ -> raise (new NotImplementedException("Cannot get coverImage from form fields")))
-        getValueFromJObject = (fun obj -> JObj.getter<Image.ImagePaths> obj "coverImage" )})
+        getValueFromJObject = (fun obj -> JObj.getter<Image.ImagePaths> obj "coverImage")
+        isUnique = false})
 
     let viewFields = [
         name; description; slug; coverImagePaths
     ]
-let addEditView (g: Game option) fields allTags documentTags =
-
-    let pageTitle = match g with
-                    | None -> "Add Game" 
-                    | Some g-> $"Edit Game %s{g.Name}"
-
-    let pageData =
-        match g with
-        | Some g -> Map.ofList [ ("id", Items.pageDataType.String g.Id); ("slug", Items.pageDataType.String  "game")]
-        | None -> Map.empty
-
-
-    Items.layout pageTitle pageData [
-        div [ _class "page-title" ] [ encodedText pageTitle ]
-        form [ _name "game-form"; _method "post"; _enctype "multipart/form-data" ] [
-                table [] [
-                    for ff in fields do
-                        yield FormFields.View.makeFormFieldRow ff g
-
-                    yield Items.makeTagsInputRow "Tags" Tag.formKey allTags documentTags
-                    yield tr [] [
-                        td [] []
-                        td [] [ input [ _type "submit"; _value "Save" ] ]
-                    ]
-                ]
-            ]
-
-        (match g with
-        | None -> Util.emptyDiv
-        | Some _ ->
-            div [ _class "microblog-container section" ] [])
-    ]
 
 let validateModel (id: string) (g: Game) ctx =
-    let stringFieldUniquenessValidator field = FormFields.stringFieldUniquenessValidator ctx documentType id field
-
-    Ok g
-    |> Task.fromResult
-    |> Task.map (Items.performValidation (FormFields.requiredStringValidator Fields.name))
-    |> Task.map (Items.performValidation (FormFields.requiredStringValidator Fields.description))
-    |> Task.map (Items.performValidation (FormFields.requiredStringValidator Fields.slug))
-    |> Task.bind (Items.performValidationAsync (stringFieldUniquenessValidator Fields.name))
-    |> Task.bind (Items.performValidationAsync (stringFieldUniquenessValidator Fields.slug))
-
+    FormFields.validateFieldsOnModel ctx documentType id Fields.viewFields g
 
 let makeAndValidateModelFromContext (existing: Game option) (ctx: HttpContext): Task<Result<Game, string>> =
     let id = existing |> Option.map (fun g -> g.Id) |> Option.defaultValue (string (Util.newGuid ()))
     let dateAdded = existing |> Option.map (fun g -> g.DateAdded) |> Option.defaultValue System.DateTimeOffset.UtcNow
 
-    let fields = HttpFormFields.fromContext ctx
-    let requiredFieldsAreValid = 
-        Ok ()
-        |> HttpFormFields.checkRequiredStringField fields (FormFields.key Fields.name)
-        |> HttpFormFields.checkRequiredStringField fields (FormFields.key Fields.description)
-        |> HttpFormFields.checkRequiredStringField fields (FormFields.key Fields.slug)
+    let httpFormFieldsAreValid = FormFields.validateFieldsOnContext ctx documentType id Fields.viewFields
 
-    match requiredFieldsAreValid with
+    match httpFormFieldsAreValid with
     | Ok _ ->
         let getFormStringValue f = FormFields.ContextValue.string f ctx |> Option.get
         let getModelImagePathsValue f =

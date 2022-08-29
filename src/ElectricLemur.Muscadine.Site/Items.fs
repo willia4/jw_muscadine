@@ -132,7 +132,7 @@ let makeTagsInputRow label key (allTags: string seq) (documentTags: string seq) 
     let el = 
         div [ _class "tags-container" ] [
             select selectAttributes (
-                allTags 
+                allTags
                 |> List.map (fun t -> 
                     let attributes = 
                         [ _value t ]

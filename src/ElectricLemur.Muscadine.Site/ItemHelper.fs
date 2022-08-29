@@ -289,14 +289,16 @@ module Views =
   module Admin =
     let addView itemDocumentType allTags =
       match ItemDocumentType.fromString itemDocumentType with
-      | Some GameDocumentType -> Game.addEditView None Game.Fields.viewFields allTags []
+      //| Some GameDocumentType -> Game.addEditView None Game.Fields.viewFields allTags []
+      | Some GameDocumentType -> FormFields.View.addEditView None "Game" "game" Game.Fields.name Game.Fields.viewFields allTags []
       | Some ProjectDocumentType -> Project.addEditView None allTags []
       | Some BookDocumentType -> Book.addEditView None allTags []
       | None -> failwith $"Could not determine addView for document type {itemDocumentType}"
 
     let editView item =
       match item with
-      | Game g -> Game.addEditView (Some g) Game.Fields.viewFields
+      //| Game g -> Game.addEditView (Some g) Game.Fields.viewFields
+      | Game g -> FormFields.View.addEditView (Some g) "Game" "game" Game.Fields.name Game.Fields.viewFields
       | Project p -> Project.addEditView (Some p)
       | Book b -> Book.addEditView (Some b)
 
