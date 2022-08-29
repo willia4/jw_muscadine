@@ -6,11 +6,6 @@ open Giraffe.ViewEngine
 open Microsoft.FSharp.Reflection
 open Newtonsoft.Json.Linq
 
-let performValidation (f: 'a -> Result<'a, string>) (prev: Result<'a, string>) =
-    match prev with
-    | Error s -> Error s
-    | Ok g -> f g
-
 let performValidationAsync (f: 'a -> Task<Result<'a, string>>) (prev: Result<'a, string>) =
     match prev with
     | Error s -> Task.fromResult (Error s)
@@ -146,12 +141,6 @@ let makeTagsInputRow label key (allTags: string seq) (documentTags: string seq) 
             ]
         ]
     makeInputRow label el
-
-let requiredStringValidator fieldName getter m =
-    if (System.String.IsNullOrWhiteSpace(getter m)) then
-        Error $"%s{fieldName} is required and cannot be empty"
-    else
-        Ok m
 
 let uniqueStringFieldValidator ctx documentType allowedId fieldName (getter: 'a -> string option) (m: 'a) = task {
     match getter m with
