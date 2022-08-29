@@ -290,16 +290,16 @@ module Views =
     let addView itemDocumentType allTags =
       match ItemDocumentType.fromString itemDocumentType with
       //| Some GameDocumentType -> Game.addEditView None Game.Fields.viewFields allTags []
-      | Some GameDocumentType -> FormFields.View.addEditView None "Game" "game" Game.Fields.name Game.Fields.viewFields allTags []
-      | Some ProjectDocumentType -> FormFields.View.addEditView None "Project" "project" Project.Fields.name Project.Fields.viewFields allTags []
-      | Some BookDocumentType -> FormFields.View.addEditView None "Book" "book" Book.Fields.title Book.Fields.viewFields allTags []
+      | Some GameDocumentType -> FormFields.View.addEditView None "Game" "game" Game.Fields.name Game.Fields.allFields allTags []
+      | Some ProjectDocumentType -> FormFields.View.addEditView None "Project" "project" Project.Fields.name Project.Fields.allFields allTags []
+      | Some BookDocumentType -> FormFields.View.addEditView None "Book" "book" Book.Fields.title Book.Fields.allFields allTags []
       | None -> failwith $"Could not determine addView for document type {itemDocumentType}"
 
     let editView item =
       match item with
-      | Game g -> FormFields.View.addEditView (Some g) "Game" "game" Game.Fields.name Game.Fields.viewFields
-      | Project p -> FormFields.View.addEditView (Some p) "Project" "project" Project.Fields.name Project.Fields.viewFields
-      | Book b -> FormFields.View.addEditView (Some b) "Book" "book" Book.Fields.title Book.Fields.viewFields
+      | Game g -> FormFields.View.addEditView (Some g) "Game" "game" Game.Fields.name Game.Fields.allFields
+      | Project p -> FormFields.View.addEditView (Some p) "Project" "project" Project.Fields.name Project.Fields.allFields
+      | Book b -> FormFields.View.addEditView (Some b) "Book" "book" Book.Fields.title Book.Fields.allFields
 
 module Handlers =
   let Get_listIndex itemDocumentType : HttpHandler =

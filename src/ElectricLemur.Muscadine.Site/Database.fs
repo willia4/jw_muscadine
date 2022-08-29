@@ -20,6 +20,7 @@ module JsonString =
 
 let idField = "_id"
 let documentTypeField = "_documentType"
+let dateAddedField = "_dateAdded"
 
 module Filters = 
     open MongoDB.Bson

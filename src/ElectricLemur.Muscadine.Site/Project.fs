@@ -75,20 +75,16 @@ module Fields =
 
     let allFields = [ _id; _dateAdded; name; description; slug; coverImagePaths; gitHubLink ]
 
-    let viewFields = allFields |> List.filter(fun f ->
-        (FormFields.key f) <> (FormFields.key _id) &&
-        (FormFields.key f) <> (FormFields.key _dateAdded))
 
-
-let validateModel (id: string) (g: Project) ctx =
-    FormFields.validateFieldsOnModel ctx documentType id Fields.viewFields g
+let validateModel (id: string) (p: Project) ctx =
+    FormFields.validateFieldsOnModel ctx documentType id Fields.allFields p
 
 
 let makeAndValidateModelFromContext (existing: Project option) (ctx: HttpContext): Task<Result<Project, string>> =
     let id = existing |> Option.map (fun p -> p.Id) |> Option.defaultValue (string (Util.newGuid ()))
     let dateAdded = existing |> Option.map (fun p -> p.DateAdded) |> Option.defaultValue System.DateTimeOffset.UtcNow
 
-    let httpFormFieldsAreValid = FormFields.validateFieldsOnContext ctx documentType id Fields.viewFields
+    let httpFormFieldsAreValid = FormFields.validateFieldsOnContext ctx documentType id Fields.allFields
 
     match httpFormFieldsAreValid with
     | Ok _ ->

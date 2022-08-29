@@ -65,6 +65,11 @@ let isUnique field =
   | OptionalBooleanField ff -> ff.isUnique
   | OptionalImagePathsField ff -> ff.isUnique
 
+let viewFieldsForAllFields allFields =
+  allFields
+  |> Seq.filter(fun f ->
+      (key f) <> Database.idField &&
+      (key f) <> Database.dateAddedField)
 module ModelValue =
   let string field (model: 'a) =
     match field with
@@ -217,6 +222,8 @@ let validateFieldOnContext ctx documentType existingItemId field  =
   res
 
 let validateFieldsOnModel ctx documentType existingItemId fields model =
+  let fields = (viewFieldsForAllFields fields)
+
   Seq.fold (
     fun res ff ->
       res |> Task.bind (Items.performValidationAsync (validateFieldOnModel ctx documentType existingItemId ff))
@@ -225,6 +232,7 @@ let validateFieldsOnModel ctx documentType existingItemId fields model =
     fields
 
 let validateFieldsOnContext ctx documentType existingItemId fields =
+  let fields = viewFieldsForAllFields fields
   Seq.fold (
     fun res ff ->
       res |> Result.bind (fun _ -> validateFieldOnContext ctx documentType existingItemId ff)
@@ -278,9 +286,8 @@ module View =
     | OptionalDateTimeField _ -> failwith "Not Implemented"
 
   open Giraffe.ViewEngine
-  let addEditView (m: 'm option) titleCaseDocumentType slug nameField (fields: seq<FormField<'m>>) allTags documentTags =
-    let idField = fields |> Seq.tryFind (fun ff -> (key ff) = "_id")
-
+  let addEditView (m: 'm option) titleCaseDocumentType slug nameField (allFields: seq<FormField<'m>>) allTags documentTags =
+    let idField = allFields |> Seq.tryFind (fun ff -> (key ff) = "_id")
     let id = idField |> Option.bind (fun idField -> m |> Option.bind (fun m -> ModelValue.string idField m))
 
     let pageTitle =
@@ -296,11 +303,12 @@ module View =
       | None -> Map.empty
 
 
+    let viewFields = viewFieldsForAllFields allFields
     Items.layout pageTitle pageData [
       yield div [ _class "page-title" ] [ encodedText pageTitle ]
       yield form [ _name "edit-form"; _method "post"; _enctype "multipart/form-data" ] [
           table [] [
-              for ff in fields do
+              for ff in viewFields do
                   yield makeFormFieldRow ff m
 
               yield Items.makeTagsInputRow "Tags" Tag.formKey allTags documentTags
