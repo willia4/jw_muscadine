@@ -91,7 +91,7 @@ let fromJObject (obj: Newtonsoft.Json.Linq.JObject) =
 
 let toJObject item =
   match item with
-  | Game g -> Game.makeJObjectFromModel g
+  | Game g -> FormFields.makeJObjectFromModel g Game.documentType Game.Fields.allFields
   | Project p -> Project.makeJObjectFromModel p
   | Book b -> Book.makeJObjectFromModel b
 

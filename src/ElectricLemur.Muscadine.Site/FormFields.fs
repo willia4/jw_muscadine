@@ -232,6 +232,10 @@ let validateFieldsOnContext ctx documentType existingItemId fields =
     (Ok ())
     fields
 
+let makeJObjectFromModel (m: 'a) (documentType: string) (allFields: seq<FormField<'a>>) =
+  let empty = JObj.ofSeq [(Database.documentTypeField, documentType)]
+  Seq.fold (fun obj ff -> setJObject m ff obj) empty allFields
+
 module View =
 
   let modelStringValue ff m = m |> Option.bind (ModelValue.string ff)

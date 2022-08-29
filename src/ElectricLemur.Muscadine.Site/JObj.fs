@@ -67,3 +67,9 @@ let parseString (s: string) =
         Ok (JObject.Parse(s))
     with
     | ex -> Error ex.Message
+
+let ofSeq (s: seq<(string * JToken)>) =
+    let empty = new JObject()
+    Seq.fold (fun (obj: JObject) (k, v) ->
+        obj.[k] <- v
+        obj) empty s

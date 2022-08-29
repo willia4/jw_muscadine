@@ -69,9 +69,13 @@ module Fields =
         getValueFromJObject = (fun obj -> JObj.getter<Image.ImagePaths> obj "coverImage")
         isUnique = false})
 
-    let viewFields = [
-        name; description; slug; coverImagePaths
+    let allFields = [
+        _id; _dateAdded; name; description; slug; coverImagePaths
     ]
+
+    let viewFields = allFields |> List.filter(fun f ->
+        (FormFields.key f) <> (FormFields.key _id) &&
+        (FormFields.key f) <> (FormFields.key _dateAdded))
 
 let validateModel (id: string) (g: Game) ctx =
     FormFields.validateFieldsOnModel ctx documentType id Fields.viewFields g
@@ -124,14 +128,7 @@ let tryMakeModelFromJObject (obj: JObject) =
         | _ -> None
     | _ -> None
 
-let makeJObjectFromModel (g: Game) =
-    (new JObject())
-    |> (fun obj ->
-            obj.[Database.documentTypeField] <- documentType
-            obj)
-    |> FormFields.setJObject g Fields._id
-    |> FormFields.setJObject g Fields._dateAdded
-    |> FormFields.setJObject g Fields.name
-    |> FormFields.setJObject g Fields.description
-    |> FormFields.setJObject g Fields.slug
-    |> FormFields.setJObject g Fields.coverImagePaths
+// let makeJObjectFromModel (g: Game) =
+//     let empty = JObj.ofSeq [(Database.documentTypeField, documentType)]
+//     Seq.fold (fun obj ff -> FormFields.setJObject g ff obj) empty Fields.allFields
+
