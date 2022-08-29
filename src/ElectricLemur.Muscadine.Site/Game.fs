@@ -127,7 +127,7 @@ let tryMakeModelFromJObject (obj: JObject) =
 let makeJObjectFromModel (g: Game) =
     (new JObject())
     |> (fun obj ->
-            obj.["_documentType"] <- documentType
+            obj.[Database.documentTypeField] <- documentType
             obj)
     |> FormFields.setJObject g Fields._id
     |> FormFields.setJObject g Fields._dateAdded
