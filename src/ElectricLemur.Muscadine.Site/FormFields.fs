@@ -126,9 +126,9 @@ module DatabaseValue =
 
 let stringFieldUniquenessValidator ctx documentType id field m =
   match field with
-  | RequiredStringField s ->
+  | RequiredStringField _ ->
       Items.uniqueStringFieldValidator ctx documentType id (key field) (ModelValue.string field) m
-  | OptionalStringField s ->
+  | OptionalStringField _ ->
       Items.uniqueStringFieldValidator ctx documentType id (key field) (ModelValue.string field) m
   | _ -> Task.fromResult (Ok m)
 
@@ -148,7 +148,7 @@ let validatedRequiredFieldOnModel ff m =
   let err = Error $"%s{k} is required and cannot be empty"
 
   match ff with
-  | RequiredStringField field ->
+  | RequiredStringField _ ->
       let s = ModelValue.string ff m |> Option.defaultValue ""
 
       if (System.String.IsNullOrWhiteSpace(s)) then
@@ -156,17 +156,17 @@ let validatedRequiredFieldOnModel ff m =
       else
         Ok m
 
-  | RequiredDateTimeField field ->
+  | RequiredDateTimeField _ ->
       match ModelValue.dateTime ff m with
       | Some _ -> Ok m
       | None -> err
 
-  | RequiredBooleanField field ->
+  | RequiredBooleanField _ ->
       match ModelValue.bool ff m with
       | Some _ -> Ok m
       | None -> err
 
-  | RequiredImagePathsField field ->
+  | RequiredImagePathsField _ ->
         match ModelValue.imagePaths ff m with
         | Some _ -> Ok m
         | None -> err
@@ -182,14 +182,14 @@ let validateRequiredFieldOnContext ff ctx =
   let contextFields = HttpFormFields.fromContext ctx
 
   match ff with
-  | RequiredStringField field ->
+  | RequiredStringField _ ->
       good |> HttpFormFields.checkRequiredStringField contextFields k
 
-  | RequiredDateTimeField field -> good
+  | RequiredDateTimeField _ -> good
 
-  | RequiredBooleanField field -> good
+  | RequiredBooleanField _ -> good
 
-  | RequiredImagePathsField field -> good
+  | RequiredImagePathsField _ -> good
 
   | OptionalStringField _ -> good
   | OptionalDateTimeField _ -> good

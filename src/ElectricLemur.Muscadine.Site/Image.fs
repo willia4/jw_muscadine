@@ -142,7 +142,6 @@ module Handlers =
     open Microsoft.Extensions.Configuration
     let GET_imageRouter (paths: string seq) =
         fun next (ctx: HttpContext) -> task {
-            let fullPath = paths |> Seq.head
             let components = paths |> Seq.skip 1 |> Seq.toArray
 
             if components.Length <> 4 then

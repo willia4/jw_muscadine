@@ -174,9 +174,9 @@ let itemLinks item =
 
 let pageDefinition item =
   match item with
-  | Game g -> FrontendHelpers.PageDefinitions.Games
-  | Project p -> FrontendHelpers.PageDefinitions.Projects
-  | Book b -> FrontendHelpers.PageDefinitions.Books
+  | Game _ -> FrontendHelpers.PageDefinitions.Games
+  | Project _ -> FrontendHelpers.PageDefinitions.Projects
+  | Book _ -> FrontendHelpers.PageDefinitions.Books
 
 let pageDefinitionForDocumentType itemDocumentType =
   match itemDocumentType with
