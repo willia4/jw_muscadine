@@ -7,6 +7,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <NoWarn>3391</NoWarn>
+    <!-- <WarnOn>1182</WarnOn> --> <!-- Excessive warnings on unused bindings -->
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <NoWarn>3391</NoWarn>
@@ -28,7 +29,7 @@
     <Compile Include="Option.fs" />
     <Compile Include="Map.fs" />
     <Compile Include="Id.fs" />
-    <Compile Include="FormFields.fs" />
+    <Compile Include="HttpFormFields.fs" />
     <Compile Include="JObj.fs" />
     <Compile Include="Util.fs" />
     <Compile Include="Login.fs" />
@@ -38,8 +39,7 @@
     <Compile Include="Tag.fs" />
     <Compile Include="Items.fs" />
     <Compile Include="Microblog.fs" />
-    <Compile Include="RequiredFields.fs" />
-    <Compile Include="OptionalFields.fs" />
+    <Compile Include="FormFields.fs" />
     <Compile Include="Game.fs" />
     <Compile Include="Book.fs" />
     <Compile Include="Project.fs" />

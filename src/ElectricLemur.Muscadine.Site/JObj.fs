@@ -58,7 +58,7 @@ let setValue<'a> (key: string) (v: 'a) (obj: JObject) =
     obj
 
 let setOptionalValue<'a> (key: string) (v: 'a option) (obj: JObject) =
-    match v with 
+    match v with
     | None -> obj
     | Some v -> setValue key v obj
 
@@ -67,3 +67,9 @@ let parseString (s: string) =
         Ok (JObject.Parse(s))
     with
     | ex -> Error ex.Message
+
+let ofSeq (s: seq<(string * JToken)>) =
+    let empty = new JObject()
+    Seq.fold (fun (obj: JObject) (k, v) ->
+        obj.[k] <- v
+        obj) empty s

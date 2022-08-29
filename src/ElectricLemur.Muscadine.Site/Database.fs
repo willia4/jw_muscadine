@@ -251,8 +251,6 @@ module private Mongo =
     }
     
     let getDistinctValues<'a> (field: string) (filter: BsonDocument) (db: MongoDatabase) = task {
-        let f: FieldDefinition<BsonDocument, 'a> = field
-
         use! cursor = db.Collection.DistinctAsync<'a>(field, filter)
         let! docs = cursorToSeq cursor
 
@@ -291,13 +289,13 @@ module private Mongo =
             let options = new ReplaceOptions()
             options.IsUpsert <- true
             let filter = Filters.empty |> Filters.byId foundId |> Filters.build
-            let! res = db.Collection.ReplaceOneAsync(filter, bson, options)
+            let! _ = db.Collection.ReplaceOneAsync(filter, bson, options)
             ()
     }
 
     let deleteDocumentById id (db: MongoDatabase) = task {
         let filter = Filters.empty |> Filters.byId id |> Filters.build
-        let! res = db.Collection.DeleteOneAsync(filter)
+        let! _ = db.Collection.DeleteOneAsync(filter)
         ()
     }
 
