@@ -174,7 +174,13 @@ module Handlers =
                             let cacheAge = System.TimeSpan.FromDays(30).TotalSeconds |> int
                             ctx.Response.Headers.Append("Cache-Control", $"max-age=%d{cacheAge}, public")
 
-                        return! streamFile false path None None next ctx
+                        let setContentType next ctx =
+                            match Util.contentTypeForFileName (System.IO.Path.GetFileName(path)) with
+                            | Some contentType ->
+                                setContentType contentType next ctx
+                            | None -> next ctx
+                            
+                        return! (setContentType >=> streamFile false path None None) next ctx
                     | false -> return! setStatusCode 401 next ctx
                 | None -> return! setStatusCode 401 next ctx
         }

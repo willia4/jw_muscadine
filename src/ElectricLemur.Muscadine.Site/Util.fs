@@ -179,6 +179,15 @@ let getJObjectStrings (obj: Newtonsoft.Json.Linq.JObject) (requiredKeys: string 
 let getMapStrings (m: Map<string, string option>) (requiredKeys: string seq) (optionalKeys: string seq) = 
     safeMapBuilder (fun k -> Map.tryFind k m |> Option.flatten) requiredKeys optionalKeys
 
+let contentTypeForFileName (fileName: string) =
+    match fileName.ToLowerInvariant() with
+    | f when f.EndsWith(".ico") -> Some "image/vnd.microsoft.icon"
+    | f when f.EndsWith(".jpg") -> Some "image/jpeg"
+    | f when f.EndsWith(".png") -> Some "image/png"
+    | f when f.EndsWith(".css") -> Some "text/css; charset=UTF-8"
+    | f when f.EndsWith(".scss") -> Some "text/css; charset=UTF-8"
+    | f when f.EndsWith(".js") -> Some "application/javascript; charset=UTF-8"
+    | _ -> None
 
 let newGuid () = System.Guid.NewGuid()
 

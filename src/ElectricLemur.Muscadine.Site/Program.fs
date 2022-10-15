@@ -67,10 +67,24 @@ module Views =
 // Web app
 // ---------------------------------
 
+let commonHeaders = [
+    "X-Clacks-Overhead", "GNU Terry Pratchett"
+    "X-Hire-Me", "https://jameswilliams.me/resume"
+    "X-Source-Code", "https://github.com/willia4/jw_muscadine"
+    "X-Greeting", "Hello! I hope you are having an amazing day. We are all rooting for you."
+]
+
 let webApp =
     fun (next: HttpFunc) (ctx: HttpContext) ->
+        let setCommonHeaders  =
+            let doNothing (next: HttpFunc) (ctx: HttpContext) : HttpFuncResult =
+                next ctx
+
+            commonHeaders
+            |> List.fold (fun n (k, v) -> n >=> setHttpHeader k v) doNothing
+
         choose [
-            GET >=>
+            GET >=> setCommonHeaders >=>
                 choose [
                     route "/" >=> Frontend.AboutMe.Handlers.GET_index
                     route "/under-construction" >=> redirectTo true "/under-construction/"
@@ -149,7 +163,7 @@ let webApp =
                     route "/feed/microblogs/books/" >=> (Microblog.Handlers.GET_atomFeed (Some Book.documentType) "books" (Util.makeUrl "/feed/microblogs/books/"))
                     route "/feed/microblogs/projects/" >=> (Microblog.Handlers.GET_atomFeed (Some Project.documentType) "projects" (Util.makeUrl "/feed/microblogs/projects/"))
                 ]
-            POST >=>
+            POST >=> setCommonHeaders >=>
                 choose [
                     route "/admin/login" >=> Login.postHandler "/admin/login" "/admin" (Login.defaultCredentialValidator (Login.getExpectedAdminCredentials ctx))
 
@@ -169,7 +183,7 @@ let webApp =
                     routef "/admin/microblog/%s" (fun id -> Login.requiresAdminRedirect $"/admin/microblog/%s{id}" >=> Microblog.Handlers.POST_edit id)
 
                 ]
-            DELETE >=>
+            DELETE >=> setCommonHeaders >=>
                 choose [
                     route "/debug/reset" >=> Login.requiresAdminAPICall >=> Debug.Handlers.DELETE_resetDatabase
 
@@ -258,7 +272,7 @@ let main args =
         let isImage (fileName: string) =
             let fileName = fileName.ToLowerInvariant()
             fileName.EndsWith(".ico") || fileName.EndsWith(".jpg") || fileName.EndsWith(".png")
-
+            
         let config = ctx.Context.GetService<IConfiguration>()
         let cacheEnabled = config.GetValue<bool>("webOptimizer:enableCaching", false)
         if cacheEnabled then
@@ -268,10 +282,14 @@ let main args =
                 let cacheAge = System.TimeSpan.FromDays(30).TotalSeconds |> int
 
                 ctx.Context.Response.Headers.Append(
-                    "Cache-Control", $"max-age=%d{cacheAge}, public"))
-
-
-
+                    "Cache-Control", $"max-age=%d{cacheAge}, public")
+        
+        Util.contentTypeForFileName ctx.File.Name
+        |> Option.iter (fun contentType -> ctx.Context.Response.Headers.ContentType <- contentType)
+        
+        commonHeaders
+        |> List.iter (fun (k, v) ->
+            ctx.Context.Response.Headers.Append(k, v)))
 
     app
         .UseStaticFiles(staticFilesOptions)
