@@ -219,6 +219,18 @@ let loadItemsExcludingItems itemDocumentType excludedItems ctx = task {
 let loadInProgressItems itemDocumentType = loadItemsContainingTags itemDocumentType [ "in-progress" ]
 let loadBacklogItems itemDocumentType = loadItemsContainingTags itemDocumentType [ "backlog" ]
 
+let loadFinishedItems itemDocumentType ctx = task {
+  let finishedTags = [ "finished"; "read"; "done" ]
+  let tasks =
+    finishedTags
+    |> List.map (fun t -> loadItemsContainingTags itemDocumentType [ t ] ctx)
+  let! finishedTasks  = System.Threading.Tasks.Task.WhenAll(tasks)
+  return
+    finishedTasks
+    |> Seq.collect id
+    |> Seq.distinctBy itemId
+}
+
 let makeItemCard ctx item = task {
   let title = (name item)
   let icon = (icon item)
@@ -252,7 +264,7 @@ let tryLookupItemBySlug (slug: string) documentType  ctx =
 
 
 module Views =
-  let makeContentView itemDocumentType inProgressCards backlogCards otherCards =
+  let makeContentView itemDocumentType inProgressCards backlogCards finishedCards otherCards =
     let notEmpty = List.isEmpty >> not
 
     let sections = div [ _class "sections" ] [
@@ -266,6 +278,12 @@ module Views =
                 h2 [ ] [ encodedText "Backlog" ]
                 div [ _class "backlog-container item-card-container" ] backlogCards
               ]
+
+      if (notEmpty finishedCards) then
+        yield section [ _id "finished-section" ] [
+                h2 [  ] [ encodedText "Finished" ]
+                div [ _class "backlog-container item-card-container" ] finishedCards
+        ]
 
       if (notEmpty otherCards) then
         yield section [ _id "other-section" ] [
@@ -318,10 +336,13 @@ module Handlers =
         let! backlog = loadBacklogItems itemDocumentType ctx
         let! backlogCards = backlog |> makeAndSortCards
 
-        let! others = loadItemsExcludingItems itemDocumentType (Seq.append inProgress backlog) ctx
+        let! finished = loadFinishedItems itemDocumentType ctx
+        let! finishedCards = finished |> makeAndSortCards
+        
+        let! others = loadItemsExcludingItems itemDocumentType (Seq.flatten [inProgress; backlog; finished]) ctx
         let! otherCards = others |> makeAndSortCards
 
-        let content = Views.makeContentView itemDocumentType inProgressCards backlogCards otherCards
+        let content = Views.makeContentView itemDocumentType inProgressCards backlogCards finishedCards otherCards
         let pageHtml = FrontendHelpers.layout (pageDefinitionForDocumentType itemDocumentType) content [ "frontend/item_cards.scss" ] ctx
 
         return! htmlView pageHtml next ctx
