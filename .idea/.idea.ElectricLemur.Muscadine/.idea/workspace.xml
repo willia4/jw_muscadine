@@ -12,7 +12,6 @@
   <component name="ChangeListManager">
     <list default="true" id="5e706e6e-c429-48e6-964a-5fcce5d8df19" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.ElectricLemur.Muscadine/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.ElectricLemur.Muscadine/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/ElectricLemur.Muscadine.Site/ItemHelper.fs" beforeDir="false" afterPath="$PROJECT_DIR$/src/ElectricLemur.Muscadine.Site/ItemHelper.fs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -60,6 +59,7 @@
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/dbb5ce4594d51031c5c5204a19aee2736d9d56a79cbfe7ca38b36db8ee385fd8/BsonDocument.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/ded4e626ee4c78774ce224cb22cf94eca4aaa6b5dedcbc4bb0f4ee6b8ef41b51/FilterDefinitionBuilder.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/df71358f7b7337a1eee3a65abe6d678dd9a065e256b8cc3fd44a2949754/Object.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="mock://C:/Users/willia4/code/jw_muscadine/src/ElectricLemur.Muscadine.Site/ItemHelper.fs" root0="SKIP_HIGHLIGHTING" />
   </component>
   <component name="MarkdownSettingsMigration">
     <option name="stateVersion" value="1" />
@@ -152,7 +152,7 @@
       <workItem from="1652474489782" duration="1768000" />
       <workItem from="1652476741689" duration="10968000" />
       <workItem from="1665863192005" duration="3010000" />
-      <workItem from="1665950261325" duration="857000" />
+      <workItem from="1665950261325" duration="2013000" />
     </task>
     <task id="LOCAL-00001" summary="Add some headers">
       <created>1665866111898</created>
@@ -161,7 +161,14 @@
       <option name="project" value="LOCAL" />
       <updated>1665866111898</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="Separate out finished items from everything else">
+      <created>1665951163448</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1665951163448</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -181,6 +188,7 @@
   <component name="VcsManagerConfiguration">
     <option name="CLEAR_INITIAL_COMMIT_MESSAGE" value="true" />
     <MESSAGE value="Add some headers" />
-    <option name="LAST_COMMIT_MESSAGE" value="Add some headers" />
+    <MESSAGE value="Separate out finished items from everything else" />
+    <option name="LAST_COMMIT_MESSAGE" value="Separate out finished items from everything else" />
   </component>
 </project>
