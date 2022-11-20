@@ -81,6 +81,7 @@ let layout pageDefinition content extraCss ctx =
         link [ (_rel "shortcut icon"); (_type "image/png"); (_href "/img/head_logo_32.png") ]
         link [ (_rel "icon"); (_type "image/png"); (_href "/img/head_logo_256.png") ]
         link [ (_rel "me"); ( _href "https://social.lol/@willia4") ]
+        link [ (_rel "me"); ( _href "https://forlorn.computer/@willia4") ]
 
         link [ (_rel "alternate"); (_type "application/atom+xml"); (_title "All Microblogs - Atom Feed"); (_href (Util.makeUrl "/feed/microblogs/" ctx |> string))]
         link [ (_rel "alternate"); (_type "application/atom+xml"); (_title "Book Microblogs - Atom Feed"); (_href (Util.makeUrl "/feed/microblogs/books/" ctx |> string))]
