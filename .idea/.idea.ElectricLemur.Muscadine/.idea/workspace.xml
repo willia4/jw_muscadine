@@ -10,7 +10,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="5e706e6e-c429-48e6-964a-5fcce5d8df19" name="Changes" comment="" />
+    <list default="true" id="5e706e6e-c429-48e6-964a-5fcce5d8df19" name="Changes" comment="Fix for build issues from new ASP.Net version">
+      <change beforePath="$PROJECT_DIR$/.idea/.idea.ElectricLemur.Muscadine/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.ElectricLemur.Muscadine/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/ElectricLemur.Muscadine.Site/Admin.fs" beforeDir="false" afterPath="$PROJECT_DIR$/src/ElectricLemur.Muscadine.Site/Admin.fs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/ElectricLemur.Muscadine.Site/Microblog.fs" beforeDir="false" afterPath="$PROJECT_DIR$/src/ElectricLemur.Muscadine.Site/Microblog.fs" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -57,7 +61,8 @@
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/dbb5ce4594d51031c5c5204a19aee2736d9d56a79cbfe7ca38b36db8ee385fd8/BsonDocument.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/ded4e626ee4c78774ce224cb22cf94eca4aaa6b5dedcbc4bb0f4ee6b8ef41b51/FilterDefinitionBuilder.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/df71358f7b7337a1eee3a65abe6d678dd9a065e256b8cc3fd44a2949754/Object.cs" root0="FORCE_HIGHLIGHTING" />
-    <setting file="mock://C:/Users/willia4/code/jw_muscadine/src/ElectricLemur.Muscadine.Site/FrontendHelpers.fs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock://C:/Users/willia4/code/jw_muscadine/src/ElectricLemur.Muscadine.Site/Admin.fs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock://C:/Users/willia4/code/jw_muscadine/src/ElectricLemur.Muscadine.Site/Program.fs" root0="SKIP_HIGHLIGHTING" />
   </component>
   <component name="MarkdownSettingsMigration">
     <option name="stateVersion" value="1" />
@@ -80,6 +85,13 @@
     &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
     &quot;ts.external.directory.path&quot;: &quot;C:\\Users\\willia4\\AppData\\Local\\JetBrains\\Toolbox\\apps\\Rider\\ch-0\\221.5591.20\\plugins\\JavaScriptLanguage\\jsLanguageServicesImpl\\external&quot;,
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  },
+  &quot;keyToStringList&quot;: {
+    &quot;rider.external.source.directories&quot;: [
+      &quot;C:\\Users\\willia4\\AppData\\Roaming\\JetBrains\\Rider2022.3\\resharper-host\\DecompilerCache&quot;,
+      &quot;C:\\Users\\willia4\\AppData\\Roaming\\JetBrains\\Rider2022.3\\resharper-host\\SourcesCache&quot;,
+      &quot;C:\\Users\\willia4\\AppData\\Local\\Symbols\\src&quot;
+    ]
   }
 }</component>
   <component name="RunManager" selected=".NET Project.ElectricLemur.Muscadine.Site">
@@ -152,6 +164,13 @@
       <workItem from="1665863192005" duration="3010000" />
       <workItem from="1665950261325" duration="2013000" />
       <workItem from="1667603333755" duration="753000" />
+      <workItem from="1667777133757" duration="199000" />
+      <workItem from="1667857095060" duration="60000" />
+      <workItem from="1668030396190" duration="279000" />
+      <workItem from="1668953822385" duration="735000" />
+      <workItem from="1671294565962" duration="697000" />
+      <workItem from="1672688478009" duration="7000" />
+      <workItem from="1673303694630" duration="1687000" />
     </task>
     <task id="LOCAL-00001" summary="Add some headers">
       <created>1665866111898</created>
@@ -174,7 +193,28 @@
       <option name="project" value="LOCAL" />
       <updated>1667603489858</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="Add Mastodon link to social media icons">
+      <created>1667777311859</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1667777311859</updated>
+    </task>
+    <task id="LOCAL-00005" summary="Add rel=me link to forlorn.computer">
+      <created>1668953902745</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1668953902745</updated>
+    </task>
+    <task id="LOCAL-00006" summary="Fix for build issues from new ASP.Net version">
+      <created>1673305259732</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1673305259732</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -196,6 +236,9 @@
     <MESSAGE value="Add some headers" />
     <MESSAGE value="Separate out finished items from everything else" />
     <MESSAGE value="Add Mastodon link" />
-    <option name="LAST_COMMIT_MESSAGE" value="Add Mastodon link" />
+    <MESSAGE value="Add Mastodon link to social media icons" />
+    <MESSAGE value="Add rel=me link to forlorn.computer" />
+    <MESSAGE value="Fix for build issues from new ASP.Net version" />
+    <option name="LAST_COMMIT_MESSAGE" value="Fix for build issues from new ASP.Net version" />
   </component>
 </project>

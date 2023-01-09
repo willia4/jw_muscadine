@@ -4,6 +4,7 @@ open System
 open Giraffe
 open Giraffe.ViewEngine
 open Microsoft.AspNetCore.Http
+open System.Linq
 
 let documentType = "microblog"
 
@@ -203,6 +204,24 @@ let loadRecentMicroblogs (since: System.DateTimeOffset) limit ctx =
 let loadMostRecentMicroblogForItem itemId ctx =
   loadRecentMicroblogsForItem (System.DateTimeOffset.UtcNow) (Some itemId) (Database.Limit 1) ctx
   |> Task.map (Seq.tryHead)
+
+let sortByMostRecentMicroblog items getItemId getSecondarySortValue ctx = task {
+  let! items = items |> Seq.mapAsync (fun item -> task {
+    let! mostRecent = loadMostRecentMicroblogForItem (getItemId item) ctx
+    let mostRecent =
+      mostRecent
+      |> Option.map (fun mr -> mr.Microblog.DateAdded)
+      |> Option.defaultValue (DateTimeOffset.MinValue)
+    
+    return item, mostRecent
+  })
+  
+  return
+    items
+      .OrderByDescending(snd)
+      .ThenBy(fst >> getSecondarySortValue)
+    |> Seq.map fst
+}
 
 let loadById id ctx = task {
   let! existing = Database.getDocumentByTypeAndId documentType id ctx

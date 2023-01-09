@@ -159,9 +159,20 @@ module Handlers =
 
     let GET_index: HttpHandler =
         fun next ctx -> task {
-            let! games = ItemHelper.loadAllItems Game.documentType ctx |> Task.map (Seq.map ItemHelper.unwrapGame)
-            let! books = ItemHelper.loadAllItems Book.documentType ctx |> Task.map (Seq.map ItemHelper.unwrapBook)
-            let! projects = ItemHelper.loadAllItems Project.documentType ctx |> Task.map (Seq.map ItemHelper.unwrapProject)
+            let! games =
+                ItemHelper.loadAllItems Game.documentType ctx
+                |> Task.map (Seq.map ItemHelper.unwrapGame)
+                |> Task.bind (fun items -> Microblog.sortByMostRecentMicroblog items (fun i -> i.Id) (fun i -> i.Name) ctx)
+                
+            let! books =
+                ItemHelper.loadAllItems Book.documentType ctx
+                |> Task.map (Seq.map ItemHelper.unwrapBook)
+                |> Task.bind (fun items -> Microblog.sortByMostRecentMicroblog items (fun i -> i.Id) (fun i -> i.Title) ctx)
+                
+            let! projects =
+                ItemHelper.loadAllItems Project.documentType ctx
+                |> Task.map (Seq.map ItemHelper.unwrapProject)
+                |> Task.bind (fun items -> Microblog.sortByMostRecentMicroblog items (fun i -> i.Id) (fun i -> i.Name) ctx)
 
             let! gameTags = Tag.loadTagsForDocuments Game.documentType (games |> Seq.map (fun x -> x.Id)) ctx
             let! bookTags = Tag.loadTagsForDocuments Book.documentType (books |> Seq.map (fun x -> x.Id)) ctx
