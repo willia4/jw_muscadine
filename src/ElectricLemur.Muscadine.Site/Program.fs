@@ -224,9 +224,9 @@ let main args =
     let contentRoot = Directory.GetCurrentDirectory()
     let webRoot     = Path.Combine(contentRoot, "wwwroot")
     let builder = WebApplication.CreateBuilder(
-        let options = new WebApplicationOptions()
-        options.ContentRootPath <- contentRoot
-        options.WebRootPath <- webRoot
+        let options = new WebApplicationOptions(
+            ContentRootPath = contentRoot,
+            WebRootPath = webRoot)
         options)
 
     builder.Logging
