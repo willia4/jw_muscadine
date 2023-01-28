@@ -1,0 +1,89 @@
+@use "../colors";
+@use "../breakpoints";
+
+@use "../fonts";
+
+.page-content.resume {
+  section {
+    section {
+      margin-left: 30px;
+      margin-top: 15px;
+      
+      header {
+        font-size: 95%;
+      }
+      
+      div.section-summary {
+        margin-left: 5px;
+        padding-top: 5px;
+        p {
+          font-style: italic;
+          font-size: 80%;
+          margin-top: 0;
+          margin-bottom: 0; 
+        }
+      }
+    }
+
+  }
+  
+  header {
+    color: colors.$heading;
+    font-weight: bold;
+    font-size: 115%;
+  }
+  
+  header.sub-header {
+    
+    font-family: "Ubuntu Medium";
+    font-variant: small-caps;
+    text-transform: lowercase;
+  }
+  
+  ul {
+    li::marker {
+      color: colors.$primary;
+    }
+    
+    li {
+      
+      .list-item-heading {
+        color: colors.$heading;
+        text-transform: uppercase;
+        font-weight: bold;
+      }
+    }
+  }
+  
+  .download {
+    font-size: 80%;
+    margin-top: 50px;
+    padding-top: 15px;
+    border-top: solid 1px black;
+    
+    header {
+      color: #a6a6a6;  
+    }
+    
+    ul {
+      margin: 0;
+      padding-left: 25px;
+      padding-top: 5px;
+      
+      li {
+        margin-bottom: 3pt;
+      }
+      li::marker {
+        color: #a6a6a6; 
+      }
+    }
+    
+    a {
+      color: #a6a6a6;
+      
+      :visited {
+        color: #a6a6a6;
+      }
+    }
+  }
+}

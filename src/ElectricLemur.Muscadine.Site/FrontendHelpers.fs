@@ -91,6 +91,7 @@ let layout pageDefinition content extraCss ctx =
         title [] [ encodedText $"James Williams.me - %s{ pageHeader }" ]
         (Util.cssLinkTag "remedy.css" ctx)
         (Util.cssLinkTag "frontend.scss" ctx)
+        (Util.cssLinkTag "print.scss" ctx)
         script [ (_src "https://kit.fontawesome.com/84935c491f.js"); (_crossorigin "anonymous") ] []
         (Util.javascriptTag "main.js" ctx)
     ]

@@ -1,0 +1,78 @@
+# James Williams
+
+## About
+A senior developer with fifteen years of experience building out and supporting
+enterprise-scale CRM and transaction systems on Microsoft stacks while tackling
+issues like data modeling, reliability, customizability, and performance
+
+Interested in building new products on up-and-coming technologies, exploring
+the future of cloud deployments, and pursuing excellence while surrounded by a
+passionate team
+
+
+
+## Key Skills
+
+* DevOps-- Azure PaaS, Azure DevOps Pipelines, PowerShell & bash, Docker, Kubernetes
+* .Net-- C#, ASP.Net Core, async and parallel programming
+* Microsoft SQL Server -- performance tuning, advanced T-SQL, schema design
+* Web: Typescript & Javascript
+
+
+
+## Work History
+### Blackbaud, Inc.
+	Laureate Software Engineer
+	June 2005 -- Present
+
+#### Highlights
+
+Lead of the DevOps team charged with enabling and empowering teams to quickly
+leverage Azure's PaaS deployment options
+            
+First-line architectural consultant and subject matter expert for any team
+wanting to go forward with new Azure technologies
+
+Lead on the team charged with building and maintaining the framework platform
+for an enterprise CRM solution
+
+Made many performance improvements and feature enhancements to a powerful
+ad-hoc query engine
+
+Added dozens of features and resolved hundreds of bugs in legacy areas of the
+system
+
+
+
+## Side Projects
+A series of personal websites hosted as a set of Docker containers on a major
+cloud provider; both the infrastructure and sites are deployed and maintained
+via a custom CLI tool
+           
+A website for organizing a book club -- built on Ruby and Sinatra using
+Amazon Web Services and Redis for data storage
+
+Mac and iOS apps for generating secure, memorable passwords -- built in
+Objective-C and Swift
+
+A "branded" website for displaying photos and albums from a 3rd-party photo
+hosting service -- built in PHP with the SmugMug API for data storage
+
+This resume is implemented in F# using the Giraffe view engine and hosted in 
+an aforementioned Docker container
+
+
+
+## Education
+### Clemson University
+	August 2001 -- May 2005
+
+* BS in Computer Science
+* Minor in Mathematics
+
+
+
+## Contact
+* 843.323.0627
+* james@jameswilliams.me
+* http://jameswilliams.me

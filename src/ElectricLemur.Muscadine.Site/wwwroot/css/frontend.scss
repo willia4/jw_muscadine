@@ -111,6 +111,7 @@ body {
 
   @include breakpoints.tablet {
     font-size: 20px;
+    padding-left: 15px;
   }
 
   @include breakpoints.phone {
