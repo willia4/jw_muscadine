@@ -89,6 +89,9 @@ let webApp =
                     route "/" >=> Frontend.AboutMe.Handlers.GET_index
                     route "/under-construction" >=> redirectTo true "/under-construction/"
                     route "/under-construction/" >=> htmlView (Views.underConstruction ctx)
+                    
+                    route "/resume" >=> redirectTo true "/resume/"
+                    route "/resume/" >=> Resume.GET
 
                     route "/dev" >=> redirectTo true "/about/"
                     route "/dev/" >=> redirectTo true "/about/"

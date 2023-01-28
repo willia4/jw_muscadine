@@ -1,0 +1,42 @@
+@media print {
+  body {
+    color: black !important;
+  }
+  
+  #main-sidebar {
+    display: none;
+  }
+  
+  #main-logo {
+    display: none;
+  }
+  
+  #main-header {
+    border: none;
+    
+    padding-left: 0px;
+    img.mini-logo {
+      display: inline;
+    }
+  }
+  
+  a {
+    text-decoration: none;
+    color: black;
+  }
+  
+  #main-content {
+    border-left: 0;
+    padding: 15px;
+  }
+  
+  
+  .page-break {
+    page-break-after: always;
+    height: 0;
+  }
+  
+  .no-print {
+    display: none;
+  }
+}

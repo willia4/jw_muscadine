@@ -10,10 +10,15 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="5e706e6e-c429-48e6-964a-5fcce5d8df19" name="Changes" comment="Fix for build issues from new ASP.Net version">
+    <list default="true" id="5e706e6e-c429-48e6-964a-5fcce5d8df19" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/src/ElectricLemur.Muscadine.Site/Resume.fs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/ElectricLemur.Muscadine.Site/wwwroot/css/frontend/resume.scss" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/ElectricLemur.Muscadine.Site/wwwroot/css/print.scss" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.ElectricLemur.Muscadine/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.ElectricLemur.Muscadine/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/ElectricLemur.Muscadine.Site/Admin.fs" beforeDir="false" afterPath="$PROJECT_DIR$/src/ElectricLemur.Muscadine.Site/Admin.fs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/ElectricLemur.Muscadine.Site/Microblog.fs" beforeDir="false" afterPath="$PROJECT_DIR$/src/ElectricLemur.Muscadine.Site/Microblog.fs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/ElectricLemur.Muscadine.Site/ElectricLemur.Muscadine.Site.fsproj" beforeDir="false" afterPath="$PROJECT_DIR$/src/ElectricLemur.Muscadine.Site/ElectricLemur.Muscadine.Site.fsproj" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/ElectricLemur.Muscadine.Site/FrontendHelpers.fs" beforeDir="false" afterPath="$PROJECT_DIR$/src/ElectricLemur.Muscadine.Site/FrontendHelpers.fs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/ElectricLemur.Muscadine.Site/Program.fs" beforeDir="false" afterPath="$PROJECT_DIR$/src/ElectricLemur.Muscadine.Site/Program.fs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/ElectricLemur.Muscadine.Site/wwwroot/css/frontend.scss" beforeDir="false" afterPath="$PROJECT_DIR$/src/ElectricLemur.Muscadine.Site/wwwroot/css/frontend.scss" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -24,6 +29,7 @@
     <option name="RECENT_TEMPLATES">
       <list>
         <option value="TypeScript File" />
+        <option value="SCSS File" />
       </list>
     </option>
   </component>
@@ -35,7 +41,21 @@
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
+  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
+  "lastFilter": {
+    "state": "OPEN"
+  }
+}]]></component>
+  <component name="GithubPullRequestsUISettings">
+    <option name="selectedUrlAndAccountId">
+      <UrlAndAccount>
+        <option name="accountId" value="81dbf745-4336-4b4f-a649-b8df5f5cb81a" />
+        <option name="url" value="git@github.com:willia4/jw_muscadine.git" />
+      </UrlAndAccount>
+    </option>
+  </component>
   <component name="HighlightingSettingsPerFile">
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/20e5d8942f0986b7d404600077c2cfbf20800/a9/ac80e51d/HtmlElements.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/34dc24a3514049c58c87c253e5d564dd3c00/e3/f0ed9b33/PipelineExtensions.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/7073921508a744858eb7485a3012c2c114400/33/162383c1/ApplicationBuilderExtensions.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/7073921508a744858eb7485a3012c2c114400/88/630e0b5f/ServiceExtensions.cs" root0="SKIP_HIGHLIGHTING" />
@@ -61,8 +81,6 @@
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/dbb5ce4594d51031c5c5204a19aee2736d9d56a79cbfe7ca38b36db8ee385fd8/BsonDocument.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/ded4e626ee4c78774ce224cb22cf94eca4aaa6b5dedcbc4bb0f4ee6b8ef41b51/FilterDefinitionBuilder.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/df71358f7b7337a1eee3a65abe6d678dd9a065e256b8cc3fd44a2949754/Object.cs" root0="FORCE_HIGHLIGHTING" />
-    <setting file="mock://C:/Users/willia4/code/jw_muscadine/src/ElectricLemur.Muscadine.Site/Admin.fs" root0="SKIP_HIGHLIGHTING" />
-    <setting file="mock://C:/Users/willia4/code/jw_muscadine/src/ElectricLemur.Muscadine.Site/Program.fs" root0="SKIP_HIGHLIGHTING" />
   </component>
   <component name="MarkdownSettingsMigration">
     <option name="stateVersion" value="1" />
@@ -74,26 +92,27 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;ts.external.directory.path&quot;: &quot;C:\\Users\\willia4\\AppData\\Local\\JetBrains\\Toolbox\\apps\\Rider\\ch-0\\221.5591.20\\plugins\\JavaScriptLanguage\\jsLanguageServicesImpl\\external&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "WebServerToolWindowFactoryState": "false",
+    "list.type.of.created.stylesheet": "SCSS",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "ts.external.directory.path": "C:\\Users\\willia4\\AppData\\Local\\JetBrains\\Toolbox\\apps\\Rider\\ch-0\\221.5591.20\\plugins\\JavaScriptLanguage\\jsLanguageServicesImpl\\external",
+    "vue.rearranger.settings.migration": "true"
   },
-  &quot;keyToStringList&quot;: {
-    &quot;rider.external.source.directories&quot;: [
-      &quot;C:\\Users\\willia4\\AppData\\Roaming\\JetBrains\\Rider2022.3\\resharper-host\\DecompilerCache&quot;,
-      &quot;C:\\Users\\willia4\\AppData\\Roaming\\JetBrains\\Rider2022.3\\resharper-host\\SourcesCache&quot;,
-      &quot;C:\\Users\\willia4\\AppData\\Local\\Symbols\\src&quot;
+  "keyToStringList": {
+    "rider.external.source.directories": [
+      "C:\\Users\\willia4\\AppData\\Roaming\\JetBrains\\Rider2022.3\\resharper-host\\DecompilerCache",
+      "C:\\Users\\willia4\\AppData\\Roaming\\JetBrains\\Rider2022.3\\resharper-host\\SourcesCache",
+      "C:\\Users\\willia4\\AppData\\Local\\Symbols\\src"
     ]
   }
-}</component>
+}]]></component>
   <component name="RunManager" selected=".NET Project.ElectricLemur.Muscadine.Site">
     <configuration name="ElectricLemur.Muscadine.Site" type="DotNetProject" factoryName=".NET Project">
       <option name="EXE_PATH" value="$PROJECT_DIR$/src/ElectricLemur.Muscadine.Site/bin/Debug/net6.0/ElectricLemur.Muscadine.Site.App.exe" />
@@ -170,7 +189,9 @@
       <workItem from="1668953822385" duration="735000" />
       <workItem from="1671294565962" duration="697000" />
       <workItem from="1672688478009" duration="7000" />
-      <workItem from="1673303694630" duration="1687000" />
+      <workItem from="1673303694630" duration="3118000" />
+      <workItem from="1673997370972" duration="611000" />
+      <workItem from="1674919386912" duration="8818000" />
     </task>
     <task id="LOCAL-00001" summary="Add some headers">
       <created>1665866111898</created>
@@ -214,7 +235,14 @@
       <option name="project" value="LOCAL" />
       <updated>1673305259732</updated>
     </task>
-    <option name="localTasksCounter" value="7" />
+    <task id="LOCAL-00007" summary="In admin interface, sort items intelligently: most recently updated is at the top. Others are alphabetical.">
+      <created>1673306234788</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1673306234788</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -239,6 +267,7 @@
     <MESSAGE value="Add Mastodon link to social media icons" />
     <MESSAGE value="Add rel=me link to forlorn.computer" />
     <MESSAGE value="Fix for build issues from new ASP.Net version" />
-    <option name="LAST_COMMIT_MESSAGE" value="Fix for build issues from new ASP.Net version" />
+    <MESSAGE value="In admin interface, sort items intelligently: most recently updated is at the top. Others are alphabetical." />
+    <option name="LAST_COMMIT_MESSAGE" value="In admin interface, sort items intelligently: most recently updated is at the top. Others are alphabetical." />
   </component>
 </project>

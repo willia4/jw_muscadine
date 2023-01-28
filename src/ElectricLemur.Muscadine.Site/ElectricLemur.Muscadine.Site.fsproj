@@ -55,6 +55,7 @@
     <Compile Include="AdminBook.fs" />
     <Compile Include="AdminProject.fs" />
     <Compile Include="Admin.fs" />
+    <Compile Include="Resume.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
   <ItemGroup>
