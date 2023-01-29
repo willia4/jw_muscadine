@@ -1,4 +1,5 @@
 module ElectricLemur.Muscadine.Site.ItemHelper
+open ElectricLemur.Muscadine.Site.FrontendHelpers
 open Giraffe
 open Giraffe.ViewEngine
 
@@ -343,7 +344,7 @@ module Handlers =
         let! otherCards = others |> makeAndSortCards
 
         let content = Views.makeContentView itemDocumentType inProgressCards backlogCards finishedCards otherCards
-        let pageHtml = FrontendHelpers.layout (pageDefinitionForDocumentType itemDocumentType) content [ "frontend/item_cards.scss" ] ctx
+        let pageHtml = FrontendHelpers.layout (pageDefinitionForDocumentType itemDocumentType) content [ PageExtra.CSS "frontend/item_cards.scss" ] ctx
 
         return! htmlView pageHtml next ctx
       }
@@ -369,7 +370,7 @@ module Handlers =
 
       match processedContent with
       | Some (item, content) ->
-          let pageHtml = FrontendHelpers.layout (pageDefinition item) content [ "frontend/item_page.scss" ] ctx
+          let pageHtml = FrontendHelpers.layout (pageDefinition item) content [ PageExtra.CSS "frontend/item_page.scss" ] ctx
           return! (htmlView pageHtml next ctx)
       | _ -> return! (setStatusCode 404 >=> text "Page not found") next ctx
     }
@@ -402,7 +403,7 @@ module Handlers =
           | None -> None
 
         let content = FrontendHelpers.makeItemPage (name item) itemLink subtitle microblog.Microblog.Text (icon item) [] tags None ctx
-        let pageHtml = FrontendHelpers.layout (pageDefinition item) content [ "frontend/item_page.scss" ] ctx
+        let pageHtml = FrontendHelpers.layout (pageDefinition item) content [ PageExtra.CSS "frontend/item_page.scss" ] ctx
         return! (htmlView pageHtml next ctx)
       | _ -> return! (setStatusCode 404 >=> text "Page not found") next ctx
     }

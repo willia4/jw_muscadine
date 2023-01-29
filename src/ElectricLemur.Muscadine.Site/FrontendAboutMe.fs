@@ -105,7 +105,7 @@ module Handlers =
       let! recentMicroblogs = Microblog.loadRecentMicroblogs (System.DateTimeOffset.UtcNow) (Database.Limit 7) ctx
 
       let content = aboutMeContent recentMicroblogs ctx
-      let pageHtml = FrontendHelpers.layout FrontendHelpers.PageDefinitions.AboutMe content [ "frontend/about_me.scss" ] ctx
+      let pageHtml = FrontendHelpers.layout FrontendHelpers.PageDefinitions.AboutMe content [ FrontendHelpers.PageExtra.CSS  "frontend/about_me.scss" ] ctx
 
       return! htmlView pageHtml next ctx
     }
@@ -114,7 +114,11 @@ module Handlers =
     fun next (ctx: HttpContext) -> task {
       let! recentMicroblogs = Microblog.loadRecentMicroblogs (System.DateTimeOffset.UtcNow) (Database.NoLimit) ctx
       let content = allMicroblogsContent recentMicroblogs ctx
-      let pageHtml = FrontendHelpers.layout (FrontendHelpers.PageDefinitions.Custom ("updates", "All Updates", "All Updates", FrontendHelpers.PageDefinitions.AboutMe) ) content [ "frontend/about_me.scss" ] ctx
+      let pageHtml = FrontendHelpers.layout
+                       (FrontendHelpers.PageDefinitions.Custom ("updates", "All Updates", "All Updates", FrontendHelpers.PageDefinitions.AboutMe) )
+                       content
+                       [ FrontendHelpers.PageExtra.CSS "frontend/about_me.scss" ]
+                       ctx
 
       return! htmlView pageHtml next ctx
     }
@@ -141,7 +145,11 @@ module Handlers =
           | ItemHelper.ItemDocumentType.ProjectDocumentType -> FrontendHelpers.PageDefinitions.Projects
           | ItemHelper.ItemDocumentType.BookDocumentType -> FrontendHelpers.PageDefinitions.Books
 
-        let pageHtml = FrontendHelpers.layout (FrontendHelpers.PageDefinitions.Custom ($"updates/%s{slugString}", longTitle, shortTitle, activeButtonPage)) content [ "frontend/about_me.scss" ] ctx
+        let pageHtml = FrontendHelpers.layout
+                         (FrontendHelpers.PageDefinitions.Custom ($"updates/%s{slugString}", longTitle, shortTitle, activeButtonPage))
+                         content
+                         [ FrontendHelpers.PageExtra.CSS  "frontend/about_me.scss" ]
+                         ctx
 
         return! htmlView pageHtml next ctx
       | None ->

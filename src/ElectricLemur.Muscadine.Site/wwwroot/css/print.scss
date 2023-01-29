@@ -28,8 +28,21 @@
   #main-content {
     border-left: 0;
     padding: 15px;
+    width: 100%;
+    height: 100%;
   }
   
+  header {
+    page-break-after: avoid;
+  }
+  
+  main {
+    page-break-before: avoid;
+  }
+  
+  div.main-content {
+    page-break-before: avoid;
+  }
   
   .page-break {
     page-break-after: always;

@@ -69,6 +69,10 @@ module PageDefinitions =
 type ItemLink =
   | GitHubLink of string
 
+type PageExtra =
+  | CSS of string
+  | JavaScript of string
+
 let layout pageDefinition content extraCss ctx =
   let homeUrl = Util.baseUrl ctx
   let pageHeader = PageDefinitions.pageTitle pageDefinition
@@ -95,7 +99,12 @@ let layout pageDefinition content extraCss ctx =
         script [ (_src "https://kit.fontawesome.com/84935c491f.js"); (_crossorigin "anonymous") ] []
         (Util.javascriptTag "main.js" ctx)
     ]
-    |> Seq.prepend (extraCss |> Seq.map (fun css -> Util.cssLinkTag css ctx))
+    |> Seq.prepend (
+      extraCss
+      |> Seq.map (fun extra ->
+                    match extra with
+                    | CSS css -> Util.cssLinkTag css ctx
+                    | JavaScript js -> Util.javascriptTag js ctx))
     |> Seq.toList
 
   html []

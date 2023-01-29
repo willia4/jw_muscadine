@@ -3,9 +3,78 @@
 
 @use "../fonts";
 
+aside {
+  display: none;
+}
+
+button.annotation-button {
+  margin-left: 10px;
+  font-size: 60%;
+  opacity: 60%;
+  background: none;
+  border: none;
+  text-decoration: underline;
+}
+
 .page-content.resume {
+  section.has-annotation {
+    display: flex;
+    flex-flow: wrap;
+    
+    margin-top: 15px;
+    margin-bottom: 30px;
+    header {
+      display: block;
+      width: 100%;
+      order: 1;
+    }
+    
+    div.section-container {
+      width: 60%;
+      padding-right: 15px;
+      order: 2;
+
+      @include breakpoints.phone {
+        order: 3;
+        width: 100%;
+        padding-right: 0;
+      }
+    }
+    
+    aside {
+      display: block;
+      order: 3;
+      
+      //background-color: #d6d6d6;
+      
+      //background: linear-gradient(90deg, rgba(251,251,251,1) 61%, rgba(240,240,240,1) 100%);
+      font-family: "Lora";
+      font-style: italic;
+      border-left: 1px solid colors.$primary;
+      padding: 10px;
+      width: 40%;
+      
+      
+      @include breakpoints.phone {
+        background: rgb(251,251,251);
+        order: 2;
+        width: 100%;
+        margin-top: 15px;
+        //border-left: 1px solid colors.$primary;
+        //border-bottom: 1px solid colors.$primary;
+        border: 0;
+        filter: drop-shadow(2px 2px 5px colors.$heading);
+      }
+    }
+  }
+  
   section {
+    div.section-container {
+      width: 100%;
+    }
+    
     section {
+      
       margin-left: 30px;
       margin-top: 15px;
       
@@ -86,4 +155,6 @@
       }
     }
   }
+  
+
 }
