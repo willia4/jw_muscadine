@@ -84,13 +84,15 @@ let resumeContent =
                                    product versions or recommending configuration changes to internal customer environments."
                             ]
 
-                            header [] [ encodedText "Blackbaud, Inc." ]
-                            div [ _class "section-container" ] [
+                            header [] [
+                                encodedText "Blackbaud, Inc."
                                 div [ _class  "section-summary" ] [
                                     s "Laureate Software Engineer"
                                     s "June 2005 — Present"
                                 ]
-                                
+                            ]
+                            
+                            div [ _class "section-container" ] [
                                 header [ _class "sub-header" ] [ s "Highlights" ]
                                 div [] [
                                     s "Lead of the DevOps team charged with enabling and empowering teams to
@@ -149,10 +151,13 @@ let resumeContent =
                     div [] [
                         section [ _class "sub-section" ] [
                             div [ _class "section-container" ] [
-                                header [] [ encodedText "Clemson University" ]
-                                div [ _class "section-summary" ] [
-                                    s "August 2001 — May 2005"
+                                header [] [
+                                             encodedText "Clemson University"
+                                             div [ _class "section-summary" ] [
+                                                s "August 2001 — May 2005"
+                                            ]
                                 ]
+                                
                                 ul [] [
                                     li [] [ encodedText "BS in Computer Science" ]
                                     li [] [ encodedText "Minor in Mathematics" ]

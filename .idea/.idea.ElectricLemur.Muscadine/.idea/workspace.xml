@@ -10,16 +10,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="5e706e6e-c429-48e6-964a-5fcce5d8df19" name="Changes" comment="Port existing resume content to new site and design">
-      <change afterPath="$PROJECT_DIR$/src/ElectricLemur.Muscadine.Site/wwwroot/js/resume.js" afterDir="false" />
+    <list default="true" id="5e706e6e-c429-48e6-964a-5fcce5d8df19" name="Changes" comment="Try to fix annotation rendering on real iPhones">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.ElectricLemur.Muscadine/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.ElectricLemur.Muscadine/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ElectricLemur.Muscadine.sln.DotSettings" beforeDir="false" afterPath="$PROJECT_DIR$/ElectricLemur.Muscadine.sln.DotSettings" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/ElectricLemur.Muscadine.Site/FrontendAboutMe.fs" beforeDir="false" afterPath="$PROJECT_DIR$/src/ElectricLemur.Muscadine.Site/FrontendAboutMe.fs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/ElectricLemur.Muscadine.Site/FrontendColophon.fs" beforeDir="false" afterPath="$PROJECT_DIR$/src/ElectricLemur.Muscadine.Site/FrontendColophon.fs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/ElectricLemur.Muscadine.Site/FrontendHelpers.fs" beforeDir="false" afterPath="$PROJECT_DIR$/src/ElectricLemur.Muscadine.Site/FrontendHelpers.fs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/ElectricLemur.Muscadine.Site/ItemHelper.fs" beforeDir="false" afterPath="$PROJECT_DIR$/src/ElectricLemur.Muscadine.Site/ItemHelper.fs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/ElectricLemur.Muscadine.Site/Resume.fs" beforeDir="false" afterPath="$PROJECT_DIR$/src/ElectricLemur.Muscadine.Site/Resume.fs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/ElectricLemur.Muscadine.Site/wwwroot/css/frontend/resume.scss" beforeDir="false" afterPath="$PROJECT_DIR$/src/ElectricLemur.Muscadine.Site/wwwroot/css/frontend/resume.scss" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/ElectricLemur.Muscadine.Site/wwwroot/js/resume.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/ElectricLemur.Muscadine.Site/wwwroot/js/resume.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -193,7 +188,7 @@
       <workItem from="1672688478009" duration="7000" />
       <workItem from="1673303694630" duration="3118000" />
       <workItem from="1673997370972" duration="611000" />
-      <workItem from="1674919386912" duration="16277000" />
+      <workItem from="1674919386912" duration="18326000" />
     </task>
     <task id="LOCAL-00001" summary="Add some headers">
       <created>1665866111898</created>
@@ -251,7 +246,21 @@
       <option name="project" value="LOCAL" />
       <updated>1674931921262</updated>
     </task>
-    <option name="localTasksCounter" value="9" />
+    <task id="LOCAL-00009" summary="Add annotations to resume">
+      <created>1675035573504</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1675035573504</updated>
+    </task>
+    <task id="LOCAL-00010" summary="Try to fix annotation rendering on real iPhones">
+      <created>1675036014159</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1675036014159</updated>
+    </task>
+    <option name="localTasksCounter" value="11" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -278,6 +287,8 @@
     <MESSAGE value="Fix for build issues from new ASP.Net version" />
     <MESSAGE value="In admin interface, sort items intelligently: most recently updated is at the top. Others are alphabetical." />
     <MESSAGE value="Port existing resume content to new site and design" />
-    <option name="LAST_COMMIT_MESSAGE" value="Port existing resume content to new site and design" />
+    <MESSAGE value="Add annotations to resume" />
+    <MESSAGE value="Try to fix annotation rendering on real iPhones" />
+    <option name="LAST_COMMIT_MESSAGE" value="Try to fix annotation rendering on real iPhones" />
   </component>
 </project>

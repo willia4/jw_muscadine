@@ -61,7 +61,21 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         });
         
-        annotation.header.appendChild(toggleButton);
+        const headerChildren = Array.from(annotation.header.childNodes);
+        const firstHeaderTextNodeIndex = headerChildren.findIndex(c => c.nodeName === '#text');
+        const afterFirstHeaderTextNode = 
+            firstHeaderTextNodeIndex <= (headerChildren.length - 2)
+            ? headerChildren[firstHeaderTextNodeIndex + 1]
+            : undefined;
+        
+        if (afterFirstHeaderTextNode) {
+            annotation.header.insertBefore(toggleButton, afterFirstHeaderTextNode);
+        } else {
+            annotation.header.appendChild(toggleButton);
+        }
+        if (headerChildren.length === 1) {
+            annotation.header.appendChild(toggleButton);    
+        }
     }
     
     findAnnotations().forEach(configureAnnotation);
