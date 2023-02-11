@@ -3,11 +3,13 @@ module ElectricLemur.Muscadine.Site.App
 open System
 open System.IO
 open System.Linq
+open Microsoft.AspNetCore.CookiePolicy
 open Microsoft.AspNetCore.Http
 open Microsoft.AspNetCore.Builder
 open Microsoft.AspNetCore.Cors.Infrastructure
 open Microsoft.AspNetCore.Hosting
 open Microsoft.AspNetCore.Authentication.Cookies
+open Microsoft.AspNetCore.DataProtection
 open Microsoft.AspNetCore.Identity
 open Microsoft.Extensions.Configuration
 open Microsoft.Extensions.Hosting
@@ -227,7 +229,7 @@ let main args =
     let contentRoot = Directory.GetCurrentDirectory()
     let webRoot     = Path.Combine(contentRoot, "wwwroot")
     let builder = WebApplication.CreateBuilder(
-        let options = new WebApplicationOptions(
+        let options = WebApplicationOptions(
             ContentRootPath = contentRoot,
             WebRootPath = webRoot)
         options)
@@ -236,12 +238,24 @@ let main args =
         .AddConsole()
         .AddDebug() |> ignore
 
-    builder.Services
+    let services = builder.Services
+    services
+        .AddDataProtection()
+        .PersistKeysToAzureBlobStorage(
+            Azure.StorageAccount.getBlobSasUriForBlob "data-protection" "data-protection" builder.Configuration)
+        .ProtectKeysWithAzureKeyVault((
+            let uri = $"https://%s{Azure.getKeyVaultName builder.Configuration}.vault.azure.net/keys/data-protection/" 
+            Uri uri),
+             Azure.getAzureCredentials builder.Configuration)
+        .SetApplicationName("jameswilliams-me")
+        |> ignore
+
+    services
         .AddCors()
         .AddGiraffe()
         .AddMemoryCache()
         .AddWebOptimizer(fun pipeline ->
-            let options = new WebOptimizer.Sass.WebOptimizerScssOptions()
+            let options = WebOptimizer.Sass.WebOptimizerScssOptions()
             let minifyCss = builder.Configuration.GetValue<bool>("minifyCss", true)
             let minifyJavascript = builder.Configuration.GetValue<bool>("minifyJavascript", true)
 
@@ -252,9 +266,11 @@ let main args =
                 pipeline.MinifyJsFiles() |> ignore)
         .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
         .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, fun options ->
-            options.ExpireTimeSpan <- TimeSpan.FromDays(15)
+            options.ExpireTimeSpan <- TimeSpan.FromDays(15.0 * 365.0)
             options.SlidingExpiration <- true
             options.AccessDeniedPath <- "/Forbidden"
+            options.Cookie.Name <- "jameswilliams-me-auth"
+            options.Cookie.IsEssential <- true
         )
         |> ignore
 
@@ -270,7 +286,7 @@ let main args =
         .UseWebOptimizer()
     |> ignore
 
-    let staticFilesOptions = new StaticFileOptions()
+    let staticFilesOptions = StaticFileOptions()
     staticFilesOptions.OnPrepareResponse <- (fun ctx ->
         let isImage (fileName: string) =
             let fileName = fileName.ToLowerInvariant()
@@ -281,8 +297,8 @@ let main args =
         if cacheEnabled then
             let fileName = ctx.File.Name
 
-            if (fileName.EndsWith(".ttf")) || (isImage fileName) then
-                let cacheAge = System.TimeSpan.FromDays(30).TotalSeconds |> int
+            if fileName.EndsWith(".ttf") || (isImage fileName) then
+                let cacheAge = TimeSpan.FromDays(30).TotalSeconds |> int
 
                 ctx.Context.Response.Headers.Append(
                     "Cache-Control", $"max-age=%d{cacheAge}, public")

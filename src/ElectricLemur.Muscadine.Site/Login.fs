@@ -167,13 +167,13 @@ let postHandler loginRoute adminRoute (credentialValidator: string option -> str
         if redirectIsValid (Some redirect) then
             if valid then
                 let claims = [ 
-                    (new Claim(ClaimTypes.Email, (email |> Option.defaultValue "")))
-                    (new Claim(ClaimTypes.Role, "Admin"))
+                    (Claim(ClaimTypes.Email, (email |> Option.defaultValue "")))
+                    (Claim(ClaimTypes.Role, "Admin"))
                 ]
-                let identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme)
-                let claimsPrincipal = new ClaimsPrincipal(identity)
+                let identity = ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme)
+                let claimsPrincipal = ClaimsPrincipal(identity)
 
-                let authProperties = new AuthenticationProperties()
+                let authProperties = AuthenticationProperties()
                 authProperties.AllowRefresh <- true
                 authProperties.IsPersistent <- true
                 authProperties.IssuedUtc <- System.DateTimeOffset.UtcNow

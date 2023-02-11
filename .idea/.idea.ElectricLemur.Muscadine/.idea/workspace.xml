@@ -10,11 +10,14 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="5e706e6e-c429-48e6-964a-5fcce5d8df19" name="Changes" comment="Try to fix annotation rendering on real iPhones">
+    <list default="true" id="5e706e6e-c429-48e6-964a-5fcce5d8df19" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/src/ElectricLemur.Muscadine.Site/Azure.fs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/ElectricLemur.Muscadine.Site/Configuration.fs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.ElectricLemur.Muscadine/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.ElectricLemur.Muscadine/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/ElectricLemur.Muscadine.Site/Resume.fs" beforeDir="false" afterPath="$PROJECT_DIR$/src/ElectricLemur.Muscadine.Site/Resume.fs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/ElectricLemur.Muscadine.Site/wwwroot/css/frontend/resume.scss" beforeDir="false" afterPath="$PROJECT_DIR$/src/ElectricLemur.Muscadine.Site/wwwroot/css/frontend/resume.scss" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/ElectricLemur.Muscadine.Site/wwwroot/js/resume.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/ElectricLemur.Muscadine.Site/wwwroot/js/resume.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/ElectricLemur.Muscadine.Site/ElectricLemur.Muscadine.Site.fsproj" beforeDir="false" afterPath="$PROJECT_DIR$/src/ElectricLemur.Muscadine.Site/ElectricLemur.Muscadine.Site.fsproj" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/ElectricLemur.Muscadine.Site/Login.fs" beforeDir="false" afterPath="$PROJECT_DIR$/src/ElectricLemur.Muscadine.Site/Login.fs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/ElectricLemur.Muscadine.Site/Program.fs" beforeDir="false" afterPath="$PROJECT_DIR$/src/ElectricLemur.Muscadine.Site/Program.fs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/ElectricLemur.Muscadine.Site/appsettings.json" beforeDir="false" afterPath="$PROJECT_DIR$/src/ElectricLemur.Muscadine.Site/appsettings.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -56,28 +59,43 @@
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/34dc24a3514049c58c87c253e5d564dd3c00/e3/f0ed9b33/PipelineExtensions.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/7073921508a744858eb7485a3012c2c114400/33/162383c1/ApplicationBuilderExtensions.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/7073921508a744858eb7485a3012c2c114400/88/630e0b5f/ServiceExtensions.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/779f7dcc3e9748e6b90956ec86a4f2453da80/71/3c34292e/Uri.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/156840c93326201f902ab82896122572d570f026aa1d7559903cd0456b843d28/CookiePolicyOptions.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/1c5ae7aa27a87d65dd39429e7e28c412409121c9aed3db8bf37e366e77ed4a/HttpContext.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/1f18529517a1d3c051def436a4696cc374fd1877837b7e6cd9efc464122ef341/AsyncMethodBuilderCore.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/2314e877e9ca6da9c5aa589e3020e7ab811721145aaf93aea44e8625a279c/BsonExtensionMethods.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/2f331d466186bf8382d734c4a7d2ce226b8477e264187e7f3735dbb47973/Core.fs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/32388bbcf2a67be4e48562988977977f9e905c7cbebf838c7f23f8df29bd/FilterDefinition.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/3839fc8fee5ae62538a4469ed86bbba1ccd15d4e0da63bba779abe1719da3/IConfiguration.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/3d226920f1e56a1c6a6847d429f9315691fa656d82581f21c5882b47f57a193/MongoCredential.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/3ea95343b9387b73062a9b61b7538f826c54ce3529632b4472ba4494044d23/AsyncTaskMethodBuilderT.cs" root0="SKIP_HIGHLIGHTING" />
-    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/42794acf9c224fece37166245d579235973727b16c1931c5ccd329df39ad78/ConfigurationBinder.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/42794acf9c224fece37166245d579235973727b16c1931c5ccd329df39ad78/ConfigurationBinder.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/42f446249c540e575ee807af64b30effd322eaf61445b169245c4d53c35f7a/BlobContainerSasPermissions.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/4482f15acbb02cda9459c9bd5b1695d52b687db3b416a4b094a852d634d492eb/list.fs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/531c96b8e65a42c13fbfb71e2d0e4c1a7acc0fc515d33df164e682b2a18/IConfigurationSection.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/553c91c7516c62767c8e482f456f10cb7a7c89b87bb22fba815d37ecf118a9e/Path.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/5592459daee911b0fbdd4d38786638941dc3745b9512977cdd1e69fa9feca4f/BsonSerializerRegistry.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/575c31ecc35a636b6f962cb71d53992552941a18982aae1c8e6c16305cc3761b/ExceptionDispatchInfo.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/5ab551d3828e732dc1f08dc9f02ba5e1fdfc2272687cc741d58189852ca708d/SortDefinition.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/5bc503682ccb17c6b67d35e1c2743fe4073145d18f3c5385c99b422301115/AuthenticationServiceCollectionExtensions.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/6a217be970b9794c15966494d96ff0b01347ef9dc0774f13a5457b09bc1a0/Builders.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/7ae1d944d557dfac4e41c4c4518ee2afb845c9a63da7bbf8c63a72d36fda393/IMongoCollection.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/8075cedce34eb6cbd6483e3133c7c7f9abb52e1d2ec756c12fe823473ea694/BlobSasBuilder.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/83c1a3ef82b7e8b399736ff3d56671c99c6f8753fc88c4b087801781b5a6abed/CookiePolicyAppBuilderExtensions.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/8fdad544e2728ae7629f3f7dce31973e77d7b513b4a1f44bffea3eb42c9848/FindOptions.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/9555881785da8918c1fdc22b936cf1b76ae8dc9ab1ad51819915b85840fc5978/AuthenticationMiddleware.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/a4af3fabc41ff23138d52fdccc851da7f4f67136fe81cdb2c1d4a448e785147/IMongoCollectionExtensions.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/a6a4fb7ae62557b1ddbba529662b57eb8a9f3208f98f0edd87517fe9cb4d6a/AuthAppBuilderExtensions.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/a8b3625d2e2e1ca3cdb5e35a44c6eaa5634d969bd2a1ce6bdb9052bf64309ca1/option.fs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/be423d85679b2858c931031f36f4d779e7cfc1bfca1d62787ecbbae4e32383/DefaultHttpContext.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/d61e8dfedf2c74c884a5ada36296844863d1396ce655a96c44434119529432b/HttpOnlyPolicy.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/d7e72b88eefffe60325c132e2d76a8f77b4ef388fe7c2583412198fdea7b29f1/BsonSerializer.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/dbb5ce4594d51031c5c5204a19aee2736d9d56a79cbfe7ca38b36db8ee385fd8/BsonDocument.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/ded4e626ee4c78774ce224cb22cf94eca4aaa6b5dedcbc4bb0f4ee6b8ef41b51/FilterDefinitionBuilder.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/df71358f7b7337a1eee3a65abe6d678dd9a065e256b8cc3fd44a2949754/Object.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/f0a1fdc9e0ae83be4a706230c2847253ff8714631a12ead8eb7428cfd948edca/CookieExtensions.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock://C:/Users/willia4/code/jw_muscadine/src/ElectricLemur.Muscadine.Site/Login.fs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="mock://C:/Users/willia4/code/jw_muscadine/src/ElectricLemur.Muscadine.Site/Program.fs" root0="SKIP_HIGHLIGHTING" />
   </component>
   <component name="MarkdownSettingsMigration">
     <option name="stateVersion" value="1" />
@@ -91,14 +109,17 @@
   </component>
   <component name="PropertiesComponent">{
   &quot;keyToString&quot;: {
+    &quot;DebuggerViewTab_PTCS_LastProportionKey&quot;: &quot;0.0&quot;,
     &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
+    &quot;XThreadsFramesViewSplitterKey&quot;: &quot;0.5006658&quot;,
     &quot;list.type.of.created.stylesheet&quot;: &quot;SCSS&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
     &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;reference.settings.ide.settings.new.ui&quot;,
     &quot;ts.external.directory.path&quot;: &quot;C:\\Users\\willia4\\AppData\\Local\\JetBrains\\Toolbox\\apps\\Rider\\ch-0\\221.5591.20\\plugins\\JavaScriptLanguage\\jsLanguageServicesImpl\\external&quot;,
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   },
@@ -188,7 +209,14 @@
       <workItem from="1672688478009" duration="7000" />
       <workItem from="1673303694630" duration="3118000" />
       <workItem from="1673997370972" duration="611000" />
-      <workItem from="1674919386912" duration="18326000" />
+      <workItem from="1674919386912" duration="20256000" />
+      <workItem from="1675206136611" duration="679000" />
+      <workItem from="1675606253799" duration="7051000" />
+      <workItem from="1675621064668" duration="56000" />
+      <workItem from="1675621491687" duration="35000" />
+      <workItem from="1675636408446" duration="1299000" />
+      <workItem from="1675637786040" duration="917000" />
+      <workItem from="1676153335295" duration="2226000" />
     </task>
     <task id="LOCAL-00001" summary="Add some headers">
       <created>1665866111898</created>
@@ -260,7 +288,14 @@
       <option name="project" value="LOCAL" />
       <updated>1675036014159</updated>
     </task>
-    <option name="localTasksCounter" value="11" />
+    <task id="LOCAL-00011" summary="Improve display of subheadings, especially on phones">
+      <created>1675037029241</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1675037029241</updated>
+    </task>
+    <option name="localTasksCounter" value="12" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -289,6 +324,7 @@
     <MESSAGE value="Port existing resume content to new site and design" />
     <MESSAGE value="Add annotations to resume" />
     <MESSAGE value="Try to fix annotation rendering on real iPhones" />
-    <option name="LAST_COMMIT_MESSAGE" value="Try to fix annotation rendering on real iPhones" />
+    <MESSAGE value="Improve display of subheadings, especially on phones" />
+    <option name="LAST_COMMIT_MESSAGE" value="Improve display of subheadings, especially on phones" />
   </component>
 </project>
