@@ -25,14 +25,13 @@ let resumeContent =
                 header [] [ encodedText "About" ]
                 div [ _class "section-container" ] [
                     div [] [
-                       s "A senior developer with fifteen years of experience building out
-                                           and supporting enterprise-scale CRM and transaction systems on Microsoft
-                                           stacks while tackling issues like data modeling, reliability,
-                                           customizability, and performance"
+                       s "James is a software architect and senior developer in Charleston, SC. He has eighteen years of experience designing, building,
+                          and supporting an automated service delivery and cloud provisioning system for hundreds of microservice deployments in Azure
+                          and, before that, an enterprise-scale CRM and transaction system on a .NET and Microsoft SQL Server tech stack"
                        
-                       s "Interested in building new products on up-and-coming technologies, exploring
-                                           the future of cloud deployments, and pursuing excellence while surrounded by a
-                                           passionate team"
+                       s "He is interested in building new products on up-and-coming technologies, exploring
+                           the future of cloud deployments, and solving interesting problems alongside a
+                           passionate team"
                     ]
                 ]
             ]
@@ -43,10 +42,10 @@ let resumeContent =
                 div [ _class "section-container" ] [
                     div [] [
                         ul [] [
-                            keyValueListItem "DevOps" "Azure PaaS, Azure DevOps Pipelines, PowerShell & bash, Docker, Kubernetes"
-                            keyValueListItem ".NET" "C#, ASP.Net Core, async and parallel programming"
-                            keyValueListItem "Microsoft SQL Server" "performance tuning, advanced T-SQL, schema design"
+                            keyValueListItem "DevOps" "Kubernetes, Istio, Docker, Azure PaaS, Azure DevOps Pipelines, PowerShell & bash"
+                            keyValueListItem ".NET" "C#, F#, ASP.Net Core, distributed and parallel programming"
                             keyValueListItem "Web" "Typescript & Javascript"
+                            keyValueListItem "Microsoft SQL Server" "performance tuning, advanced T-SQL, schema design"
                         ]
                     ]
                 ]
@@ -87,7 +86,7 @@ let resumeContent =
                             header [] [
                                 encodedText "Blackbaud, Inc."
                                 div [ _class  "section-summary" ] [
-                                    s "Laureate Software Engineer"
+                                    s "Application Architect, Laureate Software Engineer"
                                     s "June 2005 — Present"
                                 ]
                             ]
@@ -95,6 +94,8 @@ let resumeContent =
                             div [ _class "section-container" ] [
                                 header [ _class "sub-header" ] [ s "Highlights" ]
                                 div [] [
+                                    s "Designed and delivered a DDoS protection solution for Kubernetes deployments in Azure"
+                                    s "Assisted with the design and led the implementation of a transition from company-wide Azure App Service deployments to Kubernetes-based deployments using Azure AKS"
                                     s "Lead of the DevOps team charged with enabling and empowering teams to
                                        quickly leverage Azure's PaaS deployment options"
                                     s "First-line architectural consultant and subject matter expert for any
