@@ -86,8 +86,60 @@ let webApp =
             |> List.fold (fun n (k, v) -> n >=> setHttpHeader k v) doNothing
 
         choose [
-            GET >=> setCommonHeaders >=>
-                choose [
+            GET >=> setCommonHeaders >=> (
+                let makeItemRoutes singularName pluralName documentType indexHandler microblogHandlerBuilder itemPageHandlerBuilder =
+                    // this is difficult to do because routef needs a PrintfFormat and not a string.
+                    // and because interpolated strings can't use %s just by themselves
+                    
+                    let pctS= "%s"
+                    // "/books/%s/microblogs/%s"
+                    // "/books/%s/microblogs/%s/"
+                    let microblogRedirect = Microsoft.FSharp.Core.PrintfFormat<_,_,_,_, string*string> ($"/%s{pluralName}/%s{pctS}/microblogs/%s{pctS}")
+                    let microblog = Microsoft.FSharp.Core.PrintfFormat<_,_,_,_, string*string> ($"/%s{pluralName}/%s{pctS}/microblogs/%s{pctS}/")
+                    
+                    // "/books/%s"
+                    // "/books/%s/"
+                    let itemRedirect = Microsoft.FSharp.Core.PrintfFormat<_,_,_,_, string> ($"/%s{pluralName}/%s{pctS}")
+                    let item = Microsoft.FSharp.Core.PrintfFormat<_,_,_,_, string> ($"/%s{pluralName}/%s{pctS}/")
+                    
+                    // "/book/%s/microblog"
+                    let allMicroblogsByItemId = Microsoft.FSharp.Core.PrintfFormat<_,_,_,_, string> ($"/%s{singularName}/%s{pctS}/microblog")
+                    
+                    [
+                        route $"/%s{pluralName}" >=> redirectTo true $"/%s{pluralName}/"
+                        route $"/%s{pluralName}/" >=> indexHandler
+                        
+                        routef microblogRedirect (fun (slug, microblogId) -> redirectTo true $"/%s{pluralName}/%s{slug}/microblogs/%s{microblogId}/")
+                        routef microblog microblogHandlerBuilder
+                        
+                        routef itemRedirect (fun slug -> redirectTo true $"/%s{pluralName}/%s{slug}/")
+                        routef item itemPageHandlerBuilder
+                        
+                        routef allMicroblogsByItemId (fun id -> Microblog.Handlers.GET_list documentType id)
+                        
+                        route $"/feed/microblogs/%s{pluralName}" >=> redirectTo true $"/feed/microblogs/%s{pluralName}/"
+                        route $"/feed/microblogs/%s{pluralName}/" >=> (Microblog.Handlers.GET_atomFeed (Some Game.documentType) pluralName (Util.makeUrl $"/feed/microblogs/pluralName/"))
+                    ]
+
+                let gameRoutes =
+                    makeItemRoutes
+                        "game" "games" Game.documentType
+                        Frontend.Game.Handlers.GET_index (fun (slug, mbid) -> ItemHelper.Handlers.GET_microblogPage ItemHelper.ItemDocumentType.GameDocumentType slug mbid)
+                        Frontend.Game.Handlers.GET_itemPage
+
+                let bookRoutes =
+                    makeItemRoutes
+                        "book" "books" Book.documentType
+                        Frontend.Book.Handlers.GET_index (fun (slug, mbid) -> ItemHelper.Handlers.GET_microblogPage ItemHelper.ItemDocumentType.BookDocumentType slug mbid)
+                        Frontend.Book.Handlers.GET_itemPage
+                        
+                let projectRoutes =
+                    makeItemRoutes
+                        "project" "projects" Project.documentType
+                        Frontend.Project.Handlers.GET_index (fun (slug, mbid) -> ItemHelper.Handlers.GET_microblogPage ItemHelper.ItemDocumentType.ProjectDocumentType slug mbid)
+                        Frontend.Project.Handlers.GET_itemPage
+
+                let miscRoutes = [
                     route "/" >=> Frontend.AboutMe.Handlers.GET_index
                     route "/under-construction" >=> redirectTo true "/under-construction/"
                     route "/under-construction/" >=> htmlView (Views.underConstruction ctx)
@@ -97,39 +149,25 @@ let webApp =
 
                     route "/dev" >=> redirectTo true "/about/"
                     route "/dev/" >=> redirectTo true "/about/"
-
+                    
+                    route "/colophon" >=> redirectTo true "/colophon/"
+                    route "/colophon/" >=> Frontend.Colophon.Handlers.GET_index
+                    
                     route "/about" >=> redirectTo true "/about/"
                     route "/about/" >=> Frontend.AboutMe.Handlers.GET_index
-
+                    
                     route "/updates" >=> redirectTo true "/updates/"
                     route "/updates/" >=> Frontend.AboutMe.Handlers.GET_all
                     routef "/updates/%s/" (fun slug -> Frontend.AboutMe.Handlers.GET_allForItemType slug)
                     routef "/updates/%s" (fun slug -> redirectTo true $"/updates/%s{slug}/")
-
-                    route "/colophon" >=> redirectTo true "/colophon/"
-                    route "/colophon/" >=> Frontend.Colophon.Handlers.GET_index
-
-                    route "/games" >=> redirectTo true "/games/"
-                    route "/games/" >=> Frontend.Game.Handlers.GET_index
-                    routef "/games/%s/microblogs/%s" (fun (slug, microblogId) -> redirectTo true $"/games/%s{slug}/microblogs/%s{microblogId}/")
-                    routef "/games/%s/microblogs/%s/" (fun (slug, microblogId) -> ItemHelper.Handlers.GET_microblogPage ItemHelper.ItemDocumentType.GameDocumentType slug microblogId)
-                    routef "/games/%s/" (fun slug -> Frontend.Game.Handlers.GET_itemPage slug)
-                    routef "/games/%s" (fun slug -> redirectTo true $"/games/%s{slug}/")
-
-                    route "/projects" >=> redirectTo true "/projects/"
-                    route "/projects/" >=> Frontend.Project.Handlers.GET_index
-                    routef "/projects/%s/microblogs/%s" (fun (slug, microblogId) -> redirectTo true $"/projects/%s{slug}/microblogs/%s{microblogId}/")
-                    routef "/projects/%s/microblogs/%s/" (fun (slug, microblogId) -> ItemHelper.Handlers.GET_microblogPage ItemHelper.ItemDocumentType.ProjectDocumentType slug microblogId)
-                    routef "/projects/%s/" (fun slug -> Frontend.Project.Handlers.GET_itemPage slug)
-                    routef "/projects/%s" (fun slug -> redirectTo true $"/projects/%s{slug}/")
-
-                    route "/books" >=> redirectTo true "/books/"
-                    route "/books/" >=> Frontend.Book.Handlers.GET_index
-                    routef "/books/%s/microblogs/%s" (fun (slug, microblogId) -> redirectTo true $"/books/%s{slug}/microblogs/%s{microblogId}/")
-                    routef "/books/%s/microblogs/%s/" (fun (slug, microblogId) -> ItemHelper.Handlers.GET_microblogPage ItemHelper.ItemDocumentType.BookDocumentType slug microblogId)
-                    routef "/books/%s/" (fun slug -> Frontend.Book.Handlers.GET_itemPage slug)
-                    routef "/books/%s" (fun slug -> redirectTo true $"/books/%s{slug}/")
-
+                    
+                    routexp "/images/(.*?)/(.*?)/(.*?)/(.*)" Image.Handlers.GET_imageRouter
+                    
+                    route "/feed/microblogs" >=> redirectTo true "/feed/microblogs/"
+                    route "/feed/microblogs/" >=> (Microblog.Handlers.GET_atomFeed None "everything" (Util.makeUrl "/feed/microblogs/"))
+                ]
+                
+                let adminRoutes = [
                     route "/admin/login" >=> Login.getHandler
                     route "/admin/logout" >=> Login.logoutHandler "/admin/login"
                     route "/admin/status" >=> Login.requiresAdminRedirect "/admin/status" >=> Admin.Handlers.GET_status
@@ -146,28 +184,25 @@ let webApp =
                     routef "/admin/project/%s" (fun id -> Login.requiresAdminRedirect $"/admin/project/%s{id} ">=> Admin.Project.Handlers.GET_edit id)
 
                     routef "/admin/microblog/%s" (fun id -> Login.requiresAdminRedirect $"/admin/microblog/%s{id}" >=> Microblog.Handlers.GET_edit id)
+                ]
 
+                let debugRoutes = [
                     route "/debug/all" >=> Login.requiresAdminRedirect "/debug/all" >=> Debug.Handlers.GET_allDocuments
                     route "/debug/reset" >=> Login.requiresAdminAPICall >=> Debug.Handlers.GET_resetDatabase
                     route "/debug/orphaned-tags" >=> Login.requiresAdminAPICall >=> Debug.Handlers.GET_orphanedTags
                     route "/debug/orphaned-tags/delete" >=> Login.requiresAdminAPICall >=> Debug.Handlers.DELETE_orphanedTags
-
-                    routef "/game/%s/microblog" (fun id -> Microblog.Handlers.GET_list Game.documentType id)
-                    routef "/book/%s/microblog" (fun id -> Microblog.Handlers.GET_list Book.documentType id)
-                    routef "/project/%s/microblog" (fun id -> Microblog.Handlers.GET_list Project.documentType id)
-
-                    routexp "/images/(.*?)/(.*?)/(.*?)/(.*)" Image.Handlers.GET_imageRouter
-
-                    route "/feed/microblogs" >=> redirectTo true "/feed/microblogs/"
-                    route "/feed/microblogs/games" >=> redirectTo true "/feed/microblogs/games/"
-                    route "/feed/microblogs/books" >=> redirectTo true "/feed/microblogs/books/"
-                    route "/feed/microblogs/projects" >=> redirectTo true "/feed/microblogs/projects/"
-
-                    route "/feed/microblogs/" >=> (Microblog.Handlers.GET_atomFeed None "everything" (Util.makeUrl "/feed/microblogs/"))
-                    route "/feed/microblogs/games/" >=> (Microblog.Handlers.GET_atomFeed (Some Game.documentType) "games" (Util.makeUrl "/feed/microblogs/games/"))
-                    route "/feed/microblogs/books/" >=> (Microblog.Handlers.GET_atomFeed (Some Book.documentType) "books" (Util.makeUrl "/feed/microblogs/books/"))
-                    route "/feed/microblogs/projects/" >=> (Microblog.Handlers.GET_atomFeed (Some Project.documentType) "projects" (Util.makeUrl "/feed/microblogs/projects/"))
                 ]
+                
+                let routes = [
+                    yield! gameRoutes
+                    yield! bookRoutes
+                    yield! projectRoutes
+                    yield! miscRoutes
+                    yield! adminRoutes
+                    yield! debugRoutes
+                ]
+                
+                choose routes)
             POST >=> setCommonHeaders >=>
                 choose [
                     route "/admin/login" >=> Login.postHandler "/admin/login" "/admin" (Login.defaultCredentialValidator (Login.getExpectedAdminCredentials ctx))
