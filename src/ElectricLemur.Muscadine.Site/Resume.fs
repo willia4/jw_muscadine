@@ -45,43 +45,17 @@ let resumeContent =
                             keyValueListItem "DevOps" "Kubernetes, Istio, Docker, Azure PaaS, Azure DevOps Pipelines, PowerShell & bash"
                             keyValueListItem ".NET" "C#, F#, ASP.Net Core, distributed and parallel programming"
                             keyValueListItem "Web" "Typescript & Javascript"
-                            keyValueListItem "Microsoft SQL Server" "performance tuning, advanced T-SQL, schema design"
+                            keyValueListItem "Databases" "SQL Server, Azure CosmosDB, performance design, query optimization"
                         ]
                     ]
                 ]
             ]
             
             section [] [
-                header [] [encodedText "Work History" ]
+                header [ _id "work-history-header" ] [encodedText "Work History" ]
                 div [ _class "section-container" ] [
-                    div [] [
+                    div [ _id "work-history-container" ] [
                         section [ _class "sub-section" ] [
-                            aside [ ] [
-                                s "My current team was chartered to create a new system for deploying and maintaining the infrastructure
-                                   for all of our next-gen products and capabilities."
-                          
-                                s "On this team, I focus on combining Azure's PaaS building blocks with our own internal automation to
-                                   allow service teams to quickly and easily deploy new microservices to production with all of the
-                                   obvious NFRs around availability, monitoring, security, and compliance."
-
-                                s "Recently, I've assisted in architecting a change in our service-hosting platform from Azure App
-                                   Service web apps to a Kubernetes platform based on AKS."
-
-                                s "With our highly-standardized implementations, my small team is able to provide on-call support
-                                   for all infrastructure issues any of our services encounter. During these incidents, I jump from
-                                   technical troubleshooting and repair activities, coordination between various internal groups,
-                                   and liaising with Azure support personnel."
-                                   
-                                s "Previously, as the team lead for the Enterprise Platform Team I focused on the foundational
-                                   platform for Blackbaud's Enterprise CRM product. I was the front line for my team when dealing
-                                   with thorny production issues that ranged from helping our hosting services team diagnose
-                                   environmental problems to providing developer support for customer-written customizations on
-                                   top of our platform."
-
-                                s "In this role, I worked closely with our product support and product management teams to ensure
-                                   that I was always providing a customer-focused solution whether I was fixing bugs across multiple
-                                   product versions or recommending configuration changes to internal customer environments."
-                            ]
 
                             header [] [
                                 encodedText "Blackbaud, Inc."
@@ -92,14 +66,47 @@ let resumeContent =
                             ]
                             
                             div [ _class "section-container" ] [
-                                header [ _class "sub-header" ] [ s "Highlights" ]
-                                div [] [
-                                    s "Designed and delivered a DDoS protection solution for Kubernetes deployments in Azure"
-                                    s "Assisted with the design and led the implementation of a transition from company-wide Azure App Service deployments to Kubernetes-based deployments using Azure AKS"
+                                aside [ ] [
+                                    s "My current team was chartered to create a new system for deploying and maintaining the infrastructure
+                                       for all of our next-gen products and capabilities."
+                              
+                                    s "On this team, I focus on combining Azure's PaaS building blocks with our own internal automation to
+                                       allow service teams to quickly and easily deploy new microservices to production with all of the
+                                       obvious NFRs around availability, monitoring, security, and compliance."
+
+                                    s "Recently, I've assisted in architecting a change in our service-hosting platform from Azure App
+                                       Service web apps to a Kubernetes platform based on AKS."
+
+                                    s "With our highly-standardized implementations, my small team is able to provide on-call support
+                                       for all infrastructure issues any of our services encounter. During these incidents, I jump from
+                                       technical troubleshooting and repair activities, coordination between various internal groups,
+                                       and liaising with Azure support personnel."
+                                       
+                                    s "Previously, as the team lead for the Enterprise Platform Team I focused on the foundational
+                                       platform for Blackbaud's Enterprise CRM product. I was the front line for my team when dealing
+                                       with thorny production issues that ranged from helping our hosting services team diagnose
+                                       environmental problems to providing developer support for customer-written customizations on
+                                       top of our platform."
+
+                                    s "In this role, I worked closely with our product support and product management teams to ensure
+                                       that I was always providing a customer-focused solution whether I was fixing bugs across multiple
+                                       product versions or recommending configuration changes to internal customer environments."
+                                ]
+                                header [ _class "sub-header" ] [ s "Current Role" ]
+                                section [] [
+                                    s "Designed and implemented a DDoS protection solution for Kubernetes deployments in Azure"
+                                    s "Assisted with the design and led the implementation of a transition from company-wide Azure
+                                       App Service deployments to Kubernetes-based deployments using Azure AKS"
                                     s "Lead of the DevOps team charged with enabling and empowering teams to
                                        quickly leverage Azure's PaaS deployment options"
                                     s "First-line architectural consultant and subject matter expert for any
                                        team wanting to go forward with new Azure technologies"
+                                ]
+                            ]
+                            
+                            div [ _class "section-container" ] [
+                                header [ _class "sub-header" ] [ s "Previous Role" ]
+                                section [] [
                                     s "Lead on the team charged with building and maintaining the framework
                                        platform for an enterprise CRM solution"
                                     s "Made many performance improvements and feature enhancements to a

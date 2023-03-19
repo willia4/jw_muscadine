@@ -13,6 +13,7 @@
     <list default="true" id="5e706e6e-c429-48e6-964a-5fcce5d8df19" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.ElectricLemur.Muscadine/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.ElectricLemur.Muscadine/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/ElectricLemur.Muscadine.Site/Resume.fs" beforeDir="false" afterPath="$PROJECT_DIR$/src/ElectricLemur.Muscadine.Site/Resume.fs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/ElectricLemur.Muscadine.Site/wwwroot/js/resume.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/ElectricLemur.Muscadine.Site/wwwroot/js/resume.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -89,6 +90,7 @@
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/ded4e626ee4c78774ce224cb22cf94eca4aaa6b5dedcbc4bb0f4ee6b8ef41b51/FilterDefinitionBuilder.cs" root0="SKIP_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/df71358f7b7337a1eee3a65abe6d678dd9a065e256b8cc3fd44a2949754/Object.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/f0a1fdc9e0ae83be4a706230c2847253ff8714631a12ead8eb7428cfd948edca/CookieExtensions.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/f4708639776589f5ac2739f6fcbfc67343b1f9dac51cc1dbfdb003eef77cc1c/Monitor.CoreCLR.cs" root0="SKIP_HIGHLIGHTING" />
   </component>
   <component name="MarkdownSettingsMigration">
     <option name="stateVersion" value="1" />
@@ -211,6 +213,7 @@
       <workItem from="1675637786040" duration="917000" />
       <workItem from="1676153335295" duration="3087000" />
       <workItem from="1676410397458" duration="3904000" />
+      <workItem from="1676899071586" duration="3341000" />
     </task>
     <task id="LOCAL-00001" summary="Add some headers">
       <created>1665866111898</created>

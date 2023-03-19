@@ -1,6 +1,14 @@
 document.addEventListener("DOMContentLoaded", () => {
     
     function findParentSection(el) {
+        const idAttribute = el.attributes["data-container-id"];
+        if (idAttribute && idAttribute.value) {
+            const container = document.getElementById(idAttribute.value);
+            if (container) {
+                return container;
+            }
+        }
+
         const parent = el.parentNode;
         if (!parent) {
             return undefined;
@@ -23,7 +31,12 @@ document.addEventListener("DOMContentLoaded", () => {
         const asides = Array.from(document.getElementsByTagName("aside"));
         return asides.map(aside => {
                     const section = findParentSection(aside);
-                    const header = findSectionHeader(section);
+                    const headerId = aside.attributes["data-container-header-id"];
+                    
+                    const header =
+                        headerId && headerId.value && document.getElementById(headerId.value)
+                        ? document.getElementById(headerId.value)
+                        : findSectionHeader(section);
                     
                     return {
                         aside: aside,
