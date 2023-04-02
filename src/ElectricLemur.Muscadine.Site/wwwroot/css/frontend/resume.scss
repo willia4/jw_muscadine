@@ -7,152 +7,230 @@ aside {
   display: none;
 }
 
-button.annotation-button {
-  margin-left: 10px;
-  font-size: 60%;
-  opacity: 60%;
-  background: none;
-  border: none;
-  text-decoration: underline;
-  color: colors.$text;
-}
-
 .page-content.resume {
-  section.has-annotation {
-    display: flex;
-    flex-flow: wrap;
-    
-    margin-top: 15px;
-    margin-bottom: 30px;
-    header {
-      display: block;
-      width: 100%;
-      order: 1;
-    }
-    
-    div.section-container {
-      width: 60%;
-      padding-right: 15px;
-      order: 2;
-
-      @include breakpoints.phone {
-        order: 3;
-        width: 100%;
-        padding-right: 0;
-      }
-    }
-    
-    aside {
-      display: block;
-      order: 3;
-
-      font-family: "Lora";
-      font-style: italic;
-      border-left: 1px solid colors.$primary;
-      padding: 10px;
-      width: 40%;
-      
-      
-      @include breakpoints.phone {
-        background: rgb(251,251,251);
-        order: 2;
-        width: 100%;
-        margin-top: 15px;
-        border: solid 1px black;
-        padding: 10px;
-        filter: drop-shadow(2px 2px 5px colors.$heading);
-      }
-    }
+  // on bigger screens, use table display so we can all the annotations line up in the right column
+  display: table;
+  
+  // ensure that content has some breathing space next to the scroll bar by adding some 
+  // right padding
+  padding-right: 15px;
+  @include breakpoints.phone {
+    padding-right: 5px;
   }
   
-  section {
-    div.section-container {
-      width: 100%;
+  
+  // on the phone, we'll flex the annotations in within their section container 
+  @include breakpoints.phone {
+    display: block;
+  }
+  
+  div.section-row {
+    // on bigger screens, each section row is a table row with two cells (the content and annotation)
+    display: table-row;
+
+    // on phones, the section wrote is a vertical flexbox with two children (the content and annotation)
+    // we will use order to swap them so the annotation comes first and will be above the content
+    @include breakpoints.phone {
+      display: flex;
+      flex-flow: wrap;
+      flex-direction: column;
     }
-    
-    section {
-      
-      margin-left: 30px;
-      margin-top: 15px;
-      
-      header {
-        font-size: 95%;
+
+    &.section-row.indentation-0 > div {
+      padding-left: 0px;
+      @include breakpoints.small-phone {
+        padding-left: 0px;
       }
+    }
+    &.section-row.indentation-1 > div {
+      padding-left: 15px;
       
-      div.section-summary {
-        margin-left: 5px;
-        padding-top: 5px;
-        font-weight: lighter;
-        p {
-          font-style: italic;
-          font-size: 80%;
-          margin-top: 0;
-          margin-bottom: 0; 
+      @include breakpoints.small-phone {
+        padding-left: 5px;
+      }
+    }
+    &.section-row.indentation-2 > div {
+      padding-left: 30px;
+      @include breakpoints.small-phone {
+        padding-left: 10px;
+      }
+    }
+
+    // on phones, connect the annotation to its content by drawing a dashed box around it
+    // add some padding to keep content off of the dashed box box
+    // add some margin at the bottom to keep the next section from riding so close to the dashed box
+    &.has-annotation {
+      @include breakpoints.phone {
+        border: dashed 1px gray;
+        padding: 10px;
+        margin-bottom: 15px;
+        
+        // paragraphs have their own margin. The last paragraph combines its margin with the section row
+        // padding and looks terrible; so remove it
+        p:last-of-type {
+          margin-bottom: 0px;
         }
       }
     }
-
-  }
-  
-  header {
-    color: colors.$heading;
-    font-weight: bold;
-    font-size: 115%;
-  }
-  
-  header.sub-header {
     
-    font-family: "Ubuntu Medium";
-    font-variant: small-caps;
-    text-transform: lowercase;
-  }
-  
-  ul {
-    li::marker {
-      color: colors.$primary;
+    // inside a section row will be the section content (and then the annotation aside)
+    // on bigger screens, it's one of two table cells in the row (along with the annotation aside)
+    // make sure it stands out against the annotation with a minimum width
+    div.section-content {
+      display: table-cell;
+      
+      &.has-annotation {
+        padding-right: 60px;
+        min-width: 37vw;
+
+        @include breakpoints.tablet {
+          min-width: 20vw;
+        }
+      }
+
+      // on phones, the content will be a child in the section row's flexbox container
+      // use order to move this under the annotation
+      @include breakpoints.phone {
+        display: block;
+        order: 2;
+        min-width: auto;
+        width: 100%;
+      }  
     }
     
-    li {
+    // inside a section row will be the annotation aside (preceded by the content)
+    // on bigger screens, it's one of two table cells in the row (along with the content div)
+    // make it kind of look like a purple post-it note with some appropriate padding
+    aside.shown {
+      display: table-cell;
       
-      .list-item-heading {
-        color: colors.$heading;
-        text-transform: uppercase;
-        font-weight: bold;
+      background: hsla(259, 100%, 98%, 1);
+      filter: drop-shadow(2px 2px 5px colors.$heading);
+      border: solid 1px black;
+      padding: 10px;
+
+      // remove the margin from the first and last paragraphs in the aside to avoid adding on to the 
+      // padding above
+      p:first-of-type {
+        margin-top: 0px;
+      }
+
+      p:last-of-type {
+        margin-bottom: 0px;
+      }
+      
+      @include breakpoints.tablet {
+        
+      }
+      // on phones, the aside will be a child in the section row's flexbox container
+      //use order to move it above the content
+      @include breakpoints.phone {
+        display: block;
+        order: 1;
       }
     }
   }
-  
-  .download {
-    font-size: 80%;
-    margin-top: 50px;
-    padding-top: 15px;
-    border-top: solid 1px black;
+
+  // paragraphs have default top/bottom margins which is a bit odd for the first and laugh paragraphs in a container 
+  // since you'd expect the container to control its own spacing 
+  .section-content  {
+    padding-top: 5px;
+    padding-bottom: 10px;
     
-    header {
-      color: #a6a6a6;  
+    p:first-of-type {
+      margin-top: 0px;
+    }
+
+    p:last-of-type {
+      margin-bottom: 0px;
     }
     
-    ul {
-      margin: 0;
-      padding-left: 25px;
+  }
+  
+  .header-container {
+    display: flex;
+    align-items: center;
+    button.annotation-button {
+        margin-left: 10px;
+        
+        font-size: 65%;
+        opacity: 70%;
+        background: none;
+        border: none;
+        text-decoration: underline;
+        color: colors.$text;
+      cursor: pointer;
+    }
+    header, header.level-one {
+      display: inline-block;
+      color: colors.$heading;
+      font-weight: bold;
+      font-size: 115%;
+    }
+
+    header.level-two {
+      font-family: "Ubuntu Medium";
+      font-variant: small-caps;
+      text-transform: lowercase;
+    }
+
+    header .section-summary {
+      margin-left: 5px;
       padding-top: 5px;
-      
-      li {
-        margin-bottom: 3pt;
-      }
-      li::marker {
-        color: #a6a6a6; 
-      }
-    }
-    
-    a {
-      color: #a6a6a6;
-      
-      :visited {
-        color: #a6a6a6;
+      font-weight: lighter;
+
+      p {
+        font-style: italic;
+        font-size: 80%;
+        margin-top: 0;
+        margin-bottom: 0;
       }
     }
   }
-  
 
+  a {
+    color: colors.$text;
+    &:visited {
+      color: colors.$text;
+    }
+
+    @media print {
+      color: black !important;
+      &:visited {
+        color: black !important;
+      }
+      text-decoration: none;
+    }
+  }
+}
+
+ul {
+  margin-top: 0px;
+  margin-bottom: 0px;
+
+  li::marker {
+    color: colors.$primary;
+  }
+
+  li {
+
+    .list-item-heading {
+      color: colors.$heading;
+      text-transform: uppercase;
+      font-weight: bold;
+    }
+  }
+}
+
+.updated-resume {
+  margin-top: 60px;
+  font-size: 80%;
+  font-style: italic;
+}
+
+footer {
+  font-size: 80%;
+  margin-top: 50px;
+  padding-top: 15px;
+  border-top: solid 1px #000;
 }
