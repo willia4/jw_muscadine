@@ -7,113 +7,88 @@ aside {
   display: none;
 }
 
-button.annotation-button {
-  margin-left: 10px;
-  font-size: 60%;
-  opacity: 60%;
-  background: none;
-  border: none;
-  text-decoration: underline;
-  color: colors.$text;
-}
-
 .page-content.resume {
+  section {
+    margin-left: 30px;
+    margin-top: 15px;
+  }
+  
   section.has-annotation {
     display: flex;
     flex-flow: wrap;
-    
-    margin-top: 15px;
-    margin-bottom: 30px;
-    header {
-      display: block;
-      width: 100%;
+
+    .header-container {
       order: 1;
+      width: 100%;
     }
     
-    div.section-container {
-      width: 60%;
-      padding-right: 15px;
+    .section-container {
       order: 2;
-
-      @include breakpoints.phone {
-        order: 3;
-        width: 100%;
-        padding-right: 0;
-      }
+      background-color: gray;
+      //width: 40vw;
+      flex-shrink: 3;
+      flex-basis: 50vw;
     }
     
     aside {
+      //width: 25vw;
+      flex-shrink: 1;
       display: block;
       order: 3;
-
-      font-family: "Lora";
-      font-style: italic;
-      border-left: 1px solid colors.$primary;
-      padding: 10px;
-      width: 40%;
-      
-      
-      @include breakpoints.phone {
-        background: rgb(251,251,251);
-        order: 2;
-        width: 100%;
-        margin-top: 15px;
-        border: solid 1px black;
-        padding: 10px;
-        filter: drop-shadow(2px 2px 5px colors.$heading);
-      }
+      margin-right: 3px;
+      margin-left: auto;
+      background-color: purple;
+      flex-basis: 30vw;
     }
   }
-  
-  section {
-    div.section-container {
-      width: 100%;
+  .header-container {
+    display: flex;
+    align-items: center;
+    button.annotation-button {
+        margin-left: 10px;
+        
+        font-size: 60%;
+        opacity: 60%;
+        background: none;
+        border: none;
+        text-decoration: underline;
+        color: colors.$text;
+      cursor: pointer;
     }
-    
-    section {
-      
-      margin-left: 30px;
-      margin-top: 15px;
-      
-      header {
-        font-size: 95%;
-      }
-      
-      div.section-summary {
-        margin-left: 5px;
-        padding-top: 5px;
-        font-weight: lighter;
-        p {
-          font-style: italic;
-          font-size: 80%;
-          margin-top: 0;
-          margin-bottom: 0; 
-        }
-      }
+    header, header.level-one {
+      display: inline-block;
+      color: colors.$heading;
+      font-weight: bold;
+      font-size: 115%;
     }
 
+    header.level-two {
+      font-family: "Ubuntu Medium";
+      font-variant: small-caps;
+      text-transform: lowercase;
+    }
+
+    header .section-summary {
+      margin-left: 5px;
+      padding-top: 5px;
+      font-weight: lighter;
+
+      p {
+        font-style: italic;
+        font-size: 80%;
+        margin-top: 0;
+        margin-bottom: 0;
+      }
+    }
   }
-  
-  header {
-    color: colors.$heading;
-    font-weight: bold;
-    font-size: 115%;
-  }
-  
-  header.sub-header {
-    
-    font-family: "Ubuntu Medium";
-    font-variant: small-caps;
-    text-transform: lowercase;
-  }
-  
+
   ul {
     li::marker {
       color: colors.$primary;
     }
-    
+
     li {
-      
+
       .list-item-heading {
         color: colors.$heading;
         text-transform: uppercase;
@@ -121,38 +96,158 @@ button.annotation-button {
       }
     }
   }
-  
-  .download {
-    font-size: 80%;
-    margin-top: 50px;
-    padding-top: 15px;
-    border-top: solid 1px black;
-    
-    header {
-      color: #a6a6a6;  
-    }
-    
-    ul {
-      margin: 0;
-      padding-left: 25px;
-      padding-top: 5px;
-      
-      li {
-        margin-bottom: 3pt;
-      }
-      li::marker {
-        color: #a6a6a6; 
-      }
-    }
-    
-    a {
-      color: #a6a6a6;
-      
-      :visited {
-        color: #a6a6a6;
-      }
-    }
-  }
-  
-
 }
+//
+//aside {
+//  display: none;
+//}
+//
+//button.annotation-button {
+//  margin-left: 10px;
+//  font-size: 60%;
+//  opacity: 60%;
+//  background: none;
+//  border: none;
+//  text-decoration: underline;
+//  color: colors.$text;
+//}
+//
+//.page-content.resume {
+//  section.has-annotation {
+//    display: flex;
+//    flex-flow: wrap;
+//    
+//    margin-top: 15px;
+//    margin-bottom: 30px;
+//    header {
+//      display: block;
+//      width: 100%;
+//      order: 1;
+//    }
+//    
+//    div.section-container {
+//      width: 60%;
+//      padding-right: 15px;
+//      order: 2;
+//
+//      @include breakpoints.phone {
+//        order: 3;
+//        width: 100%;
+//        padding-right: 0;
+//      }
+//    }
+//    
+//    aside {
+//      display: block;
+//      order: 3;
+//
+//      font-family: "Lora";
+//      font-style: italic;
+//      border-left: 1px solid colors.$primary;
+//      padding: 10px;
+//      width: 40%;
+//      
+//      
+//      @include breakpoints.phone {
+//        background: rgb(251,251,251);
+//        order: 2;
+//        width: 100%;
+//        margin-top: 15px;
+//        border: solid 1px black;
+//        padding: 10px;
+//        filter: drop-shadow(2px 2px 5px colors.$heading);
+//      }
+//    }
+//  }
+//  
+//  section {
+//    div.section-container {
+//      width: 100%;
+//    }
+//    
+//    section {
+//      
+//      margin-left: 30px;
+//      margin-top: 15px;
+//      
+//      header {
+//        font-size: 95%;
+//      }
+//      
+//      div.section-summary {
+//        margin-left: 5px;
+//        padding-top: 5px;
+//        font-weight: lighter;
+//        p {
+//          font-style: italic;
+//          font-size: 80%;
+//          margin-top: 0;
+//          margin-bottom: 0; 
+//        }
+//      }
+//    }
+//
+//  }
+//  
+//  header {
+//    color: colors.$heading;
+//    font-weight: bold;
+//    font-size: 115%;
+//  }
+//  
+//  header.sub-header {
+//    
+//    font-family: "Ubuntu Medium";
+//    font-variant: small-caps;
+//    text-transform: lowercase;
+//  }
+//  
+//  ul {
+//    li::marker {
+//      color: colors.$primary;
+//    }
+//    
+//    li {
+//      
+//      .list-item-heading {
+//        color: colors.$heading;
+//        text-transform: uppercase;
+//        font-weight: bold;
+//      }
+//    }
+//  }
+//  
+//  .download {
+//    font-size: 80%;
+//    margin-top: 50px;
+//    padding-top: 15px;
+//    border-top: solid 1px black;
+//    
+//    header {
+//      color: #a6a6a6;  
+//    }
+//    
+//    ul {
+//      margin: 0;
+//      padding-left: 25px;
+//      padding-top: 5px;
+//      
+//      li {
+//        margin-bottom: 3pt;
+//      }
+//      li::marker {
+//        color: #a6a6a6; 
+//      }
+//    }
+//    
+//    a {
+//      color: #a6a6a6;
+//      
+//      :visited {
+//        color: #a6a6a6;
+//      }
+//    }
+//  }
+//  
+//
+//}
