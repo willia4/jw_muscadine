@@ -12,7 +12,11 @@ document.addEventListener("DOMContentLoaded", () => {
         return Array.from(els).reduce((acc, el) => {
             const sid = findElementSid(el);
             if (sid) {
-                acc[sid] = el;
+                if (acc[sid]) {
+                    acc[sid].push(el);
+                } else {
+                    acc[sid] = [ el ];
+                }
             }
             return acc;
         }, {});
@@ -20,12 +24,17 @@ document.addEventListener("DOMContentLoaded", () => {
     function findAnnotations() {
         const asideSids =  createElementSidMappings(document.getElementsByTagName("aside"));
         const headerSids = createElementSidMappings(document.getElementsByTagName("header"));
+        const contentSids = createElementSidMappings(document.querySelectorAll("div.section-content"));
+        const sectionRows = createElementSidMappings(document.querySelectorAll("div.section-row"));
+        
         const sids = Object.keys(asideSids).filter(s => Object.keys(headerSids).includes(s));
         
         return sids.map(sid => {
             return {
-                aside: asideSids[sid],
-                header: headerSids[sid]
+                aside: asideSids[sid][0], // should only ever be one aside or header
+                header: headerSids[sid][0],
+                content: contentSids[sid] || [],
+                sectionRows: sectionRows[sid] || []
             }
         });
     }
@@ -34,6 +43,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const headerParent = annotation.header.parentNode;
         if (!headerParent) { return; }
 
+        
         const toggleButton = document.createElement("button");
         toggleButton.classList.add("no-print");
         toggleButton.classList.add("annotation-button");
@@ -51,12 +61,28 @@ document.addEventListener("DOMContentLoaded", () => {
                toggleButton.appendChild(hideText);
                toggleButton.dataset.status = 'shown';
                annotation.aside.classList.add('shown');
+               
+               annotation.header.classList.add('has-annotation');
+               annotation.content.forEach(el => el.classList.add('has-annotation'));
+               annotation.aside.parentNode.classList.add('has-annotation');
+               //annotation.sectionRows.forEach(el => el.classList.add('has-annotation'));
+               
+               annotation.header.scrollIntoView({
+                   behavior: "smooth",
+                   block: "start",
+                   inline: "nearest"
+               });
            }
            else {
                toggleButton.removeChild(hideText);
                toggleButton.appendChild(showText);
                toggleButton.dataset.status = 'not-shown';
+               
                annotation.aside.classList.remove('shown');
+               annotation.header.classList.remove('has-annotation');
+               annotation.content.forEach(el => el.classList.remove('has-annotation'));
+               annotation.aside.parentNode.classList.remove('has-annotation');
+               //annotation.sectionRows.forEach(el => el.classList.remove('has-annotation'));
            }
         });
 

@@ -1,65 +1,80 @@
 # James Williams
 
 ## About
-A senior developer with fifteen years of experience building out and supporting
-enterprise-scale CRM and transaction systems on Microsoft stacks while tackling
-issues like data modeling, reliability, customizability, and performance
+James is a software architect and senior developer in Charleston, SC. He has eighteen
+years of experience designing, building, and supporting an automated service delivery
+and cloud provisioning system for hundreds of microservice deployments in Azure and,
+before that, an enterprise-scale CRM and transaction system on a .NET and Microsoft
+SQL Server tech stack
 
-Interested in building new products on up-and-coming technologies, exploring
-the future of cloud deployments, and pursuing excellence while surrounded by a
-passionate team
+He is interested in building new products on up-and-coming technologies, exploring
+the future of cloud deployments, and solving interesting problems alongside a passionate
+team
 
 
 
 ## Key Skills
 
-* DevOps-- Azure PaaS, Azure DevOps Pipelines, PowerShell & bash, Docker, Kubernetes
-* .Net-- C#, ASP.Net Core, async and parallel programming
-* Microsoft SQL Server -- performance tuning, advanced T-SQL, schema design
-* Web: Typescript & Javascript
+* DevOps: Kubernetes, Istio, Docker, Azure PaaS, Azure DevOps Pipelines, PowerShell & bash
+* .Net: C#, F#, ASP.Net Core, distributed and parallel programming
+* Web: Typescript & JavaScript
+* Databases: SQL Server, Azure CosmosDB, performance design, query optimization
 
 
 
 ## Work History
 ### Blackbaud, Inc.
-	Laureate Software Engineer
+	Platform Engineering Team Architect, Laureate Software Engineer
 	June 2005 -- Present
 
-#### Highlights
+#### Current Role
+Technical lead and architect of the Platform Engineering team charged with enabling
+and empowering other dev teams to quickly and efficiently leverage Azure's PaaS
+deployment options
 
-Lead of the DevOps team charged with enabling and empowering teams to quickly
-leverage Azure's PaaS deployment options
-            
-First-line architectural consultant and subject matter expert for any team
-wanting to go forward with new Azure technologies
+Currently designing and implementing a PCI DSS-Compliant IAC based compute platform
+centered around Kubernetes
 
-Lead on the team charged with building and maintaining the framework platform
-for an enterprise CRM solution
+Currently leading an effort to migrate existing microservice-based deployment automation
+to a new IAC model based on Pulumi
 
-Made many performance improvements and feature enhancements to a powerful
-ad-hoc query engine
+Designed and implemented a DDoS protection solution for Kubernetes deployments in Azure
 
-Added dozens of features and resolved hundreds of bugs in legacy areas of the
-system
+Assisted with the design and led the implementation of a transition from company-wide
+Azure App Service deployments to Kubernetes-based deployments using Azure AKS
+
+On-call and subject matter expert for Kubernetes implementation and operational issues
+
+Architectural consultant and subject matter expert for any team wanting to go forward
+with new Azure technologies
+
+#### Previous Role
+Technical lead on the team charged with building and maintaining the framework and
+platform for an enterprise CRM solution
+
+Maintained a powerful ad-hoc query engine, implementing multiple performance improvements
+and feature enhancements along the way
+
+Added dozens of features and resolved hundreds of bugs in legacy areas of the system
+
+Modernized legacy subsystems by adopting new authentication methods and new .NET async
+patterns
 
 
 
 ## Side Projects
-A series of personal websites hosted as a set of Docker containers on a major
-cloud provider; both the infrastructure and sites are deployed and maintained
-via a custom CLI tool
-           
-A website for organizing a book club -- built on Ruby and Sinatra using
-Amazon Web Services and Redis for data storage
+A subject-centered microblogging platform and personal website written in F# using a
+Mongo datastore, deployed via Docker
 
-Mac and iOS apps for generating secure, memorable passwords -- built in
-Objective-C and Swift
+This resume, also written in F# as a specific page of the above personal website
 
-A "branded" website for displaying photos and albums from a 3rd-party photo
-hosting service -- built in PHP with the SmugMug API for data storage
+A suite of Docker containers (and orchestration scripts) hosting multiple websites
+behind a Traefik frontend, deployed automatically via GitHub action pipelines
 
-This resume is implemented in F# using the Giraffe view engine and hosted in 
-an aforementioned Docker container
+Previously wrote a Ruby and Sinatra web app for managing a book club, an Objective-C
+and Cocoa macOS app for generating secure & memorable passwords, a PHP webapp for
+displaying photographs, and all sorts of miscellaneous scripts and utilities for
+anything that needs doing
 
 
 
@@ -67,7 +82,7 @@ an aforementioned Docker container
 ### Clemson University
 	August 2001 -- May 2005
 
-* BS in Computer Science
+* BS in Computer Science, Cum Laude
 * Minor in Mathematics
 
 
