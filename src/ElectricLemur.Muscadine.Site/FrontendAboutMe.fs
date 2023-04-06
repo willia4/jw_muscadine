@@ -115,7 +115,7 @@ module Handlers =
       let! recentMicroblogs = Microblog.loadRecentMicroblogs (System.DateTimeOffset.UtcNow) (Database.NoLimit) ctx
       let content = allMicroblogsContent recentMicroblogs ctx
       let pageHtml = FrontendHelpers.layout
-                       (FrontendHelpers.PageDefinitions.Custom ("updates", "All Updates", "All Updates", FrontendHelpers.PageDefinitions.AboutMe) )
+                       (FrontendHelpers.PageDefinitions.Custom ("updates", "All Updates", "All Updates", FrontendHelpers.PageDefinitions.AboutMe, []) )
                        content
                        [ FrontendHelpers.PageExtra.CSS "frontend/about_me.scss" ]
                        ctx
@@ -146,7 +146,7 @@ module Handlers =
           | ItemHelper.ItemDocumentType.BookDocumentType -> FrontendHelpers.PageDefinitions.Books
 
         let pageHtml = FrontendHelpers.layout
-                         (FrontendHelpers.PageDefinitions.Custom ($"updates/%s{slugString}", longTitle, shortTitle, activeButtonPage))
+                         (FrontendHelpers.PageDefinitions.Custom ($"updates/%s{slugString}", longTitle, shortTitle, activeButtonPage, []))
                          content
                          [ FrontendHelpers.PageExtra.CSS  "frontend/about_me.scss" ]
                          ctx

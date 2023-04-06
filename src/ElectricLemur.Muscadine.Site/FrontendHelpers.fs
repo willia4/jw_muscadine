@@ -12,7 +12,7 @@ module PageDefinitions =
     | Books
     | Games
     | Colophon
-    | Custom of slug: string * longName: string * shortName: string * selectedPage: Page
+    | Custom of slug: string * longName: string * shortName: string * selectedPage: Page * customHeader: (XmlNode list)
 
   let sidebarButtonTitle page =
     match page with
@@ -21,7 +21,7 @@ module PageDefinitions =
     | Books -> "What Am I Reading?", "Books"
     | Games -> "What Am I Playing?", "Games"
     | Colophon -> "Colophon", "Colophon"
-    | Custom (_, longName, shortName, _) -> longName, shortName
+    | Custom (_, longName, shortName, _, _) -> longName, shortName
 
   let sidebarButtonIcon page =
     match page with
@@ -37,6 +37,11 @@ module PageDefinitions =
     | Colophon -> "About This Site"
     | _ -> sidebarButtonTitle page |> fst
 
+  let customHeader page =
+    match page with
+    | Custom (_, _, _, _, customHeader) -> customHeader
+    | _ -> []
+    
   let pageRoute page =
     match page with
     | AboutMe -> "/about/"
@@ -44,13 +49,13 @@ module PageDefinitions =
     | Books -> "/books/"
     | Games -> "/games/"
     | Colophon -> "/colophon/"
-    | Custom (slug, _, _, _) -> $"/%s{slug}/"
+    | Custom (slug, _, _, _, _) -> $"/%s{slug}/"
 
   let makeSidebarButton currentPage buttonPage =
     let title = sidebarButtonTitle buttonPage
     let active =
       match currentPage with
-      | Custom (_, _, _, currentPage) -> currentPage = buttonPage
+      | Custom (_, _, _, currentPage, _) -> currentPage = buttonPage
       | _ -> currentPage = buttonPage
 
     let largeButtonClass = if active then "sidebar-button large-button active" else "sidebar-button large-button"
@@ -123,6 +128,9 @@ let layout pageDefinition content extraCss ctx =
             ]
 
             encodedText pageHeader
+            
+            yield! (PageDefinitions.customHeader pageDefinition)
+
             button [ (_class "menu-button"); ] [
               i [ _class "fa-solid fa-bars" ] []
             ]

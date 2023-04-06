@@ -106,8 +106,8 @@ let resumeContent =
                                        and supporting an automated service delivery and cloud provisioning system for hundreds of microservice deployments in Azure
                                        and, before that, an enterprise-scale CRM and transaction system on a .NET and Microsoft SQL Server tech stack"
                                
-                                    s "He is interested in building new products on up-and-coming technologies, exploring
-                                       the future of cloud deployments, and solving interesting problems alongside a
+                                    s "He is interested in building new products on up-and-coming technologies, modernizing older systems to take advantage of recent advances, 
+                                       exploring the future of cloud deployments, and solving interesting problems alongside a
                                        passionate team"]
             }
             
@@ -116,7 +116,7 @@ let resumeContent =
                 Annotation = []
                 Content = Content [ ul [] [
                                             keyValueListItem "DevOps" "Kubernetes, Istio, Docker, Azure PaaS, Azure DevOps Pipelines, PowerShell & bash"
-                                            keyValueListItem ".NET" "C#, F#, ASP.Net Core, distributed and parallel programming"
+                                            keyValueListItem ".NET" "C#, F#, ASP.Net Core WebAPI, distributed and parallel programming"
                                             keyValueListItem "Web" "Typescript & JavaScript"
                                             keyValueListItem "Databases" "SQL Server, Azure CosmosDB, performance design, query optimization"]]
             }
@@ -169,9 +169,9 @@ let resumeContent =
                                                                     s "Technical lead and architect of the Platform Engineering team charged with enabling and empowering other dev teams to
                                                                        quickly and efficiently leverage Azure's PaaS deployment options"
                                                                        
-                                                                    s "Currently designing and implementing a PCI DSS-Compliant IAC based compute platform centered around Kubernetes"
+                                                                    s "Currently designing and implementing a PCI DSS-Compliant IaC-based compute platform for continuously deployed microservices, centered around Kubernetes"
                                                                     
-                                                                    s "Currently leading an effort to migrate existing microservice-based deployment automation to a new IAC model based on Pulumi"
+                                                                    s "Currently leading an effort to migrate existing microservice-based deployment automation to a new IaC model based on Pulumi"
                                                                     
                                                                     s "Designed and implemented a DDoS protection solution for Kubernetes deployments in Azure"
                                                                     
@@ -194,7 +194,7 @@ let resumeContent =
     
                                                             s "In this role, I worked closely with our product support and product management teams to ensure
                                                                that I was always providing a customer-focused solution whether I was fixing bugs across multiple
-                                                               product versions or recommending configuration changes to internal customer environments."]
+                                                               product versions or recommending configuration changes to internal customer environments." ]
 
                                             Content = Content [ s "Technical lead on the team charged with building and maintaining the framework
                                                                    and platform for an enterprise CRM solution"
@@ -205,7 +205,7 @@ let resumeContent =
                                                                 s "Added dozens of features and resolved hundreds of bugs in legacy
                                                                    areas of the system"
                                                                    
-                                                                s "Modernized legacy subsystems by adopting new authentication methods and new .NET async patterns"]}
+                                                                s "Modernized legacy subsystems by adopting new authentication methods and new .NET async patterns" ]}
                                         ]
                         }
                     ]
@@ -234,8 +234,14 @@ let resumeContent =
                            a [ _href "https://github.com/willia4/electriclemur-v4-bootstrap" ] [ encodedText "and orchestration scripts" ]
                            encodedText ") hosting multiple websites behind a Traefik frontend, deployed automatically via GitHub action pipelines"]
 
-                    s "Previously wrote a Ruby and Sinatra web app for managing a book club, an Objective-C and Cocoa macOS app for generating secure &
-                       memorable passwords, a PHP webapp for displaying photographs, and all sorts of miscellaneous scripts and utilities for anything that needs doing"
+                    p [] [ encodedText "Other projects include: "
+                           ul [] [
+                                li [] [ encodedText "a Windows UWP C# app for managing a karaoke library and playing CD+G files" ]
+                                li [] [ encodedText "a Ruby and Sinatra web app for managing a book club" ]
+                                li [] [ encodedText "an Objective-C and Cocoa macOS app for generating secure & memorable passwords" ]
+                                li [] [ encodedText "a PHP webapp for displaying photographs" ]
+                                li [] [ encodedText "Miscellaneous scripts and utilities as needed in bash, PowerShell, TypeScript, C#, F#, C++, etc." ]
+                           ]]
                 ]
             }
             
@@ -293,8 +299,14 @@ let resumeContent =
 let GET : HttpHandler =
     fun next ctx -> task {
         
+        let customHeader = [
+            div [ (_id "custom-header"); (_class "print-only") ] [
+                div [] [ encodedText "843.323.0627" ]
+                div [] [ encodedText "james@jameswilliams.me" ]
+            ]
+        ]
         let page = layout
-                       (PageDefinitions.Page.Custom ("resume", "Resume of James Williams", "Resume", PageDefinitions.Page.AboutMe))
+                       (PageDefinitions.Page.Custom ("resume", "Resume of James Williams", "Resume", PageDefinitions.Page.AboutMe, customHeader))
                        resumeContent
                        [ PageExtra.CSS "frontend/resume.scss"
                          PageExtra.JavaScript "resume.js" ]

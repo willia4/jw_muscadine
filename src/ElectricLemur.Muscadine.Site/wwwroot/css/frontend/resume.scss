@@ -234,3 +234,12 @@ footer {
   padding-top: 15px;
   border-top: solid 1px #000;
 }
+
+#custom-header {
+  flex-grow: 1;
+  text-align: right;
+  margin-right: 30px;
+  font-size: 60%;
+  font-family: "Ubuntu Regular";
+  font-style: italic;
+}
