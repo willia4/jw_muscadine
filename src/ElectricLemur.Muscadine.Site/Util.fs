@@ -245,7 +245,7 @@ let cssLinkTag cssFile ctx=
     link [ (_rel "stylesheet"); (_type "text/css"); (_href $"/css/%s{cssFile}?v=%s{version}") ]
 
 let javascriptTag javascriptFile ctx =
-    let version = "foo" //fileVersion "js" javascriptFile ctx
+    let version = fileVersion "js" javascriptFile ctx
     script [ _src $"/js/%s{javascriptFile}?v={version}" ] []
 
 let extractEmbeddedResource name =
