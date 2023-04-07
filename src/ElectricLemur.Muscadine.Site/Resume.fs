@@ -240,7 +240,7 @@ let resumeContent =
                                 li [] [ encodedText "a Ruby and Sinatra web app for managing a book club" ]
                                 li [] [ encodedText "an Objective-C and Cocoa macOS app for generating secure & memorable passwords" ]
                                 li [] [ encodedText "a PHP webapp for displaying photographs" ]
-                                li [] [ encodedText "Miscellaneous scripts and utilities as needed in bash, PowerShell, TypeScript, C#, F#, C++, etc." ]
+                                li [] [ encodedText "miscellaneous scripts and utilities as needed in bash, PowerShell, TypeScript, C#, F#, C++, etc." ]
                            ]]
                 ]
             }
