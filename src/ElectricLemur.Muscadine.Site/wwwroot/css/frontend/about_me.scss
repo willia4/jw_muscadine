@@ -23,13 +23,13 @@
 
       header {
         .subtitle {
-          font-family: "Ubuntu Medium";
+          font-family: fonts.$header1;
           font-size: 20px;
           color: colors.$heading;
         }
 
         .title {
-          font-family: "Lora";
+          font-family: fonts.$callout;
           font-weight: bold;
           font-size: 64px;
           color: colors.$heading;
@@ -69,7 +69,7 @@
 
       code {
         color: colors.$heading;
-        font-weight: bold;
+        font-family: "Fira Mono Medium";
       }
     }
 
@@ -158,7 +158,7 @@
   }
 
   h2.activity-title {
-    font-family: "Ubuntu Bold";
+    //font-family: fonts.$header2;
     font-size: 32px;
     color: colors.$heading;
 
@@ -250,7 +250,7 @@
 
           .header-text {
             font-size: 24px;
-            font-family: "Ubuntu Bold";
+            font-family: fonts.$header3;
             color: colors.$heading;
 
             @include breakpoints.phone {
@@ -261,7 +261,7 @@
 
           .timestamp {
             font-size: 12px;
-            font-family: "Ubuntu Regular";
+            font-family: fonts.$body;
             margin-left: 12px;
             color: colors.$text;
 

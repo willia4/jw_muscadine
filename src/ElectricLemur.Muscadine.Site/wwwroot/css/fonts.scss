@@ -1,0 +1,76 @@
+@font-face {
+  font-family: "Lora Italic";
+  src :url("/fonts/Lora-Italic.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Lora Regular";
+  src :url("/fonts/Lora-Regular.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Lora Bold";
+  src :url("/fonts/Lora-Bold.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Lora Medium";
+  src :url("/fonts/Lora-Medium.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Lora SemiBold";
+  src :url("/fonts/Lora-SemiBold.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Assistant ExtraBold";
+  src :url("/fonts/Assistant-ExtraBold.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Outfit Regular";
+  src: url("/fonts/Outfit-Regular.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Outfit Bold";
+  src: url("/fonts/Outfit-Bold.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Outfit ExtraBold";
+  src: url("/fonts/Outfit-ExtraBold.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Outfit SemiBold";
+  src: url("/fonts/Outfit-SemiBold.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Fira Mono Regular";
+  src: url("/fonts/FiraMono-Regular.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Fira Mono Medium";
+  src: url("/fonts/FiraMono-Medium.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Fira Mono Bold";
+  src: url("/fonts/FiraMono-Bold.ttf") format("truetype");
+}
+
+$body: "Lora Regular";
+$bodyAlt: "Lora Medium";
+$bodyEmphasis: "Lora Bold";
+
+$logo: "Outfit Bold";
+$chrome: "Outfit SemiBold";
+
+$callout: "Assistant ExtraBold";
+$header1: "Outfit ExtraBold";
+$header2: "Outfit Bold";
+$header3: "Outfit Regular";

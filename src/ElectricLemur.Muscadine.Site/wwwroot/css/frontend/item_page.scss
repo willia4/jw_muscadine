@@ -152,7 +152,7 @@
   }
 
   h2.activity-title {
-    font-family: "Ubuntu Bold";
+    //font-family: fonts.$header2;
     font-size: 32px;
     color: colors.$heading;
 
@@ -181,7 +181,7 @@
         }
 
         .timestamp {
-          font-family: "Ubuntu Medium";
+          font-family: fonts.$header3;
           font-size: 18px;
         }
       }

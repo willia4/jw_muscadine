@@ -16,7 +16,7 @@ section {
   }
 
   h2 {
-    font-family: "Ubuntu Bold";
+    //font-family: fonts.fonts.$header2;
     font-size: 32px;
     color: colors.$heading;
 
@@ -211,7 +211,7 @@ section {
         }
 
         .item-microblog {
-          font-family: "Ubuntu Regular";
+          font-family: fonts.$body;
           font-size: 15px;
 
           .item-microblog-heading {
@@ -225,7 +225,6 @@ section {
               font-weight: bold;
               margin-right: 5px;
               font-size: 12px;
-
             }
 
             .date {
@@ -244,8 +243,6 @@ section {
           .text {
 
           }
-
-
         }
       }
     }

@@ -135,7 +135,7 @@ aside {
   // since you'd expect the container to control its own spacing 
   .section-content  {
     padding-top: 5px;
-    padding-bottom: 10px;
+    padding-bottom: 8px;
     
     p:first-of-type {
       margin-top: 0px;
@@ -162,6 +162,7 @@ aside {
       cursor: pointer;
     }
     header, header.level-one {
+      font-family: fonts.$header1;
       display: inline-block;
       color: colors.$heading;
       font-weight: bold;
@@ -169,7 +170,9 @@ aside {
     }
 
     header.level-two {
-      font-family: "Ubuntu Medium";
+      font-family: fonts.$header2;
+      font-size: 120%;
+      letter-spacing: 2.5px;
       font-variant: small-caps;
       text-transform: lowercase;
     }
@@ -177,8 +180,9 @@ aside {
     header .section-summary {
       margin-left: 5px;
       padding-top: 5px;
-      font-weight: lighter;
-
+      
+      font-family: fonts.$header3;
+      
       p {
         font-style: italic;
         font-size: 80%;
@@ -215,6 +219,7 @@ ul {
   li {
 
     .list-item-heading {
+      font-family: fonts.$bodyEmphasis;
       color: colors.$heading;
       text-transform: uppercase;
       font-weight: bold;
@@ -240,6 +245,6 @@ footer {
   text-align: right;
   margin-right: 30px;
   font-size: 60%;
-  font-family: "Ubuntu Regular";
+  font-family: fonts.$header3;
   font-style: italic;
 }

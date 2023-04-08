@@ -185,7 +185,7 @@ let resumeContent =
                                          }
                                 
                                          {
-                                            Header = [ header [ _class "level-two" ] [ encodedText "Previous Role" ] ]
+                                            Header = [ header [ _class "level-two" ] [ encodedText "Previous Roles" ] ]
                                             Annotation = [  s "Previously, as the team lead for the Enterprise Platform Team I focused on the foundational
                                                                platform for Blackbaud's Enterprise CRM product. I was the front line for my team when dealing
                                                                with thorny production issues that ranged from helping our hosting services team diagnose

@@ -17,11 +17,27 @@ html {
 
 body {
   overflow-x: clip;
-  font-family: "Ubuntu Regular";
+  font-family: fonts.$body;
   font-size: 17px;
   color: colors.$text;
   width: 100vw;
   height: 100vh
+}
+
+code {
+  font-family: "Fira Mono Regular";
+}
+
+header, h1 {
+  font-family: fonts.$header1;
+}
+
+h2 {
+  font-family: fonts.$header2;
+}
+
+h3, h4, h5 {
+  font-family: fonts.$header3;
 }
 
 #content-wrapper {
@@ -70,7 +86,7 @@ body {
   grid-column: 2;
   background-color: $right-background-color;
   color: colors.$heading;
-  font-family: "Ubuntu Medium";
+  font-family: fonts.$logo;
   font-size: 24px;
   display: flex;
   align-items: center;
@@ -173,7 +189,7 @@ body {
         padding-right: 22px;
         text-decoration: none;
         color: colors.$heading;
-        font-family: "Ubuntu Medium";
+        font-family: fonts.$chrome;
         font-size: 20px;
         border: solid 1px colors.$heading;
 

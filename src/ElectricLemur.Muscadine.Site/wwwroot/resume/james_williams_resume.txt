@@ -48,7 +48,7 @@ On-call and subject matter expert for Kubernetes implementation and operational 
 Architectural consultant and subject matter expert for any team wanting to go forward
 with new Azure technologies
 
-#### Previous Role
+#### Previous Roles
 Technical lead on the team charged with building and maintaining the framework and
 platform for an enterprise CRM solution
 
@@ -76,7 +76,7 @@ Other projects include:
     * a Ruby and Sinatra web app for managing a book club
     * an Objective-C and Cocoa macOS app for generating secure & memorable passwords
     * a PHP webapp for displaying photographs
-    * Miscellaneous scripts and utilities as needed in bash, PowerShell, TypeScript, C#, F#, C++, etc.
+    * miscellaneous scripts and utilities as needed in bash, PowerShell, TypeScript, C#, F#, C++, etc.
 
 
 
