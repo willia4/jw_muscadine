@@ -33,8 +33,9 @@
   #main-content {
     border-left: 0;
     padding: 15px;
-    width: 100%;
+    width: 100vw;
     height: 100%;
+    background-color: white;
   }
   
   header {
@@ -43,6 +44,7 @@
   
   main {
     page-break-before: avoid;
+    background-color: white;
   }
   
   div.main-content {
