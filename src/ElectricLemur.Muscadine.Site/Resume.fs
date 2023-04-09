@@ -305,11 +305,17 @@ let GET : HttpHandler =
                 div [] [ encodedText "james@jameswilliams.me" ]
             ]
         ]
+        
+        // mark "About Me" as active
+        let sidebar = PageDefinitions.SidebarButton.defaultSidebar (Some PageDefinitions.AboutMe)
+
         let page = layout
                        (PageDefinitions.Page.Custom ("resume", "Resume of James Williams", "Resume", PageDefinitions.Page.AboutMe, customHeader))
                        resumeContent
                        [ PageExtra.CSS "frontend/resume.scss"
                          PageExtra.JavaScript "resume.js" ]
+                       NoPageData
+                       (Some sidebar)
                        ctx
                    
         return! htmlView page next ctx

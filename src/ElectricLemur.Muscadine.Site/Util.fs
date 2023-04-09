@@ -272,3 +272,7 @@ let textToParagraphs (text: string) =
         Giraffe.ViewEngine.HtmlElements.p [] [ encodedText lines ]
     )
     |> Seq.toList
+
+let makeId prefix =
+    let id = System.Guid.NewGuid().ToString().Replace("-","").ToLowerInvariant()
+    $"{prefix}-{id}"

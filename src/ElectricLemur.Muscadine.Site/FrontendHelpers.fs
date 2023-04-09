@@ -5,6 +5,7 @@ open Giraffe.ViewEngine
 open Microsoft.AspNetCore.Http;
 open Newtonsoft.Json.Linq
 
+
 module PageDefinitions =
   type Page =
     | AboutMe
@@ -51,24 +52,79 @@ module PageDefinitions =
     | Colophon -> "/colophon/"
     | Custom (slug, _, _, _, _) -> $"/%s{slug}/"
 
-  let makeSidebarButton currentPage buttonPage =
-    let title = sidebarButtonTitle buttonPage
-    let active =
-      match currentPage with
-      | Custom (_, _, _, currentPage, _) -> currentPage = buttonPage
-      | _ -> currentPage = buttonPage
+  type SidebarButton = {
+    LongTitle: string
+    ShortTitle: string
+    Active: bool
+    Route: string
+    Icon: XmlNode option
+  }
 
-    let largeButtonClass = if active then "sidebar-button large-button active" else "sidebar-button large-button"
-    let smallButtonClass = if active then "sidebar-button small-button active" else "sidebar-button small-button"
+  module SidebarButton =
+    module DefaultButtons =
+      let AboutMe = {
+        LongTitle = "About Me"
+        ShortTitle = "About Me"
+        Route = "/about/"
+        Icon = Some (i [ _class Constants.Icons.AboutMe ] [])
+        Active = false
+      }
+      
+      let Projects = {
+        LongTitle = "What Am I Working On?"
+        ShortTitle = "Projects"
+        Route = "/projects/"
+        Icon = Some (i [ _class Constants.Icons.Project ] [])
+        Active= false
+      }
+      
+      let Books = {
+        LongTitle = "What Am I Reading?"
+        ShortTitle = "Books"
+        Route = "/books/"
+        Icon = Some (i [ _class Constants.Icons.Book ] [])
+        Active = false
+      }
+      
+      let Games = {
+        LongTitle = "What Am I Playing?"
+        ShortTitle = "Games"
+        Route = "/games/"
+        Icon = Some (i [ _class Constants.Icons.Game ] [])
+        Active = false
+      }
+      
+      let Colophon = {
+        LongTitle = "Colophon"
+        ShortTitle = "Colophon"
+        Route = "/colophon/"
+        Icon = Some (i [ _class Constants.Icons.Colophon ] [])
+        Active = false
+      }
+    let defaultSidebar (currentPage: Page option) =
+      [
+        { DefaultButtons.AboutMe with Active = currentPage |> Option.map (fun p -> p = AboutMe) |> Option.defaultValue false }
+        { DefaultButtons.Projects with Active = currentPage |> Option.map (fun p -> p = Projects) |> Option.defaultValue false }
+        { DefaultButtons.Books with Active = currentPage |> Option.map (fun p -> p = Books) |> Option.defaultValue false }
+        { DefaultButtons.Games with Active = currentPage |> Option.map (fun p -> p = Games) |> Option.defaultValue false }
+        { DefaultButtons.Colophon with Active = currentPage |> Option.map (fun p -> p = Colophon) |> Option.defaultValue false }
+      ]
+      
+      
+  let makeSidebarButton (button: SidebarButton) =
+    let title = (button.LongTitle, button.ShortTitle)
+
+    let largeButtonClass = if button.Active then "sidebar-button large-button active" else "sidebar-button large-button"
+    let smallButtonClass = if button.Active then "sidebar-button small-button active" else "sidebar-button small-button"
 
     let buttonIcon =
-      match sidebarButtonIcon buttonPage with
+      match button.Icon with
       | Some i -> [ i ]
       | None -> []
 
     [
-        a [ (_class largeButtonClass); (_href (pageRoute buttonPage)); (attr "role" "menuitem") ] (List.append buttonIcon [ encodedText (fst title) ])
-        a [ (_class smallButtonClass); (_href (pageRoute buttonPage)); (attr "role" "menuitem") ] (List.append buttonIcon [ encodedText (snd title) ])
+        a [ (_class largeButtonClass); (_href button.Route); (attr "role" "menuitem") ] (List.append buttonIcon [ encodedText (fst title) ])
+        a [ (_class smallButtonClass); (_href button.Route); (attr "role" "menuitem") ] (List.append buttonIcon [ encodedText (snd title) ])
     ]
 
 type ItemLink =
@@ -78,10 +134,43 @@ type PageExtra =
   | CSS of string
   | JavaScript of string
 
-let layout pageDefinition content extraCss ctx =
+type PageDataType =
+    | String of value: string
+    | Int of value: int
+    | Float of value: float
+    
+type PageData =
+  | PageData of Map<string, PageDataType>
+  | NoPageData
+  
+
+let layout pageDefinition content extraCss (pageData: PageData) (sidebar: Option<PageDefinitions.SidebarButton list>) ctx =
   let homeUrl = Util.baseUrl ctx
   let pageHeader = PageDefinitions.pageTitle pageDefinition
   let sidebarOrder = [ PageDefinitions.AboutMe; PageDefinitions.Projects; PageDefinitions.Books; PageDefinitions.Games; PageDefinitions.Colophon ]
+
+  let sidebar =
+    match sidebar with
+    | Some sidebar -> sidebar
+    | None -> PageDefinitions.SidebarButton.defaultSidebar (Some pageDefinition)
+    
+  let pageDataScript =
+    let sb = System.Text.StringBuilder("window.pageData = {};")
+
+    ( match pageData with
+      | NoPageData -> sb
+      | PageData pageData ->
+          for k in (Map.keys pageData) do
+            sb
+              .Append($"window.pageData[\"{k}\"] = ")
+              .Append(match pageData[k] with
+                      | String s -> $"\"{s}\""
+                      | Int i -> $"{i}"
+                      | Float f -> $"{f}")
+              .AppendLine(";")
+            |> ignore
+          sb
+    ).ToString()
 
   let headNodes =
     [
@@ -101,6 +190,7 @@ let layout pageDefinition content extraCss ctx =
         (Util.cssLinkTag "remedy.css" ctx)
         (Util.cssLinkTag "frontend.scss" ctx)
         (Util.cssLinkTag "print.scss" ctx)
+        script [] [ rawText pageDataScript ]
         script [ (_src "https://kit.fontawesome.com/84935c491f.js"); (_crossorigin "anonymous") ] []
         (Util.javascriptTag "main.js" ctx)
     ]
@@ -137,9 +227,9 @@ let layout pageDefinition content extraCss ctx =
           ]
           div [ _id "main-sidebar"] [
             ul [ attr "role" "menu" ] (
-              sidebarOrder
-              |> List.map (fun p ->
-                  li [ (attr "role" "presentation") ] (PageDefinitions.makeSidebarButton pageDefinition p ))
+              sidebar
+              |> List.map (fun button ->
+                  li [ (attr "role" "presentation") ] (PageDefinitions.makeSidebarButton button ))
 
             )
           ]

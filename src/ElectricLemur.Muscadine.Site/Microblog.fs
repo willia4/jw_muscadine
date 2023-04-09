@@ -1,6 +1,7 @@
 module Microblog
 open ElectricLemur.Muscadine.Site
 open System
+open ElectricLemur.Muscadine.Site.Items
 open Giraffe
 open Giraffe.ViewEngine
 open Microsoft.AspNetCore.Http
@@ -281,22 +282,6 @@ let postBodyFromContext (ctx: HttpContext) =
     | None -> Error "Invalid post body; missing text element"
   ))
 
-let private editView (microblog: MicroblogAssignment) =
-  let pageTitle = "Edit Microblog"
-  Items.layout pageTitle Map.empty [
-    div [ _class "page-title" ] [ encodedText pageTitle ]
-    form [ _name "form"; _method "post" ] [
-      table [ ] [
-        Items.makeInputRow "Timestamp" (encodedText (microblog.DateAdded.ToString("g")))
-        Items.makeTextAreaInputRow "Text" "text" 5 (Some microblog.Text)
-
-        tr [] [
-          td [] []
-          td [] [ input [ _type "submit"; _value "Save" ] ]
-        ]
-      ]
-    ]
-  ]
 
 module Handlers =
   let POST_add itemDocumentType itemId : HttpHandler =
@@ -347,18 +332,6 @@ module Handlers =
     fun next ctx -> task {
       do! deleteMicroblogFromItem itemDocumentType itemId blogId ctx
       return! setStatusCode 200 next ctx
-    }
-
-  let GET_edit id : HttpHandler =
-    fun next ctx -> task {
-      let! existing =
-        Database.getDocumentByTypeAndId documentType id ctx
-        |> Task.map (Option.map JObjectToMicroblogAssignment)
-
-      return! match existing with
-              | None -> (setStatusCode 404 >=> text "Microblog not found") next ctx
-              | Some existing -> htmlView (editView existing) next ctx
-
     }
 
   let POST_edit id : HttpHandler =

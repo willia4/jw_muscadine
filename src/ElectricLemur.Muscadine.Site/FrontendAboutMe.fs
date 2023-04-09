@@ -105,7 +105,7 @@ module Handlers =
       let! recentMicroblogs = Microblog.loadRecentMicroblogs (System.DateTimeOffset.UtcNow) (Database.Limit 7) ctx
 
       let content = aboutMeContent recentMicroblogs ctx
-      let pageHtml = FrontendHelpers.layout FrontendHelpers.PageDefinitions.AboutMe content [ FrontendHelpers.PageExtra.CSS  "frontend/about_me.scss" ] ctx
+      let pageHtml = FrontendHelpers.layout FrontendHelpers.PageDefinitions.AboutMe content [ FrontendHelpers.PageExtra.CSS  "frontend/about_me.scss" ] FrontendHelpers.NoPageData None ctx
 
       return! htmlView pageHtml next ctx
     }
@@ -118,6 +118,8 @@ module Handlers =
                        (FrontendHelpers.PageDefinitions.Custom ("updates", "All Updates", "All Updates", FrontendHelpers.PageDefinitions.AboutMe, []) )
                        content
                        [ FrontendHelpers.PageExtra.CSS "frontend/about_me.scss" ]
+                       FrontendHelpers.NoPageData
+                       None
                        ctx
 
       return! htmlView pageHtml next ctx
@@ -149,6 +151,8 @@ module Handlers =
                          (FrontendHelpers.PageDefinitions.Custom ($"updates/%s{slugString}", longTitle, shortTitle, activeButtonPage, []))
                          content
                          [ FrontendHelpers.PageExtra.CSS  "frontend/about_me.scss" ]
+                         FrontendHelpers.NoPageData
+                         None
                          ctx
 
         return! htmlView pageHtml next ctx

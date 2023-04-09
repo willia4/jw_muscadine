@@ -58,9 +58,6 @@
     <Compile Include="FrontendProject.fs" />
     <Compile Include="FrontendGame.fs" />
     <Compile Include="FrontendAboutMe.fs" />
-    <Compile Include="AdminGame.fs" />
-    <Compile Include="AdminBook.fs" />
-    <Compile Include="AdminProject.fs" />
     <Compile Include="Admin.fs" />
     <Compile Include="Resume.fs" />
     <Compile Include="Program.fs" />

@@ -34,7 +34,7 @@ module Fields =
 
     let title = FormFields.FormField.RequiredStringField ({
         Key = "name"
-        Label = "Name"
+        Label = "Title"
         getValueFromModel = (fun b -> Some b.Title)
         getValueFromContext = (fun ctx -> HttpFormFields.fromContext ctx |> HttpFormFields.stringOptionValue "name")
         getValueFromJObject = (fun obj -> JObj.getter<string> obj "name")

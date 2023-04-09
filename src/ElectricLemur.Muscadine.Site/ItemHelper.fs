@@ -51,7 +51,7 @@ module ItemDocumentType =
     | GameDocumentType -> "Game"
     | ProjectDocumentType -> "Project"
     | BookDocumentType -> "Book"
-
+    
 let tryWrapItem (item: obj) =
   match item with
   | :? Game.Game as g -> Some (Game g)
@@ -305,21 +305,6 @@ module Views =
             ]
     ]
 
-  module Admin =
-    let addView itemDocumentType allTags =
-      match ItemDocumentType.fromString itemDocumentType with
-      //| Some GameDocumentType -> Game.addEditView None Game.Fields.viewFields allTags []
-      | Some GameDocumentType -> FormFields.View.addEditView None "Game" "game" Game.Fields.name Game.Fields.allFields allTags []
-      | Some ProjectDocumentType -> FormFields.View.addEditView None "Project" "project" Project.Fields.name Project.Fields.allFields allTags []
-      | Some BookDocumentType -> FormFields.View.addEditView None "Book" "book" Book.Fields.title Book.Fields.allFields allTags []
-      | None -> failwith $"Could not determine addView for document type {itemDocumentType}"
-
-    let editView item =
-      match item with
-      | Game g -> FormFields.View.addEditView (Some g) "Game" "game" Game.Fields.name Game.Fields.allFields
-      | Project p -> FormFields.View.addEditView (Some p) "Project" "project" Project.Fields.name Project.Fields.allFields
-      | Book b -> FormFields.View.addEditView (Some b) "Book" "book" Book.Fields.title Book.Fields.allFields
-
 module Handlers =
   let Get_listIndex itemDocumentType : HttpHandler =
     fun next ctx ->
@@ -344,7 +329,7 @@ module Handlers =
         let! otherCards = others |> makeAndSortCards
 
         let content = Views.makeContentView itemDocumentType inProgressCards backlogCards finishedCards otherCards
-        let pageHtml = FrontendHelpers.layout (pageDefinitionForDocumentType itemDocumentType) content [ PageExtra.CSS "frontend/item_cards.scss" ] ctx
+        let pageHtml = FrontendHelpers.layout (pageDefinitionForDocumentType itemDocumentType) content [ PageExtra.CSS "frontend/item_cards.scss" ] NoPageData None ctx
 
         return! htmlView pageHtml next ctx
       }
@@ -370,7 +355,7 @@ module Handlers =
 
       match processedContent with
       | Some (item, content) ->
-          let pageHtml = FrontendHelpers.layout (pageDefinition item) content [ PageExtra.CSS "frontend/item_page.scss" ] ctx
+          let pageHtml = FrontendHelpers.layout (pageDefinition item) content [ PageExtra.CSS "frontend/item_page.scss" ] NoPageData None ctx
           return! (htmlView pageHtml next ctx)
       | _ -> return! (setStatusCode 404 >=> text "Page not found") next ctx
     }
@@ -403,18 +388,12 @@ module Handlers =
           | None -> None
 
         let content = FrontendHelpers.makeItemPage (name item) itemLink subtitle microblog.Microblog.Text (icon item) [] tags None ctx
-        let pageHtml = FrontendHelpers.layout (pageDefinition item) content [ PageExtra.CSS "frontend/item_page.scss" ] ctx
+        let pageHtml = FrontendHelpers.layout (pageDefinition item) content [ PageExtra.CSS "frontend/item_page.scss" ] NoPageData None ctx
         return! (htmlView pageHtml next ctx)
       | _ -> return! (setStatusCode 404 >=> text "Page not found") next ctx
     }
 
 module AdminHandlers =
-  let private adminSlug item =
-    match item with
-    | Game _ -> "/admin/game/"
-    | Project _ -> "/admin/project/"
-    | Book _ -> "/admin/book/"
-
   let private coverImageKey item =
     match item with
     | Game _ -> (FormFields.key Game.Fields.coverImagePaths)
@@ -445,15 +424,9 @@ module AdminHandlers =
       (fun n -> { unwrapped with CoverImagePaths = n})
     |> Task.map (Result.map wrapItem)
 
-  let GET_add itemDocumentType : HttpHandler =
-    fun next ctx -> 
-      Tag.getExistingTags ctx
-      |> Task.map (fun allTags -> Views.Admin.addView itemDocumentType allTags)
-      |> Task.bind (fun view -> htmlView view next ctx)
-
-  let POST_add itemDocumentType : HttpHandler =
+  let POST_add (itemDocumentType: ItemDocumentType) : HttpHandler =
     fun next ctx -> task {
-      let! item = fromContextForm itemDocumentType None ctx
+      let! item = fromContextForm (ItemDocumentType.toDatabaseDocumentType itemDocumentType) None ctx
 
       match item with
       | Ok item ->
@@ -470,30 +443,15 @@ module AdminHandlers =
               do! Database.upsertDocument ctx data
               do! Tag.saveTagsForForm (documentType item) (itemId item) Tag.formKey ctx
 
-              let redirectUrl = $"%s{adminSlug item}%s{itemId item}"
+              let redirectUrl = $"/admin/{ItemDocumentType.toSlug itemDocumentType}/{itemId item}"
               return! (redirectTo false redirectUrl) next ctx
       | Error msg ->
           return! (setStatusCode 400 >=> text msg) next ctx
     }
 
-  let GET_edit itemDocumentType id : HttpHandler =
-    fun next ctx -> task {
-      let! existing =
-        Database.getDocumentById id ctx
-        |> Task.map (Option.bind fromJObject)
 
-      let! allTags = Tag.getExistingTags ctx
-      let! documentTags = Tag.loadTagsForDocument itemDocumentType id ctx
 
-      match existing with
-      | Some existing ->
-          let view = Views.Admin.editView existing allTags documentTags
-          return! htmlView view next ctx
-      | None ->
-          return! (setStatusCode 404 >=> text "Page not found") next ctx
-    }
-
-  let POST_edit itemDocumentType id : HttpHandler =
+  let POST_edit (itemDocumentType: ItemDocumentType) id : HttpHandler =
     fun next ctx -> task {
       let! existing =
         Database.getDocumentById id ctx
@@ -502,7 +460,7 @@ module AdminHandlers =
       match existing with
       | None -> return! (setStatusCode 404) next ctx
       | Some existing ->
-          let! newModel = fromContextForm itemDocumentType (Some existing) ctx
+          let! newModel = fromContextForm (ItemDocumentType.toDatabaseDocumentType itemDocumentType) (Some existing) ctx
           match newModel with
           | Ok newModel ->
               let! coverImageUploadResult =
@@ -518,7 +476,7 @@ module AdminHandlers =
                   do! Database.upsertDocument ctx data
                   do! Tag.saveTagsForForm (documentType newModel) (itemId newModel) Tag.formKey ctx
 
-                  let redirectUrl = $"%s{adminSlug newModel}%s{itemId newModel}"
+                  let redirectUrl = $"/admin/{ItemDocumentType.toSlug itemDocumentType}/{itemId newModel}"
                   return! (redirectTo false redirectUrl) next ctx
           | Error msg -> return! (setStatusCode 400 >=> text msg) next ctx
     }

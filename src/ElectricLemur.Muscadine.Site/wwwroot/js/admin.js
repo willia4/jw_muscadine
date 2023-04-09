@@ -1,20 +1,61 @@
-﻿async function deleteItemClick(event, button) {
-  const idAttribute = button.attributes.getNamedItem("data-id");
-  const id = idAttribute ? idAttribute.value : null;
+﻿function getCancelUrl() {
+    if (window.pageData && window.pageData.cancelUrl) {
+        return window.pageData.cancelUrl;
+    }
 
-  const nameAttribute = button.attributes.getNamedItem("data-name");
-  const name = nameAttribute ? nameAttribute.value : null;
+    if (window.pageData && window.pageData.slug) {
+        return "/admin/" + window.pageData.slug;
+    }
 
-  const urlAttribute = button.attributes.getNamedItem("data-url");
-  const url = urlAttribute ? urlAttribute.value : null;
+    return "/admin";
+}
 
+async function waitForTransitions(el) {
+    return new Promise((res, rej) => {
+        let resolved = false; 
+        
+        setTimeout(() => {
+            if (!resolved) {
+                resolved = true;
+                res();
+            }
+        }, 3000); 
+        
+        el.addEventListener('transitionend', () => {
+            if (!resolved) {
+                resolved = true;
+                res();
+            }
+        })    
+    })
+    
+}
+
+async function deleteItemClick(event, button) {
+  const id = button.dataset.id;
+  const name = button.dataset.name;
+  const url = button.dataset.url;
+  const sectionId = button.dataset.sectionId;
+  
+  const section = sectionId ? document.getElementById(sectionId) : undefined;
+  
   if (!(!!id && !!name && !!url)) {
     alert(`Invalid page state: could not determine item to delete`);
     return;
   }
 
+  if (section) {
+      section.classList.add("being-deleted");
+      await waitForTransitions(section);
+  }
+  
   const answer = confirm(`Do you want to delete the item ${name}?`);
-  if (!answer) return;
+  if (!answer) {
+      if (section) {
+          section.classList.remove("being-deleted");
+      }
+      return;
+  };
 
   const response = await fetch(url, {
     method: "DELETE",
@@ -178,7 +219,8 @@ function configureMicroblogs() {
             link.appendChild(document.createTextNode(d.toLocaleString()));
             link.setAttribute("href", "/admin/microblog/" + data.id);
 
-            tr.appendChild(link);
+            
+            tr.appendChild(document.createElement("td")).appendChild(link);
             tr.appendChild(document.createElement("td")).appendChild(document.createTextNode(data.text));
     
             const deleteButton = document.createElement("button");
@@ -236,14 +278,31 @@ function configureMicroblogs() {
           configureTags();
           configureMicroblogs();
 
-          const buttons = document.getElementsByClassName("delete-button");
+          const deleteButtons = document.getElementsByClassName("delete-button");
 
-          for (let i = 0; i < buttons.length; i++) {
-            const b = buttons[i];
+          for (let i = 0; i < deleteButtons.length; i++) {
+            const b = deleteButtons[i];
 
             b.addEventListener("click", (event) => {
               deleteItemClick(event, b);
             });
+          }
+          
+          const addButtons = Array.from(document.querySelectorAll("#main-header button.add-new"));
+          for (const b of addButtons) {
+              b.addEventListener("click", (event) => {
+                if (b.dataset.newUrl) {
+                    window.location = b.dataset.newUrl;
+                }
+              })
+          }
+          
+          const cancelButtons = Array.from(document.querySelectorAll("form button.cancel-button"));
+          for (const b of cancelButtons) {
+              b.addEventListener("click", (event) => {
+                  event.preventDefault();
+                  window.location = getCancelUrl();
+              });
           }
     });
   }

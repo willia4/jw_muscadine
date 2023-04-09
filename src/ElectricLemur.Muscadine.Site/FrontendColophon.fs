@@ -19,7 +19,7 @@ module Handlers =
     fun next (ctx: HttpContext) -> task {
 
       let content = colophonContent
-      let pageHtml = FrontendHelpers.layout FrontendHelpers.PageDefinitions.Colophon content [ FrontendHelpers.PageExtra.CSS "frontend/colophon.scss" ] ctx
+      let pageHtml = FrontendHelpers.layout FrontendHelpers.PageDefinitions.Colophon content [ FrontendHelpers.PageExtra.CSS "frontend/colophon.scss" ] FrontendHelpers.NoPageData None ctx
 
       return! htmlView pageHtml next ctx
     }

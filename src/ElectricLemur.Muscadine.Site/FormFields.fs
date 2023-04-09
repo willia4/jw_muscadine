@@ -1,5 +1,6 @@
 module FormFields
 open ElectricLemur.Muscadine.Site
+open ElectricLemur.Muscadine.Site.Items
 
 type FieldDescriptor<'m, 'f> = {
     Key: string
@@ -290,35 +291,25 @@ module View =
     let idField = allFields |> Seq.tryFind (fun ff -> (key ff) = "_id")
     let id = idField |> Option.bind (fun idField -> m |> Option.bind (fun m -> ModelValue.string idField m))
 
-    let pageTitle =
-      match m with
-      | None -> $"Add %s{titleCaseDocumentType}"
-      | Some m ->
-          let modelName = (ModelValue.string nameField m) |> Option.defaultValue "ERROR: NAME NOT FOUND"
-          $"Edit %s{titleCaseDocumentType} %s{modelName}"
-
-    let pageData =
-      match id with
-      | Some id -> Map.ofList [ ("id", Items.pageDataType.String id); ("slug", Items.pageDataType.String slug)]
-      | None -> Map.empty
-
-
     let viewFields = viewFieldsForAllFields allFields
-    Items.layout pageTitle pageData [
-      yield div [ _class "page-title" ] [ encodedText pageTitle ]
+    [
       yield form [ _name "edit-form"; _method "post"; _enctype "multipart/form-data" ] [
-          table [] [
-              for ff in viewFields do
-                  yield makeFormFieldRow ff m
-
-              yield Items.makeTagsInputRow "Tags" Tag.formKey allTags documentTags
-              yield tr [] [
-                  td [] []
-                  td [] [ input [ _type "submit"; _value "Save" ] ]
-              ]
+            for ff in viewFields do
+              yield makeFormFieldRow ff m
+              
+            yield Items.makeTagsInputRow "Tags" Tag.formKey allTags documentTags
+            
+            yield Items.makeInputRow "save-button" None InputRowType.SaveButton (
+              div [ _class "save-cancel-container" ] [
+                div [ _class "save-cancel" ] [
+                  input [ _type "submit"; _value "Save" ]
+                  button [ _class "cancel-button" ] [ encodedText "Cancel" ]  
+                ]])
+               
           ]
-        ]
-
-      if Option.isSome m then
-        yield div [ _class "microblog-container section" ] []
+      
+      yield! match m with
+             | Some _ -> [ (div [ _class "microblog-container section" ] [] )]
+             | None -> []
     ]
+

@@ -1,143 +1,177 @@
 ﻿module Admin
+open ElectricLemur.Muscadine.Site.FrontendHelpers
+open ElectricLemur.Muscadine.Site.ItemHelper
+open ElectricLemur.Muscadine.Site.Items
 open Giraffe
 open Giraffe.ViewEngine
 open Microsoft.AspNetCore.Http
 open System.Security.Claims
 open ElectricLemur.Muscadine.Site
-open Newtonsoft.Json.Linq;
 open Game;
 open Book;
-open Project;
-open System.Threading.Tasks
+open Project
 
+let getItemCoverImage (item: ItemWrapper) =
+    match item with
+    | Book x -> x.CoverImagePaths 
+    | Project x -> x.IconImagePaths
+    | Game x -> x.CoverImagePaths
+
+let getItemCoverImageIcon (item: ItemWrapper) =
+    item
+    |> getItemCoverImage
+    |> Option.map (fun img -> img.Size128)
+
+let getItemCoverImageIconPath (item: ItemWrapper) =
+    item
+    |> getItemCoverImageIcon
+    |> Util.addRootPath "/images"
+    
 module Views =
-    let layout (pageTitle: string) (content: XmlNode list) ctx =
-        html [] [
-            head [] [
-                title [] [ encodedText pageTitle ]
-                (Util.cssLinkTag "admin.scss" ctx)
-                (Util.javascriptTag "admin.js" ctx)
-            ]
-            body [] [
-                div [ _class "site-title" ] [
-                    encodedText "James Williams/"
-                    a [ _href "/admin/" ] [encodedText "Admin"]
+    type AddButtonDisplay =
+        | NotShown
+        | Shown of ItemDocumentType
+    
+    let adminLayout (pageTitle: string) (addButtonDisplay: AddButtonDisplay) (pageData: FrontendHelpers.PageData) (itemDocumentType: ItemDocumentType option) (content: XmlNode list) ctx =
+        let extraHeader =
+            match addButtonDisplay with
+            | NotShown -> []
+            | Shown itemDocumentType ->
+                let slug = ItemDocumentType.toSlug itemDocumentType
+                let documentType = ItemDocumentType.toDatabaseDocumentType itemDocumentType
+                let singular = ItemDocumentType.toSingularTitleString itemDocumentType
+                let urlBase = $"/admin/{slug}"
+                [
+                    button [
+                        _class "add-new"
+                        _data "new-url" $"{urlBase}/_new"
+                        _data "document-type" (System.Web.HttpUtility.UrlEncode(documentType))
+                        _data "slug" (System.Web.HttpUtility.UrlEncode(slug))
+                    ] [ encodedText $"Add {singular}" ]
                 ]
-                div [ _class "body-content"] content
-            ] 
-        ]
-
-    let makeIndexSection 
-        (data: 'a seq) (header: string) (urlBase: string) (tableHeaders: string seq) 
-        (makeTableRow: 'a -> XmlNode list) = 
-        let safeHeader = header.ToLowerInvariant().Replace(" ", "-")
-
-        div [ _class "section" ] [
-            div [ _class "section-header" ] [
-                span [] [ encodedText header ]
-                a [ _class "add-new"; attr "data-for" safeHeader; _href $"{urlBase}/_new" ] [ encodedText "Add" ]
-            ]
-
-            table 
-                [ _class "section-table" ] 
-                ([
-                    tr [] [ for h in tableHeaders -> (th [] [ encodedText h ])]
-                ] |> List.prepend [
-                    for d in data ->
-                        tr [] (makeTableRow d)
-                ])
-
-        ]
-
-    let index (games: seq<Game * List<string>> ) (books: seq<Book * List<string>>) (projects: seq<Project * List<string>>) (ctx: HttpContext) =
-        let makeTagsCell tags = 
-            div [ _class "tags" ] (tags |> List.sort |> List.map (fun t -> div [ _class "tag" ] [encodedText t]))
-        let content = [
-            makeIndexSection 
-                games 
-                "Games" 
-                "/admin/game" 
-                [ "Cover"; "Short Name"; "Description"; "Slug"; "Tags"; "" ]
-                (fun g -> 
-                    let (g, tags) = g
-                    let makeUrl (g: Game) = $"/admin/game/{g.Id}"
-                    [
-                        td [ _class "icon-cell" ] (
-                            let path = g.CoverImagePaths |> Option.map (fun p -> p.Size64) |> Util.addRootPath "/images"
-                            match path with
-                               | Some path -> [ img [ _src path ]]
-                               | None -> [])
-                        td [] [ a [ _href (makeUrl g)] [ encodedText g.Name ]]
-                        td [] [ encodedText g.Description ]
-                        td [] [ encodedText g.Slug ]
-                        td [ _class "tag-cell" ] [ makeTagsCell tags ]
-                        td [ _class "delete-cell" ] [
-                            button [ _class "delete-button"
-                                     attr "data-id" (string g.Id) 
-                                     attr "data-name" g.Name 
-                                     attr "data-url" $"/admin/game/{g.Id}" ]
-                                   [ encodedText "Delete" ]
-                        ]
-                ])
-
-            makeIndexSection
-                books
-                "Books"
-                "/admin/book"
-                [ "Cover"; "Title"; "Description"; "Slug"; "Tags"; "" ]
-                (fun b -> 
-                    let (b, tags) = b
-                    let makeUrl (b: Book) = $"/admin/book/{b.Id}"
-                    [
-                        td [ _class "icon-cell" ] (
-                            let path = b.CoverImagePaths |> Option.map (fun p -> p.Size64) |> Util.addRootPath "/images"
-                            match path with
-                               | Some path -> [ img [ _src path ]]
-                               | None -> [])
-                        td [] [ a [ _href (makeUrl b)] [ encodedText b.Title ]]
-                        td [] [ encodedText b.Description ]
-                        td [] [ encodedText b.Slug ]
-                        td [ _class "tag-cell" ] [ makeTagsCell tags ]
-                        td [ _class "delete-cell" ] [
-                            button [ _class "delete-button"
-                                     attr "data-id" (string b.Id) 
-                                     attr "data-name" b.Title 
-                                     attr "data-url" $"/admin/book/{b.Id}" ]
-                                   [ encodedText "Delete" ]
-                        ]
-                ])
                 
-            makeIndexSection
-                projects
-                "Projects"
-                "/admin/project"
-                [ "Icon"; "Name"; "Description"; "Slug"; "Tags"; "" ]
-                (fun p -> 
-                    let (p, tags) = p
-                    let makeUrl (p: Project) = $"/admin/project/{p.Id}"
-                    [
-                        td [ _class "icon-cell" ] (
-                            let path = p.IconImagePaths |> Option.map (fun p -> p.Size64) |> Util.addRootPath "/images"
-                            match path with
-                               | Some path -> [ img [ _src path ]]
-                               | None -> [])
-                        td [] [ a [ _href (makeUrl p)] [ encodedText p.Name ]]
-                        td [] [ encodedText p.Description ]
-                        td [] [ encodedText p.Slug ]
-                        td [ _class "tag-cell" ] [ makeTagsCell tags ]
-                        td [ _class "delete-cell" ] [
-                            button [ _class "delete-button"
-                                     attr "data-id" (string p.Id) 
-                                     attr "data-name" p.Name 
-                                     attr "data-url" $"/admin/book/{p.Id}" ]
-                                   [ encodedText "Delete" ]
-                        ]
-                ])
+        let pageDef =
+            FrontendHelpers.PageDefinitions.Page.Custom (
+                $"/admin/{slug}",
+                $"Admin: {pageTitle}",
+                $"Admin: {pageTitle}",
+                FrontendHelpers.PageDefinitions.Page.AboutMe,
+                extraHeader)
+            
+        let extra = [ (FrontendHelpers.PageExtra.CSS "admin.scss")
+                      (FrontendHelpers.PageExtra.JavaScript "admin.js") ]
+        
+        let sidebar: PageDefinitions.SidebarButton list = [
+            {
+                LongTitle = "Admin: Projects"
+                ShortTitle = "Projects"
+                Icon = PageDefinitions.SidebarButton.DefaultButtons.Projects.Icon
+                Route = "/admin/projects"
+                Active = (itemDocumentType |> Option.map(fun i -> i = ProjectDocumentType) |> Option.defaultValue false)
+            }
+            
+            {
+                LongTitle = "Admin: Books"
+                ShortTitle = "Books"
+                Icon = PageDefinitions.SidebarButton.DefaultButtons.Books.Icon
+                Route = "/admin/books"
+                Active = (itemDocumentType |> Option.map(fun i -> i = BookDocumentType) |> Option.defaultValue false)
+            }
+            
+            {
+                LongTitle = "Admin: Games"
+                ShortTitle = "Games"
+                Icon = PageDefinitions.SidebarButton.DefaultButtons.Games.Icon
+                Route = "/admin/games"
+                Active = (itemDocumentType |> Option.map(fun i -> i = GameDocumentType) |> Option.defaultValue false)
+            }
+            
+            {
+                LongTitle = "Exit Admin"
+                ShortTitle = "Exit"
+                Icon = Some (i [ _class "fa-solid fa-right-from-bracket" ] [])
+                Route = "/"
+                Active = false
+            }
+        ]
+        FrontendHelpers.layout pageDef content extra pageData (Some sidebar) ctx
+
+    let makeItemIndexRow (itemDocumentType: ItemDocumentType) (item: ItemWrapper) (tags: Option<string seq>) =
+        let itemImage =
+            match getItemCoverImageIconPath item with
+            | Some path -> div [ _class "item-image" ] [ img [ _src path ] ]
+            | None -> div [ _class "item-image empty-image" ] []
+            
+        let tags =
+            tags
+            |> Option.map(List.ofSeq)
+            |> Option.defaultValue []
+            |> List.map (fun t -> span [ _class "item-tag" ] [encodedText t])
+
+        let markdownDescription = Markdig.Markdown.ToHtml(ItemHelper.description item)
+        
+        let sectionId = System.Guid.NewGuid().ToString().Replace("-", "").ToLower()
+        let sectionId = $"item-section-{sectionId}"
+
+        let slug = ItemDocumentType.toSlug itemDocumentType
+        
+        section [ _class "index-item"; _id sectionId] [
+            itemImage
+            div [ _class "item-content" ] [ 
+                header [] [
+                    h2 [] [
+                        a [ _href $"/admin/{slug}/{ItemHelper.itemId item}" ] [ encodedText (ItemHelper.name item) ]
+                    ]
+                    
+                    button [ _class "delete-button"
+                             _data "id" (ItemHelper.itemId item)
+                             _data "name" (ItemHelper.name item)
+                             _data "section-id" sectionId
+                             _data "url" $"/admin/{slug}/{ItemHelper.itemId item}"] [ encodedText "Delete" ]
+                    
+                    div [ _class "item-tags" ] tags
+                ]
+                div [ _class "item-description" ] [ rawText markdownDescription ]
+            ]
         ]
 
-        layout "Admin" content ctx
+    let index (itemDocumentType: ItemDocumentType) (items: ItemWrapper seq) (tags: Map<string,string list>) (pageData: FrontendHelpers.PageData) (ctx: HttpContext) =
+        let content = [
+            yield! (items |> Seq.map (fun item ->
+                let tags =
+                    tags
+                    |> Map.tryFind (ItemHelper.itemId item)
+                    |> Option.map (Seq.ofList)
+                
+                makeItemIndexRow itemDocumentType item tags ))
+        ]
+
+        adminLayout (ItemDocumentType.toPluralTitleString itemDocumentType) (AddButtonDisplay.Shown itemDocumentType) pageData (Some itemDocumentType) content ctx
+
+open Views
 
 module Handlers =
+    type EditCancelMode =
+    | CancelToIndex
+    | CancelToItem of string
+    
+    let private makePageData  (itemDocumentType: ItemHelper.ItemDocumentType) (cancelMode) (item: ItemWrapper option) =
+        let slug = (ItemDocumentType.toSlug itemDocumentType)
+        let cancelUrl =
+            match cancelMode with
+            | CancelToIndex -> $"/admin/{slug}"
+            | CancelToItem id -> $"/admin/{slug}/{id}"
+            
+        Map.empty
+        |> Map.add "documentType" (FrontendHelpers.PageDataType.String (ItemDocumentType.toDatabaseDocumentType itemDocumentType))
+        |> Map.add "slug" (FrontendHelpers.PageDataType.String slug)
+        |> Map.add "cancelUrl" (FrontendHelpers.PageDataType.String cancelUrl)
+        |> (fun m ->
+            match item with
+            | Some item -> Map.add "id" (FrontendHelpers.PageDataType.String (ItemHelper.itemId item)) m
+            | None -> m)
+        |> FrontendHelpers.PageData
+
     let GET_status: HttpHandler =
         fun (next: HttpFunc) (ctx: HttpContext) ->
             let user = ctx.User
@@ -157,38 +191,90 @@ module Handlers =
             return! text result next ctx
         }
 
-    let GET_index: HttpHandler =
+    let GET_index (itemDocumentType: ItemHelper.ItemDocumentType) =
         fun next ctx -> task {
-            let! games =
-                ItemHelper.loadAllItems Game.documentType ctx
-                |> Task.map (Seq.map ItemHelper.unwrapGame)
-                |> Task.bind (fun items -> Microblog.sortByMostRecentMicroblog items (fun i -> i.Id) (fun i -> i.Name) ctx)
+            let documentType = ItemDocumentType.toDatabaseDocumentType itemDocumentType
                 
-            let! books =
-                ItemHelper.loadAllItems Book.documentType ctx
-                |> Task.map (Seq.map ItemHelper.unwrapBook)
-                |> Task.bind (fun items -> Microblog.sortByMostRecentMicroblog items (fun i -> i.Id) (fun i -> i.Title) ctx)
+            let! items =
+                ItemHelper.loadAllItems documentType ctx
+                |> Task.bind (fun items -> Microblog.sortByMostRecentMicroblog items ItemHelper.itemId ItemHelper.name ctx)
                 
-            let! projects =
-                ItemHelper.loadAllItems Project.documentType ctx
-                |> Task.map (Seq.map ItemHelper.unwrapProject)
-                |> Task.bind (fun items -> Microblog.sortByMostRecentMicroblog items (fun i -> i.Id) (fun i -> i.Name) ctx)
+            let! tags = Tag.loadTagsForDocuments documentType (items |> Seq.map ItemHelper.itemId) ctx
+            
+            return! htmlView (Views.index itemDocumentType items tags (makePageData itemDocumentType CancelToIndex None) ctx) next ctx
+        }
+        
+    let GET_add (itemDocumentType: ItemHelper.ItemDocumentType) =
+        fun next ctx -> task {
+            let! allTags = Tag.getExistingTags ctx 
+            let title = ItemDocumentType.toSingularTitleString itemDocumentType
+            let slug = ItemDocumentType.toSlug itemDocumentType
+            
+            let content =
+                match itemDocumentType with
+                | GameDocumentType -> FormFields.View.addEditView None title slug (Game.Fields.name) (Game.Fields.allFields) allTags []
+                | ProjectDocumentType -> FormFields.View.addEditView None title slug (Project.Fields.name) (Project.Fields.allFields) allTags []
+                | BookDocumentType -> FormFields.View.addEditView None title slug (Book.Fields.title) (Book.Fields.allFields) allTags []
 
-            let! gameTags = Tag.loadTagsForDocuments Game.documentType (games |> Seq.map (fun x -> x.Id)) ctx
-            let! bookTags = Tag.loadTagsForDocuments Book.documentType (books |> Seq.map (fun x -> x.Id)) ctx
-            let! projectTags = Tag.loadTagsForDocuments Project.documentType (projects |> Seq.map (fun x -> x.Id)) ctx
+            return! htmlView (Views.adminLayout $"Add {title}" AddButtonDisplay.NotShown (makePageData itemDocumentType CancelToIndex None) (Some itemDocumentType) content ctx) next ctx
+        }
+        
+    let GET_edit (itemDocumentType: ItemHelper.ItemDocumentType) (id: string) =
+        fun next ctx -> task {
+            let documentType = ItemDocumentType.toDatabaseDocumentType itemDocumentType
+            
+            let! existing =
+                Database.getDocumentById id ctx
+                |> Task.map (Option.bind ItemHelper.fromJObject)
+                
+            let! allTags = Tag.getExistingTags ctx
+            let! documentTags = Tag.loadTagsForDocument documentType id ctx
 
-            let matchItemsToTags (items: seq<'a>) (idGetter: 'a -> string) tags = 
-                items
-                |> Seq.map (fun i -> 
-                    let id = idGetter i
-                    let tags = tags |> Map.tryFind id |> Option.defaultValue []
-                    (i, tags)
-                )
+            let title = ItemDocumentType.toSingularTitleString itemDocumentType
+            let slug = ItemDocumentType.toSlug itemDocumentType
+            
+            let content =
+                existing
+                |> Option.map (fun existing ->
+                        match existing with
+                        | Game m -> FormFields.View.addEditView (Some m) title slug (Game.Fields.name) (Game.Fields.allFields) allTags documentTags
+                        | Project m -> FormFields.View.addEditView (Some m) title slug (Project.Fields.name) (Project.Fields.allFields) allTags documentTags
+                        | Book m -> FormFields.View.addEditView (Some m) title slug (Book.Fields.title) (Book.Fields.allFields) allTags documentTags
+                    )
+                |> Option.defaultValue []
+                
+            match existing with
+            | Some existing ->
+                let view = Views.adminLayout $"Edit {title} \"{ItemHelper.name existing}\"" AddButtonDisplay.NotShown (makePageData itemDocumentType CancelToIndex (Some existing)) (Some itemDocumentType) content ctx
+                return! htmlView view next ctx
+            | None ->
+                return! (setStatusCode 404 >=> text "Page not found") next ctx
+        }
+        
 
-            let games = matchItemsToTags games (fun x -> x.Id) gameTags
-            let books = matchItemsToTags books (fun x -> x.Id) bookTags
-            let projects = matchItemsToTags projects (fun x -> x.Id) projectTags
+    let GET_microblog_edit id : HttpHandler =
+        fun next ctx -> task {
+          let! existing = Microblog.loadById id ctx
+          
+          // this is so simpler that we can just put the view right in the handler
+          return! match existing with
+                  | None -> (setStatusCode 404 >=> text "Microblog not found") next ctx
+                  | Some existing ->
+                      let itemDocumentType = ItemDocumentType.fromString existing.ItemDocumentType |> Option.defaultValue ItemDocumentType.ProjectDocumentType
+                      
+                      let content = [
+                          form [ _name "form"; _method "post"; ] [
+                            Items.makeInputRow "timestamp" (Some "Timestamp") Items.HardcodedLabel (encodedText (existing.Microblog.DateAdded.ToString("g")))
+                            Items.makeTextAreaInputRow "Text" "text" 5 (Some existing.Microblog.Text)
+                            
+                            Items.makeInputRow "save-button" None InputRowType.SaveButton (
+                                div [ _class "save-cancel-container" ] [
+                                    div [ _class "save-cancel" ] [
+                                      input [ _type "submit"; _value "Save" ]
+                                      button [ _class "cancel-button" ] [ encodedText "Cancel" ]  
+                                    ]])
+                        ]
+                      ]
+                      htmlView (Views.adminLayout "Edit microblog" AddButtonDisplay.NotShown (makePageData itemDocumentType (CancelToItem existing.ItemId) None) (Some itemDocumentType) content ctx) next ctx
 
-            return! htmlView (Views.index games books projects ctx) next ctx
         }

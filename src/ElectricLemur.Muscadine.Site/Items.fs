@@ -13,48 +13,35 @@ let performValidationAsync (f: 'a -> Task<Result<'a, string>>) (prev: Result<'a,
         return! f g
     }
 
-type pageDataType =
-    | String of value: string
-    | Int of value: int
-    | Float of value: float
+type InputRowType =
+| Text
+| TextArea
+| Image
+| Checkbox
+| InputTags
+| HardcodedLabel
+| SaveButton
 
-let layout pageTitle pageData content =
-    let makePageDataScript =
-        let sb = new System.Text.StringBuilder()
-        let sb = sb.AppendLine("window.pageData = {};")
-
-        let sb =
-            pageData
-            |> Map.fold (fun (sb: System.Text.StringBuilder) k v ->
-
-                let sb = sb.Append($"window.pageData[\"%s{k}\"] = ")
-                let sb = sb.Append(match v with
-                                   | String s -> $"\"%s{s}\""
-                                   | Int i -> $"%d{i}"
-                                   | Float f -> $"%f{f}")
-                sb.AppendLine(";")) sb
-        sb.ToString()
-
-    html [] [
-        head [] [
-            title [] [ encodedText pageTitle ]
-            link [ (_rel "stylesheet"); (_type "text/css"); (_href "/css/admin.scss") ]
-            script [] [ rawText makePageDataScript ]
-            script [ _src "/js/admin.js" ] []
+let makeInputRow (key: string) (formLabel: string option) inputRowType formEl =
+    let inputRowType =
+        match inputRowType with
+        | Text -> "text"
+        | TextArea -> "textarea"
+        | Image -> "image"
+        | Checkbox -> "checkbox"
+        | InputTags -> "tags"
+        | HardcodedLabel -> "label"
+        | SaveButton -> "save-button"
+    
+    div [ _class $"input-row {inputRowType}-input-row"; _data "field-id" key ] [
+        div [ _class "input-label" ] [
+            match formLabel with
+            | Some formLabel -> label [ _for key ] [ encodedText formLabel ]
+            | None -> span [] []
         ]
-        body [] [
-            div [ _class "site-title" ] [
-                encodedText "James Williams/"
-                a [ _href "/admin/" ] [encodedText "Admin"]
-            ]
-            div [ _class "body-content" ] content
+        div [ _class $"input-value {inputRowType}-input-value" ] [
+            formEl
         ]
-    ]
-
-let makeInputRow label formEl = 
-    tr [] [
-        td [ _class "form-label" ] [ encodedText label ]
-        td [ _class "form-input" ] [ formEl ]
     ]
 
 let makeImageInputRow label key pathToDisplay =
@@ -77,7 +64,7 @@ let makeImageInputRow label key pathToDisplay =
                         _src src
                     ] 
                 ]
-    makeInputRow label el
+    makeInputRow key (Some label) Image el
 
 let makeTextAreaInputRow label key lineCount value =
     let el =
@@ -88,7 +75,7 @@ let makeTextAreaInputRow label key lineCount value =
             _cols "30"
         ] [ encodedText (value |> Option.defaultValue "")]
 
-    makeInputRow label el
+    makeInputRow key (Some label) TextArea el
 
 let makeTextInputRow label key value =
     let el = input [
@@ -97,7 +84,7 @@ let makeTextInputRow label key value =
         _name key
         _value (value |> Option.defaultValue "")
     ]
-    makeInputRow label el
+    makeInputRow key (Some label) Text el
 
 let makeCheckboxInputRow label key (value: bool option) = 
     let value = value |> Option.defaultValue false
@@ -111,7 +98,7 @@ let makeCheckboxInputRow label key (value: bool option) =
         |> List.prependIf value _checked
 
     let el = input attributes
-    makeInputRow label el
+    makeInputRow key (Some label) Checkbox el
 
 let makeTagsInputRow label key (allTags: string seq) (documentTags: string seq) =
     let selectAttributes = [
@@ -140,7 +127,7 @@ let makeTagsInputRow label key (allTags: string seq) (documentTags: string seq) 
                 button [ _class "new-tag-button" ] [ encodedText "Add Tag"]
             ]
         ]
-    makeInputRow label el
+    makeInputRow key (Some label) InputTags el
 
 let uniqueStringFieldValidator ctx documentType allowedId fieldName (getter: 'a -> string option) (m: 'a) = task {
     match getter m with
