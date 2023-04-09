@@ -123,12 +123,22 @@ let private redirectIsValid (redirect: string option) =
         "^/admin/check-database$"
         "^/admin/category/[A-Za-z0-9-]*/?$"
         "^/admin/category/_new$"
-        "^/admin/game/_new$"
-        "^/admin/game/[A-Za-z0-9-]*/?$"
-        "^/admin/book/_new$"
-        "^/admin/book/[A-Za-z0-9-]*/?$"
-        "^/admin/project/_new$"
-        "^/admin/project/[A-Za-z0-9-]*/?$"
+        
+        "^/admin/games"
+        "^/admin/games/"
+        "^/admin/games/_new$"
+        "^/admin/games/[A-Za-z0-9-]*/?$"
+        
+        "^/admin/books"
+        "^/admin/books/"
+        "^/admin/books/_new$"
+        "^/admin/books/[A-Za-z0-9-]*/?$"
+        
+        "^/admin/projects"
+        "^/admin/projects/"
+        "^/admin/projects/_new$"
+        "^/admin/projects/[A-Za-z0-9-]*/?$"
+        
         "^/admin/microblog/[A-Za-z0-9-]*/?$"
         "^/debug/all$"
     ]
