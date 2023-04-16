@@ -227,14 +227,20 @@
           grid-row: 1;
           grid-column: 2;
           margin: 0;
-          padding: 0;
-
+          
+          padding-left: 0px;
+          padding-right: 0px;
+          padding-top: 0px;
+          padding-bottom: 8px;
+          
           @include breakpoints.tablet {
+            
             display: flex;
             flex-direction: column;
           }
 
           @include breakpoints.phone {
+            padding-bottom: 0px;
             display: flex;
             flex-direction: column;
           }
@@ -252,7 +258,7 @@
             font-size: 24px;
             font-family: fonts.$header3;
             color: colors.$heading;
-
+            
             @include breakpoints.phone {
               font-size: 20px;
               width: 100%;
