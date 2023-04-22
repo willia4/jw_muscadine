@@ -194,10 +194,38 @@ module Handlers =
     let GET_index (itemDocumentType: ItemHelper.ItemDocumentType) =
         fun next ctx -> task {
             let documentType = ItemDocumentType.toDatabaseDocumentType itemDocumentType
-                
-            let! items =
-                ItemHelper.loadAllItems documentType ctx
-                |> Task.bind (fun items -> Microblog.sortByMostRecentMicroblog items ItemHelper.itemId ItemHelper.name ctx)
+            
+            let inProgressTask = ItemHelper.loadInProgressItems itemDocumentType ctx
+            let backlogTask = ItemHelper.loadBacklogItems itemDocumentType ctx
+            let finishedTask = ItemHelper.loadFinishedItems itemDocumentType ctx
+            let! _ = System.Threading.Tasks.Task.WhenAll([| inProgressTask; backlogTask; finishedTask; |])
+            
+            let! inProgress = inProgressTask
+            let! backlog = backlogTask
+            let! finished  = finishedTask
+            
+            let! others = ItemHelper.loadItemsExcludingItems itemDocumentType (Seq.flatten [inProgress; backlog; finished]) ctx
+            
+            let sort = fun items -> Microblog.sortByMostRecentMicroblog items ItemHelper.itemId ItemHelper.name ctx
+            
+            let sortInProgressTask = sort inProgress
+            let sortBacklogTask = sort backlog
+            let sortFinishedTask = sort finished
+            let sortOthersTask = sort others
+            
+            let! _ = System.Threading.Tasks.Task.WhenAll([| sortInProgressTask; sortBacklogTask; sortFinishedTask; sortOthersTask |])
+
+            let! inProgress = sortInProgressTask
+            let! backlog = sortBacklogTask
+            let! finished  = sortFinishedTask
+            let! others = sortOthersTask
+            
+            let items = [
+                yield! inProgress
+                yield! backlog
+                yield! finished
+                yield! others
+            ]
                 
             let! tags = Tag.loadTagsForDocuments documentType (items |> Seq.map ItemHelper.itemId) ctx
             
