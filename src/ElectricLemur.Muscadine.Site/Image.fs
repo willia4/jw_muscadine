@@ -1,5 +1,8 @@
 ﻿module Image
 
+open System
+open System.Collections.Immutable
+open FileInfo
 open Microsoft.AspNetCore.Http
 open SixLabors.ImageSharp
 open SixLabors.ImageSharp.Processing
@@ -43,15 +46,15 @@ let rec xmlElementFromIcon icon sizeChooser ctx =
         |> Option.defaultValue (xmlElementFromIcon (FontAwesome "fa-solid fa-cloud-exclamation") sizeChooser ctx)
 
 
-let private loadImageFromBytes (img: byte array) = 
+let private loadImageFromBytes (img: ImmutableArray<byte>) = 
     try
         let mutable format: IImageFormat = null
-        let img = Image.Load(img, &format)
+        let img = Image.Load(img.AsSpan(), &format)
         Ok (img, format)
     with
     | ex -> Error (ex.Message)
 
-let private resizeImage size (original: byte array) = task {
+let private resizeImage size (original: ImmutableArray<byte>) = task {
     
     match loadImageFromBytes original with
     | Error msg -> return Error msg
@@ -67,10 +70,10 @@ let private resizeImage size (original: byte array) = task {
     
         do! img.SaveAsync(outputStream, format)
 
-        return Ok (outputStream.ToArray())
+        return Ok (outputStream.ToArray().ToImmutableArray())
 }
 
-let saveImageToDataStore (originalFile: IFormFile) documentType (documentId: string) fileKey ctx = task {
+let saveImageToDataStore (originalFile: FileInfo) documentType (documentId: string) fileKey ctx = task {
     let containerDirectory = 
         let id = Id.compressId documentId
         joinPath3 documentType fileKey id
@@ -80,25 +83,25 @@ let saveImageToDataStore (originalFile: IFormFile) documentType (documentId: str
     // prev: A Result that determines if the function does anything at all. Wraps a tuple. 
     // The snd item in the tuple is the buffer for the original image. 
     // The fst item in the tuple is an object which can be passed to relativePathGetter to retrieve the path to save the image to
-    let resizeAndSaveImage size relativePathGetter prev = task {
+    let resizeAndSaveImage size (relativePathGetter: 'a -> string) (prev: Result<'a * ImmutableArray<byte>, string>) = task {
         match prev with
         | Error msg -> return (Error msg)
-        | Ok (path, (originalBytes: byte array)) -> 
+        | Ok (path, (originalBytes: ImmutableArray<byte>)) -> 
             let fullPathToNew = fullPathFromRelativePath (relativePathGetter path)
 
             let! resizedImage = resizeImage size originalBytes
 
             match resizedImage with
             | Ok bytes -> 
-                saveFile fullPathToNew bytes |> ignore
+                saveFileBytes fullPathToNew bytes |> ignore
             
                 return (Ok (path, originalBytes))
             | Error msg -> return (Error msg)
     }
         
-    let ext = match extensionForFormFile originalFile with
+    let ext = match extensionForFile originalFile with
               | Some ext -> Ok ext
-              | None -> Error $"File %s{originalFile.FileName} must have an extension"
+              | None -> Error $"File %s{fileName originalFile} must have an extension"
 
     let paths =
         ext
@@ -115,7 +118,7 @@ let saveImageToDataStore (originalFile: IFormFile) documentType (documentId: str
         match paths with
         | Error msg -> Task.fromResult (Error msg)
         | Ok paths -> task {
-            let! bytes = formFileToBytes originalFile
+            let! bytes = getBytes originalFile
             return Ok (paths, bytes)
         }
 

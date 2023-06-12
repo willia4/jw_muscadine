@@ -1,11 +1,13 @@
 module Util
+open System.Collections.Immutable
+open FileInfo
 open Microsoft.AspNetCore.Http
 open Microsoft.AspNetCore.Hosting
 open Microsoft.Extensions.Configuration
 open Giraffe
 open Giraffe.ViewEngine
 open Microsoft.Extensions.Caching.Memory
-
+open CommunityToolkit.HighPerformance
 
 let flip f a b = f b a
 let flip3 f a b c = f c b a
@@ -65,43 +67,37 @@ let joinUrlParts (a: string) (b: string) =
     let result = $"{a}{b}"
     result
 
-let formFileToBytes (formFile: IFormFile) = task {
-    use m = new System.IO.MemoryStream()
-    do! formFile.CopyToAsync(m)
-    return m.ToArray()
-}
-
-let saveFile (filePath: string) (file: byte array) = task {
+let saveFileBytes (filePath: string) (fileBytes: ImmutableArray<byte>) = task {
     let dir = System.IO.Path.GetDirectoryName(filePath)
     if not (System.IO.Directory.Exists(dir)) then
         System.IO.Directory.CreateDirectory(dir) |> ignore
 
     try
-        use ms = new System.IO.MemoryStream(file)
+        use bufferStream = fileBytes.AsMemory().AsStream()
 
         use write = System.IO.File.OpenWrite(filePath)
-        do! ms.CopyToAsync(write)
+        do! bufferStream.CopyToAsync(write)
 
         return Ok filePath
     with
     | ex -> return Error (ex.Message)
 }
-let saveFormFile (filePath: string) (file: IFormFile) = task {
-    let! bytes = formFileToBytes file
-    return! saveFile filePath bytes
+let saveFormFile (filePath: string) (file: FileInfo) = task {
+    let! bytes = getBytes file
+    return! saveFileBytes filePath bytes
 }
 
-let extensionForFormFile (f: IFormFile) =
-    let ext = System.IO.Path.GetExtension(f.FileName)
+let extensionForFile (f: FileInfo) =
+    let ext = fileExtension f
     if (System.String.IsNullOrWhiteSpace(ext)) then 
         None
     else
         Some ext
 
-let saveFileToDataStore (f: IFormFile) documentType (documentId: string) fileKey ctx = task {
+let saveFileToDataStore (f: FileInfo) documentType (documentId: string) fileKey ctx = task {
     let relativePath = 
-        match extensionForFormFile f with
-        | None -> Error $"File %s{f.FileName} must have an extension"
+        match extensionForFile f with
+        | None -> Error $"File %s{fileName f} must have an extension"
         | Some ext -> 
             let id = Id.compressId documentId
             Ok (joinPath3 documentType fileKey $"%s{id}%s{ext}")
@@ -257,7 +253,7 @@ let extractEmbeddedResource name =
     use output = new System.IO.MemoryStream()
     stream.CopyTo(output)
 
-    output.GetBuffer()
+    output.ToArray()
 
 let extractEmbeddedTextFile name =
     System.Text.Encoding.UTF8.GetString(extractEmbeddedResource name)

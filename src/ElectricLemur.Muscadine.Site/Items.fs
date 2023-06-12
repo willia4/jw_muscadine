@@ -146,7 +146,7 @@ let handleFileUpload ctx documentType id key (existingPath: string option) (mode
     let! filePath =
         match file with
         | None -> Task.fromResult (Ok existingPath)
-        | Some file -> Util.saveFileToDataStore file documentType id key ctx
+        | Some file -> Util.saveFileToDataStore (FileInfo.ofHttpFormFile file) documentType id key ctx
 
     return match filePath with
            | Error msg -> Error msg
@@ -160,7 +160,7 @@ let handleImageUpload ctx documentType documentId key (existingPath: Image.Image
     match originalFile with
     | None -> return Ok (modelSetter existingPath)
     | Some file -> 
-        let! o = Image.saveImageToDataStore file documentType documentId key ctx
+        let! o = Image.saveImageToDataStore (FileInfo.ofHttpFormFile file) documentType documentId key ctx
         return match o with
                | Error msg -> Error msg
                | Ok newPaths -> Ok (modelSetter (Some newPaths))
