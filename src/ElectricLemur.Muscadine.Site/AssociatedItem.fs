@@ -1,4 +1,4 @@
-module AssociatedItem
+module ElectricLemur.Muscadine.Site.AssociatedItem
 open ElectricLemur.Muscadine.Site
 open Newtonsoft.Json.Linq
 

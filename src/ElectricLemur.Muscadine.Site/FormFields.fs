@@ -1,5 +1,4 @@
-module FormFields
-open ElectricLemur.Muscadine.Site
+module ElectricLemur.Muscadine.Site.FormFields
 open ElectricLemur.Muscadine.Site.Items
 open ImagePaths
 type FieldDescriptor<'m, 'f> = {

@@ -1,4 +1,5 @@
 module ElectricLemur.Muscadine.Site.Configuration
+
 open System
 open Giraffe
 open Microsoft.AspNetCore.Http
@@ -37,4 +38,4 @@ let getValue<'a> key (section: IConfiguration) =
             | _ -> "/"
             
         raise (InvalidOperationException($"Could not find key {key} in config section {path}"))
-    
+

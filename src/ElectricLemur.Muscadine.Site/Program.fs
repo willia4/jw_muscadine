@@ -2,16 +2,13 @@ module ElectricLemur.Muscadine.Site.App
 
 open System
 open System.IO
-open System.Linq
 open ElectricLemur.Muscadine.Site.ItemHelper
-open Microsoft.AspNetCore.CookiePolicy
 open Microsoft.AspNetCore.Http
 open Microsoft.AspNetCore.Builder
 open Microsoft.AspNetCore.Cors.Infrastructure
 open Microsoft.AspNetCore.Hosting
 open Microsoft.AspNetCore.Authentication.Cookies
 open Microsoft.AspNetCore.DataProtection
-open Microsoft.AspNetCore.Identity
 open Microsoft.Extensions.Configuration
 open Microsoft.Extensions.Hosting
 open Microsoft.Extensions.Logging

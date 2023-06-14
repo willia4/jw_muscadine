@@ -1,7 +1,6 @@
-module FileInfo
+module ElectricLemur.Muscadine.Site.FileInfo
 open System
 open System.IO
-open System.Threading
 open Microsoft.AspNetCore.Http
 open CommunityToolkit.HighPerformance
 open System.Collections.Immutable

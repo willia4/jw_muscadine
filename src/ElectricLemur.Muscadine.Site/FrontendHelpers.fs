@@ -1,10 +1,5 @@
 module ElectricLemur.Muscadine.Site.FrontendHelpers
-
-open Giraffe
 open Giraffe.ViewEngine
-open Microsoft.AspNetCore.Http;
-open Newtonsoft.Json.Linq
-
 
 module PageDefinitions =
   type Page =

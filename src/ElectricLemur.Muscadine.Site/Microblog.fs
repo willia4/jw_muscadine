@@ -1,7 +1,5 @@
-module Microblog
-open ElectricLemur.Muscadine.Site
+module ElectricLemur.Muscadine.Site.Microblog
 open System
-open ElectricLemur.Muscadine.Site.Items
 open Giraffe
 open Giraffe.ViewEngine
 open Microsoft.AspNetCore.Http

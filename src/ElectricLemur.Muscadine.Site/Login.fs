@@ -1,18 +1,10 @@
-﻿module Login
+﻿module ElectricLemur.Muscadine.Site.Login
 
 open System
-open System.IO
 open Microsoft.AspNetCore.Http
-open Microsoft.AspNetCore.Builder
-open Microsoft.AspNetCore.Cors.Infrastructure
-open Microsoft.AspNetCore.Hosting
 open Microsoft.AspNetCore.Authentication.Cookies
-open Microsoft.AspNetCore.Identity
 open Microsoft.AspNetCore.Authentication
 open Microsoft.Extensions.Configuration
-open Microsoft.Extensions.Hosting
-open Microsoft.Extensions.Logging
-open Microsoft.Extensions.DependencyInjection
 open System.Security.Claims
 open Giraffe
 

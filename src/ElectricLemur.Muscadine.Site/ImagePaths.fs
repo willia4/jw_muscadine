@@ -1,4 +1,4 @@
-module ImagePaths
+module ElectricLemur.Muscadine.Site.ImagePaths
 
 type ImagePaths = {
     Original: string

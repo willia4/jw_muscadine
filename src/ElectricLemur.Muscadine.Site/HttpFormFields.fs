@@ -1,4 +1,4 @@
-﻿module HttpFormFields
+﻿module ElectricLemur.Muscadine.Site.HttpFormFields
 
 open Microsoft.AspNetCore.Http
 

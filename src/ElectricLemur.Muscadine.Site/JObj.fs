@@ -1,5 +1,4 @@
-﻿module JObj
-open Newtonsoft.Json
+﻿module ElectricLemur.Muscadine.Site.JObj
 open Newtonsoft.Json.Linq
 
 let typeName<'a> = 

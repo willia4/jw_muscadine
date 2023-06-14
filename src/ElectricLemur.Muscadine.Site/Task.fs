@@ -1,5 +1,4 @@
-
-module Task
+module ElectricLemur.Muscadine.Site.Task
   let map (f: 'a -> 'b) (t: System.Threading.Tasks.Task<'a>) = task {
     let! v = t
     return (f v)

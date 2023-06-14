@@ -4,8 +4,6 @@ open Azure.Storage
 open Azure.Storage.Blobs
 open Azure.Storage.Sas
 open ElectricLemur.Muscadine.Site
-open Giraffe
-open Microsoft.AspNetCore.Http
 open Microsoft.Extensions.Configuration
 
 let private getAzureSection (config: IConfiguration) = config |> Configuration.getSection "Azure"

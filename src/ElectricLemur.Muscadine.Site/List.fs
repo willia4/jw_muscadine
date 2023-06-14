@@ -1,4 +1,4 @@
-module List
+module ElectricLemur.Muscadine.Site.List
 
 /// Returns a new List with the values of b appended to the values of a
 let appendSeq (a: 'a list) (b: 'a seq) =

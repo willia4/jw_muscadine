@@ -1,9 +1,7 @@
 ﻿module ElectricLemur.Muscadine.Site.Items
 
-open Microsoft.AspNetCore.Http
 open System.Threading.Tasks
 open Giraffe.ViewEngine
-open Microsoft.FSharp.Reflection
 open Newtonsoft.Json.Linq
 open ImagePaths
 

@@ -1,4 +1,4 @@
-module Util
+module ElectricLemur.Muscadine.Site.Util
 open System.Collections.Immutable
 open FileInfo
 open Microsoft.AspNetCore.Http

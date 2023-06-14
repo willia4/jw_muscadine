@@ -2,7 +2,6 @@ module ElectricLemur.Muscadine.Site.Frontend.AboutMe
 open Giraffe
 open Giraffe.ViewEngine
 open Microsoft.AspNetCore.Http
-open Newtonsoft.Json.Linq
 open ElectricLemur.Muscadine.Site
 
 let makeMicroblogsContent (recentMicroblogs: Microblog.EnrichedMicroblog seq) ctx =

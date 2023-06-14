@@ -1,7 +1,5 @@
 module ElectricLemur.Muscadine.Site.Frontend.Game
 open Giraffe
-open Giraffe.ViewEngine
-open Microsoft.AspNetCore.Http;
 open ElectricLemur.Muscadine.Site
 
 module Handlers =

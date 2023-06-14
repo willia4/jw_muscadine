@@ -1,7 +1,6 @@
-﻿module Id
+﻿module ElectricLemur.Muscadine.Site.Id
 
 open System
-open System.Linq
 open System.Text.RegularExpressions
 
 let private compressedIdRegex = new Regex "[0-9a-fA-F]{32}"

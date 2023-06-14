@@ -1,4 +1,4 @@
-﻿module Image
+﻿module ElectricLemur.Muscadine.Site.Image
 
 open System
 open System.Collections.Immutable

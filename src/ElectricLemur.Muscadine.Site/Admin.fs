@@ -1,4 +1,4 @@
-﻿module Admin
+﻿module ElectricLemur.Muscadine.Site.Admin
 open ElectricLemur.Muscadine.Site.FrontendHelpers
 open ElectricLemur.Muscadine.Site.ItemHelper
 open ElectricLemur.Muscadine.Site.Items

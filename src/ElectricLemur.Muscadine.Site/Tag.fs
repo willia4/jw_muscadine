@@ -1,8 +1,5 @@
-﻿module Tag
+﻿module ElectricLemur.Muscadine.Site.Tag
 open ElectricLemur.Muscadine.Site
-open Microsoft.AspNetCore.Http
-open Giraffe
-open Microsoft.Extensions.Caching.Memory
 
 type TaggedItem<'a> = {
     Item: 'a

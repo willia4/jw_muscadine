@@ -1,4 +1,4 @@
-module Option
+module ElectricLemur.Muscadine.Site.Option
 
 let ofResult (r: Result<'a, 'e>) =
   match r with

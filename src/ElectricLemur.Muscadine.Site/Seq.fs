@@ -1,4 +1,4 @@
-module Seq
+module ElectricLemur.Muscadine.Site.Seq
 
 let copyToImmutableSeq (s: seq<'a>) = List.ofSeq s |> Seq.ofList
 

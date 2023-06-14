@@ -1,4 +1,4 @@
-module Map
+module ElectricLemur.Muscadine.Site.Map
 
 /// Applies a key-generating function to each element of a list and yields a Map
 /// based on the item keys. Each value in the map is a List of items matching that key.
