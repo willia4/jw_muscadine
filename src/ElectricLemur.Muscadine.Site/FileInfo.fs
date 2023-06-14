@@ -15,6 +15,12 @@ let ofHttpFormFile (f: IFormFile) = HttpFile(f)
 let ofPath (p: string) = PathFile(p)
 let ofBytes (fileName: string) (bytes: ImmutableArray<byte>) = BytesFile(fileName, bytes)
 
+let isValid f =
+    match f with
+    | PathFile fullPath -> System.IO.File.Exists(fullPath)
+    | HttpFile _ -> true // no way to check that the IFormFile is still valid so assume it hasn't been disposed
+    | BytesFile _ -> true // we have the bytes so it's definitionally valid
+ 
 let fileName f =
     match f with
     | PathFile fullPath -> System.IO.Path.GetFileName(fullPath)
@@ -40,7 +46,7 @@ let copyToStream (target: System.IO.Stream) f =
             use bufferStream = bytes.AsMemory().AsStream()
             do! bufferStream.CopyToAsync(target)
         }
-    
+
 let getBytes f =
     match f with
     | PathFile fullPath -> task {
@@ -64,3 +70,23 @@ let clone f =
         let fileName = fileName f
         return BytesFile (fileName, bytes)
     }
+    
+/// <summary>
+/// Creates a readable Stream from a FileInfo. 
+/// </summary>
+/// <remarks>The returned Stream must be Disposed by the caller</remarks>
+let rec toStream f =
+    match f with
+    | PathFile fullPath -> Task.fromResult (System.IO.File.OpenRead(fullPath) :> System.IO.Stream)
+    | HttpFile _ -> task {
+            let! cloned = clone f
+            return! toStream cloned // this is only not infinitely recursive because clone will never return an HttpFile
+        }
+    | BytesFile (_, bytes) -> task {
+            let ms = new MemoryStream(bytes.Length)
+            use sourceStream = bytes.AsMemory().AsStream()
+            do! sourceStream.CopyToAsync(ms)
+            ms.Seek(0L, SeekOrigin.Begin)
+            return (ms :> System.IO.Stream) 
+        }
+        

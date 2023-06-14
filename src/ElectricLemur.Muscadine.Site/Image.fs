@@ -168,8 +168,9 @@ module Handlers =
                     let path = $"{documentType}/{imageKey}/{id}/{fileName}"
                     let path = path.Replace("/", System.IO.Path.DirectorySeparatorChar.ToString())
                     let path = System.IO.Path.Join((Util.dataPath ctx), path)
-
-                    match System.IO.File.Exists(path) with
+                    let file = FileInfo.ofPath path
+                    
+                    match FileInfo.isValid file with
                     | true ->
                         let config = ctx.GetService<IConfiguration>()
                         let cacheEnabled = config.GetValue<bool>("webOptimizer:enableCaching", false)
@@ -178,12 +179,14 @@ module Handlers =
                             ctx.Response.Headers.Append("Cache-Control", $"max-age=%d{cacheAge}, public")
 
                         let setContentType next ctx =
-                            match Util.contentTypeForFileName (System.IO.Path.GetFileName(path)) with
+                            match Util.contentTypeForFileInfo file with
                             | Some contentType ->
                                 setContentType contentType next ctx
                             | None -> next ctx
                             
-                        return! (setContentType >=> streamFile false path None None) next ctx
+                        let fileInfo = FileInfo.ofPath path
+                        use! fileStream = FileInfo.toStream fileInfo
+                        return! (setContentType >=> streamData false fileStream None None) next ctx
                     | false -> return! setStatusCode 401 next ctx
                 | None -> return! setStatusCode 401 next ctx
         }

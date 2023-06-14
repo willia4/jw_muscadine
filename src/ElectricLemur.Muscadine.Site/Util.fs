@@ -185,6 +185,8 @@ let contentTypeForFileName (fileName: string) =
     | f when f.EndsWith(".js") -> Some "application/javascript; charset=UTF-8"
     | _ -> None
 
+let contentTypeForFileInfo (fileInfo: FileInfo) = fileInfo |> FileInfo.fileName |> contentTypeForFileName
+
 let newGuid () = System.Guid.NewGuid()
 
 let guidFromString (s: string) = 
