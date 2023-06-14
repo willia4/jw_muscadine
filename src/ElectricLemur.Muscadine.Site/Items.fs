@@ -5,6 +5,7 @@ open System.Threading.Tasks
 open Giraffe.ViewEngine
 open Microsoft.FSharp.Reflection
 open Newtonsoft.Json.Linq
+open ImagePaths
 
 let performValidationAsync (f: 'a -> Task<Result<'a, string>>) (prev: Result<'a, string>) =
     match prev with
@@ -153,7 +154,7 @@ let handleFileUpload ctx documentType id key (existingPath: string option) (mode
            | Ok coverImagePath -> Ok (modelSetter coverImagePath)
 }
 
-let handleImageUpload ctx documentType documentId key (existingPath: Image.ImagePaths option) (modelSetter: Image.ImagePaths option -> 'a) = task {
+let handleImageUpload ctx documentType documentId key (existingPath: ImagePaths option) (modelSetter: ImagePaths option -> 'a) = task {
     let files = Util.uploadedFiles ctx
     let originalFile = files |> List.filter (fun f -> f.Name = key) |> List.tryHead
 
@@ -186,7 +187,7 @@ let getDefaultIcon documentType =
 
 let tryReadItemImagePaths (itemData: JObject option) =
     match itemData with
-    | Some itemData -> "coverImage" |> JObj.getter<Image.ImagePaths> itemData
+    | Some itemData -> "coverImage" |> JObj.getter<ImagePaths> itemData
     | None -> None
 
 let tryReadItemId (itemData: JObject option) =

@@ -3,6 +3,7 @@ open System
 open Microsoft.AspNetCore.Http
 open System.Threading.Tasks
 open Newtonsoft.Json.Linq
+open ImagePaths
 
 let documentType = Constants.Database.DocumentTypes.Project
 
@@ -12,7 +13,7 @@ type Project = {
     Name: string;
     Description: string;
     Slug: string;
-    IconImagePaths: Image.ImagePaths option;
+    IconImagePaths: ImagePaths option;
     GitHubLink: string option;
 }
 
@@ -62,7 +63,7 @@ module Fields =
         Label = "Icon Image"
         getValueFromModel = (fun p -> p.IconImagePaths)
         getValueFromContext = (fun _ -> raise (new NotImplementedException("Cannot get coverImage from form fields")))
-        getValueFromJObject = (fun obj -> JObj.getter<Image.ImagePaths> obj "coverImage")
+        getValueFromJObject = (fun obj -> JObj.getter<ImagePaths> obj "coverImage")
         isUnique = false})
 
     let gitHubLink = FormFields.FormField.OptionalStringField({

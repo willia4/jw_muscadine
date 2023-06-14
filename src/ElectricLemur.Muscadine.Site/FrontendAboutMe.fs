@@ -11,7 +11,7 @@ let makeMicroblogsContent (recentMicroblogs: Microblog.EnrichedMicroblog seq) ct
     let d = mb.Microblog.DateAdded.ToString("o")
     let markdownHtml = Markdig.Markdown.ToHtml(mb.Microblog.Text)
 
-    let icon = Image.xmlElementFromIcon mb.ItemIcon Image.choose256 ctx
+    let icon = Image.xmlElementFromIcon mb.ItemIcon ImagePaths.choose256 ctx
 
     div [ _class "microblog" ] [
       FrontendHelpers.wrapNodeInLinkIfHrefExists mb.Link (div [ _class "icon" ] [

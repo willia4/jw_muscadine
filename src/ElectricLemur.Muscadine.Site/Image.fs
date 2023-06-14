@@ -4,6 +4,7 @@ open System
 open System.Collections.Immutable
 open FileInfo
 open Microsoft.AspNetCore.Http
+open Newtonsoft.Json.Linq
 open SixLabors.ImageSharp
 open SixLabors.ImageSharp.Processing
 open SixLabors.ImageSharp.Formats
@@ -11,22 +12,57 @@ open Util
 open Giraffe
 open Giraffe.ViewEngine
 open ElectricLemur.Muscadine.Site
+open ImagePaths
 
-type ImagePaths = {
-    Original: string
-    Size1024: string
-    Size512: string
-    Size256: string
-    Size128: string
-    Size64: string
+
+type ImageLibraryRecord = {
+    Id: string
+    DateAdded: DateTimeOffset
+    Name: string
+    ImagePaths: ImagePaths
 }
 
-let choose64 i = i.Size64
-let choose128 i = i.Size128
-let choose256 i = i.Size256
-let choose512 i = i.Size512
-let choose1024 i = i.Size1024
-let chooseOriginal i = i.Original
+module ImageLibraryRecord =
+    let documentType = "imageLibraryRecord"
+    //
+    // module Fields =
+    //     open 
+    //     let _id = FormFields.FormField.RequiredStringField ({
+    //         Key = "_id"
+    //         Label = "Id"
+    //         getValueFromModel = (fun b -> Some b.Id)
+    //         getValueFromContext = (fun ctx -> None)
+    //         getValueFromJObject = (fun obj -> JObj.getter<string> obj "_id")
+    //         isUnique = true})
+    //
+    //     let _dateAdded = FormFields.FormField.RequiredDateTimeField ({
+    //         Key = "_dateAdded"
+    //         Label = "Date Added"
+    //         getValueFromModel = (fun b -> Some b.DateAdded)
+    //         getValueFromContext = (fun ctx -> None)
+    //         getValueFromJObject = (fun obj -> JObj.getter<System.DateTimeOffset> obj "_dateAdded")
+    //         isUnique = false})
+
+    let fromJObject (obj: JObject) =
+        let id = JObj.getter<string> obj Database.idField
+        let dateAdded = JObj.getter<DateTimeOffset> obj Database.dateAddedField
+        let name = JObj.getter<string> obj "name"
+        let paths = JObj.getter<ImagePaths> obj "imagePaths"
+        
+        match id, dateAdded, name, paths with
+        | Some id, Some dateAdded, Some name, Some paths ->
+            Some {
+                    Id = id
+                    DateAdded = dateAdded
+                    Name = name
+                    ImagePaths = paths }
+        | _ -> None
+        
+    let toJObject (record: ImageLibraryRecord) =
+        JObj.ofSeq [ (Database.idField, record.Id); (Database.documentTypeField, documentType) ]
+        |> JObj.setValue Database.dateAddedField record.DateAdded
+        |> JObj.setValue "name" record.Name
+        |> JObj.setValue "imagePaths" record.ImagePaths
 
 type Icon =
     | FontAwesome of string
@@ -73,16 +109,9 @@ let private resizeImage size (original: ImmutableArray<byte>) = task {
         return Ok (outputStream.ToArray().ToImmutableArray())
 }
 
-let saveImageToDataStore (originalFile: FileInfo) documentType (documentId: string) fileKey ctx = task {
-    let containerDirectory = 
-        let id = Id.compressId documentId
-        joinPath3 documentType fileKey id
-
+let saveImageToContainer (originalFile: FileInfo) (containerDirectory: string) ctx = task {
     let fullPathFromRelativePath relativePath = joinPath (dataPath ctx) relativePath
-
-    // prev: A Result that determines if the function does anything at all. Wraps a tuple. 
-    // The snd item in the tuple is the buffer for the original image. 
-    // The fst item in the tuple is an object which can be passed to relativePathGetter to retrieve the path to save the image to
+    
     let resizeAndSaveImage size (relativePathGetter: 'a -> string) (prev: Result<'a * ImmutableArray<byte>, string>) = task {
         match prev with
         | Error msg -> return (Error msg)
@@ -98,11 +127,11 @@ let saveImageToDataStore (originalFile: FileInfo) documentType (documentId: stri
                 return (Ok (path, originalBytes))
             | Error msg -> return (Error msg)
     }
-        
+    
     let ext = match extensionForFile originalFile with
               | Some ext -> Ok ext
               | None -> Error $"File %s{fileName originalFile} must have an extension"
-
+              
     let paths =
         ext
         |> Result.map (fun ext -> {
@@ -113,7 +142,7 @@ let saveImageToDataStore (originalFile: FileInfo) documentType (documentId: stri
             Size128 = joinPath containerDirectory $"size_128%s{ext}"
             Size64 = joinPath containerDirectory $"size_64%s{ext}"
         })
-
+        
     let! r = 
         match paths with
         | Error msg -> Task.fromResult (Error msg)
@@ -131,6 +160,13 @@ let saveImageToDataStore (originalFile: FileInfo) documentType (documentId: stri
 
     return r |> Result.map (fun r -> fst r)
 }
+let saveImageToDataStore (originalFile: FileInfo) documentType (documentId: string) fileKey ctx = task {
+    let containerDirectory = 
+        let id = Id.compressId documentId
+        joinPath3 documentType fileKey id
+
+    return! saveImageToContainer originalFile containerDirectory ctx
+}
 
 let deleteAllImages coverImage ctx =
     deleteRelativePathIfExists coverImage.Original ctx
@@ -140,6 +176,36 @@ let deleteAllImages coverImage ctx =
     deleteRelativePathIfExists coverImage.Size128 ctx
     deleteRelativePathIfExists coverImage.Size64 ctx
     Task.fromResult ()
+
+let saveImageToLibrary (originalImage: FileInfo) (imageName: string option) ctx = task {
+    let id = Util.newGuid () |> string
+    let containerDirectory = joinPath "imageLibrary" (Id.compressId id)
+    
+    let! paths = saveImageToContainer originalImage containerDirectory ctx
+    
+    return!
+        match paths with
+        | Ok paths -> task {
+            let record = {
+                    Id = id
+                    DateAdded = DateTimeOffset.UtcNow
+                    Name = imageName |> Option.defaultValue (FileInfo.fileName originalImage)
+                    ImagePaths = paths 
+                }
+            do! Database.upsertDocument ctx (ImageLibraryRecord.toJObject record)
+            return Ok record
+            }
+        | Error err -> Error err |> Task.fromResult
+}
+
+let loadImageFromLibrary id ctx = task {
+    let! record = Database.getDocumentByTypeAndId ImageLibraryRecord.documentType id ctx 
+    let record = record |> Option.bind ImageLibraryRecord.fromJObject
+    
+    return match record with
+           | Some record -> Ok record
+           | None -> Error $"Image with id %s{id} could not be found"
+}
 
 module Handlers =
     open Microsoft.Extensions.Configuration

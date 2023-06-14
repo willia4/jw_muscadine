@@ -86,7 +86,7 @@ let rec toStream f =
             let ms = new MemoryStream(bytes.Length)
             use sourceStream = bytes.AsMemory().AsStream()
             do! sourceStream.CopyToAsync(ms)
-            ms.Seek(0L, SeekOrigin.Begin)
+            ms.Seek(0L, SeekOrigin.Begin) |> ignore
             return (ms :> System.IO.Stream) 
         }
         

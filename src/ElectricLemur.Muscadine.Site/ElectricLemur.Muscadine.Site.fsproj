@@ -43,6 +43,7 @@
     <Compile Include="Util.fs" />
     <Compile Include="Login.fs" />
     <Compile Include="Database.fs" />
+    <Compile Include="ImagePaths.fs" />
     <Compile Include="Image.fs" />
     <Compile Include="AssociatedItem.fs" />
     <Compile Include="Tag.fs" />

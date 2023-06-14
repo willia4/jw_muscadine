@@ -1,7 +1,7 @@
 module FormFields
 open ElectricLemur.Muscadine.Site
 open ElectricLemur.Muscadine.Site.Items
-
+open ImagePaths
 type FieldDescriptor<'m, 'f> = {
     Key: string
     Label: string
@@ -15,11 +15,11 @@ type FormField<'m> =
   | RequiredStringField of FieldDescriptor<'m, string>
   | RequiredDateTimeField of FieldDescriptor<'m, System.DateTimeOffset>
   | RequiredBooleanField of FieldDescriptor<'m, bool>
-  | RequiredImagePathsField of FieldDescriptor<'m, Image.ImagePaths>
+  | RequiredImagePathsField of FieldDescriptor<'m, ImagePaths>
   | OptionalStringField of FieldDescriptor<'m, string>
   | OptionalDateTimeField of FieldDescriptor<'m, System.DateTimeOffset>
   | OptionalBooleanField of FieldDescriptor<'m, bool>
-  | OptionalImagePathsField of FieldDescriptor<'m, Image.ImagePaths>
+  | OptionalImagePathsField of FieldDescriptor<'m, ImagePaths>
 
 
 let key (field : FormField<_>) =

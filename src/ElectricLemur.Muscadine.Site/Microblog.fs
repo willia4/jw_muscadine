@@ -397,7 +397,7 @@ module Handlers =
                 // only include actual images in the atom feed
                 match e.ItemIcon with
                 | Image.Image _ -> yield! [
-                    Image.xmlElementFromIcon e.ItemIcon Image.choose256 ctx
+                    Image.xmlElementFromIcon e.ItemIcon ImagePaths.choose256 ctx
                     br []
                   ]
                 | _ -> yield! []

@@ -3,6 +3,7 @@ open System
 open Microsoft.AspNetCore.Http
 open System.Threading.Tasks
 open Newtonsoft.Json.Linq
+open ImagePaths
 
 let documentType = Constants.Database.DocumentTypes.Book
 
@@ -12,7 +13,7 @@ type Book = {
     Title: string;
     Description: string;
     Slug: string;
-    CoverImagePaths: Image.ImagePaths option;
+    CoverImagePaths: ImagePaths option;
 }
 
 module Fields =
@@ -61,7 +62,7 @@ module Fields =
         Label = "Cover Image"
         getValueFromModel = (fun b -> b.CoverImagePaths)
         getValueFromContext = (fun _ -> raise (new NotImplementedException("Cannot get coverImage from form fields")))
-        getValueFromJObject = (fun obj -> JObj.getter<Image.ImagePaths> obj "coverImage")
+        getValueFromJObject = (fun obj -> JObj.getter<ImagePaths> obj "coverImage")
         isUnique = false})
 
     let allFields = [ _id; _dateAdded; title; description; slug; coverImagePaths ]

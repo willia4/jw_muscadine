@@ -278,7 +278,7 @@ let makeItemCard title link tags (microblog: (System.DateTimeOffset * string) op
   div [ _class "item-card" ] [
     div [ _class "item-image"] [
       div [ _class "item-image-container" ] [
-        wrapNodeInLinkIfHrefExists link (Image.xmlElementFromIcon image Image.choose512 ctx)
+        wrapNodeInLinkIfHrefExists link (Image.xmlElementFromIcon image ImagePaths.choose512 ctx)
       ]
     ]
     div [ _class "item-text-container" ] ([
@@ -326,7 +326,7 @@ let makeItemPage title titleLink (subtitle: XmlNode option) (description: string
         ])
     |> Seq.toList
 
-  let iconNode = Image.xmlElementFromIcon icon Image.choose1024 ctx
+  let iconNode = Image.xmlElementFromIcon icon ImagePaths.choose1024 ctx
 
   let tags = Tag.sortTagsForDisplay tags
   let tagsDiv =
