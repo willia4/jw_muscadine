@@ -1,6 +1,7 @@
 module ElectricLemur.Muscadine.Site.FileInfo
 open System
 open System.IO
+open System.Threading.Tasks
 open Microsoft.AspNetCore.Http
 open CommunityToolkit.HighPerformance
 open System.Collections.Immutable
@@ -9,28 +10,33 @@ type FileInfo =
 | PathFile of string
 | HttpFile of IFormFile
 | BytesFile of string * ImmutableArray<byte>
+| BytesProvider of string * (unit -> Task<ImmutableArray<byte>>)
 
 let ofHttpFormFile (f: IFormFile) = HttpFile(f)
 let ofPath (p: string) = PathFile(p)
 let ofBytes (fileName: string) (bytes: ImmutableArray<byte>) = BytesFile(fileName, bytes)
+let ofBytesProvider (fileName: string) (provider: unit -> Task<ImmutableArray<byte>>) = BytesProvider(fileName, provider)
 
 let isValid f =
     match f with
     | PathFile fullPath -> System.IO.File.Exists(fullPath)
     | HttpFile _ -> true // no way to check that the IFormFile is still valid so assume it hasn't been disposed
     | BytesFile _ -> true // we have the bytes so it's definitionally valid
+    | BytesProvider _ -> true // assume that the function will work; otherwise, we'd need to call it
  
 let fileName f =
     match f with
     | PathFile fullPath -> System.IO.Path.GetFileName(fullPath)
     | HttpFile file -> file.FileName
     | BytesFile (fileName, _) -> fileName
+    | BytesProvider (fileName, _) -> fileName
     
 let fileExtension f =
     match f with
     | PathFile fullPath -> System.IO.Path.GetExtension(fullPath)
     | HttpFile file -> System.IO.Path.GetExtension(file.FileName)
     | BytesFile (fileName, _) -> System.IO.Path.GetExtension(fileName)
+    | BytesProvider (fileName, _) -> System.IO.Path.GetExtension(fileName)
     
 let copyToStream (target: System.IO.Stream) f =
     match f with
@@ -45,6 +51,11 @@ let copyToStream (target: System.IO.Stream) f =
             use bufferStream = bytes.AsMemory().AsStream()
             do! bufferStream.CopyToAsync(target)
         }
+    | BytesProvider (_, provider) -> task {
+        let! bytes = provider ()
+        use bufferStream = bytes.AsMemory().AsStream()
+        do! bufferStream.CopyToAsync(target)
+    }
 
 let getBytes f =
     match f with
@@ -60,6 +71,9 @@ let getBytes f =
             return ms.ToArray().ToImmutableArray()
         }
     | BytesFile (_, bytes) -> Task.fromResult bytes
+    | BytesProvider (_, provider) -> task {
+        return! provider ()
+    }
     
 let clone f =
     match f with
@@ -81,6 +95,10 @@ let rec toStream f =
             let! cloned = clone f
             return! toStream cloned // this is only not infinitely recursive because clone will never return an HttpFile
         }
+    | BytesProvider _ -> task {
+            let! cloned = clone f
+            return! toStream cloned // this is only not infinitely recursive because clone will never return an HttpFile
+        }
     | BytesFile (_, bytes) -> task {
             let ms = new MemoryStream(bytes.Length)
             use sourceStream = bytes.AsMemory().AsStream()
@@ -88,4 +106,3 @@ let rec toStream f =
             ms.Seek(0L, SeekOrigin.Begin) |> ignore
             return (ms :> System.IO.Stream) 
         }
-        
