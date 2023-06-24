@@ -159,6 +159,8 @@ module private Mongo =
         | None = 0
         | Unique = 1
 
+    let mongoTimeoutSource () = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(8))
+    
     let rec private createIndex db (keys: (string * IndexDirection) seq) (options: IndexOptions)= task {
         let keyDefinition = new BsonDocument()
         keys |> Seq.iter (fun (k, dir) ->
@@ -174,7 +176,8 @@ module private Mongo =
         let c = db.Collection
 
         try
-            let! _ = c.Indexes.CreateOneAsync(m)
+            use timeout = mongoTimeoutSource()
+            let! _ = c.Indexes.CreateOneAsync(m, cancellationToken=(timeout.Token))
             return ()
         with
         | :? MongoDB.Driver.MongoCommandException as ex when ex.Code = 86 -> // code 86 is "index exists with a different definition" so delete it and try again
@@ -185,7 +188,8 @@ module private Mongo =
 
     let resetIndexes db = task {
         let c = db.Collection
-        do! c.Indexes.DropAllAsync()
+        use timeout = mongoTimeoutSource ()
+        do! c.Indexes.DropAllAsync(cancellationToken=(timeout.Token))
     }
 
     let private initDatabase db = task {
@@ -212,17 +216,20 @@ module private Mongo =
     let private jObjectToBson = jObjectToJson >> jsonToBson
 
     let countDocuments (filter: BsonDocument) (db: MongoDatabase) = task {
-        return! db.Collection.CountDocumentsAsync(filter)
+        use timeout = mongoTimeoutSource ()
+        return! db.Collection.CountDocumentsAsync(filter, cancellationToken=(timeout.Token))
     }
 
     let private cursorToSeq(cursor: IAsyncCursor<'a>) = task {
         let acc = new System.Collections.Generic.List<'a>()
-
-        let! hasNext = cursor.MoveNextAsync()
+        
+        use timeout = mongoTimeoutSource ()
+        let! hasNext = cursor.MoveNextAsync(cancellationToken=(timeout.Token))
         let mutable continueLooping = hasNext
         while continueLooping do
+            use timeout = mongoTimeoutSource ()
             acc.AddRange(cursor.Current)
-            let! hasNext = cursor.MoveNextAsync()
+            let! hasNext = cursor.MoveNextAsync(cancellationToken=(timeout.Token))
             continueLooping <- hasNext
 
         return (acc :> seq<'a>)
@@ -233,11 +240,12 @@ module private Mongo =
                     | Limit v -> v
                     | NoLimit -> 0
 
+        use timeout = mongoTimeoutSource ()
         use! cursor = db.Collection
                         .Find(filter)
                         .Sort(sort)
                         .Limit(limit)
-                        .ToCursorAsync()
+                        .ToCursorAsync(cancellationToken=(timeout.Token))
 
         let! documents = cursorToSeq cursor
         return (documents |> Seq.map bsonToJObject)
@@ -245,14 +253,16 @@ module private Mongo =
     
     let getDocument (id: string) (db: MongoDatabase) = task {
         let filter = Filters.empty |> Filters.byId id |> Filters.build
-        let! item = db.Collection.Find(filter).FirstOrDefaultAsync()
+        use timeout = mongoTimeoutSource ()
+        let! item = db.Collection.Find(filter).FirstOrDefaultAsync(cancellationToken=(timeout.Token))
         return match item with
                 | null -> None
                 | _ -> item |> bsonToJObject |> Some
     }
     
     let getDistinctValues<'a> (field: string) (filter: BsonDocument) (db: MongoDatabase) = task {
-        use! cursor = db.Collection.DistinctAsync<'a>(field, filter)
+        use timeout = mongoTimeoutSource ()
+        use! cursor = db.Collection.DistinctAsync<'a>(field, filter, cancellationToken=(timeout.Token))
         let! docs = cursorToSeq cursor
 
         return docs 
@@ -272,7 +282,8 @@ module private Mongo =
             else
                 bson.[idField] <- System.Guid.NewGuid() |> string
                 bson.[idField].AsString
-        do! db.Collection.InsertOneAsync(bson)
+        use timeout = mongoTimeoutSource ()
+        do! db.Collection.InsertOneAsync(bson, cancellationToken=(timeout.Token))
         return id
     }
 
@@ -290,13 +301,15 @@ module private Mongo =
             let options = new ReplaceOptions()
             options.IsUpsert <- true
             let filter = Filters.empty |> Filters.byId foundId |> Filters.build
-            let! _ = db.Collection.ReplaceOneAsync(filter, bson, options)
+            use timeout = mongoTimeoutSource()
+            let! _ = db.Collection.ReplaceOneAsync(filter, bson, options, cancellationToken=(timeout.Token))
             ()
     }
 
     let deleteDocumentById id (db: MongoDatabase) = task {
         let filter = Filters.empty |> Filters.byId id |> Filters.build
-        let! _ = db.Collection.DeleteOneAsync(filter)
+        use timeout = mongoTimeoutSource()
+        let! _ = db.Collection.DeleteOneAsync(filter, cancellationToken=(timeout.Token))
         ()
     }
 
