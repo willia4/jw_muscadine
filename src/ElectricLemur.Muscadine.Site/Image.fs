@@ -14,12 +14,11 @@ open Giraffe.ViewEngine
 open ElectricLemur.Muscadine.Site
 open ImagePaths
 
-
 type ImageLibraryRecord = {
     Id: string
     DateAdded: DateTimeOffset
     Name: string
-    ImagePaths: ImagePaths
+    ContentType: string
 }
 
 module ImageLibraryRecord =
@@ -48,21 +47,41 @@ module ImageLibraryRecord =
         let dateAdded = JObj.getter<DateTimeOffset> obj Database.dateAddedField
         let name = JObj.getter<string> obj "name"
         let paths = JObj.getter<ImagePaths> obj "imagePaths"
+        let contentType = JObj.getter<string> obj "contentType"
         
-        match id, dateAdded, name, paths with
-        | Some id, Some dateAdded, Some name, Some paths ->
+        match id, dateAdded, name, paths, contentType with
+        | Some id, Some dateAdded, Some name, Some paths, Some contentType->
             Some {
                     Id = id
                     DateAdded = dateAdded
                     Name = name
-                    ImagePaths = paths }
+                    ContentType = contentType }
         | _ -> None
         
     let toJObject (record: ImageLibraryRecord) =
         JObj.ofSeq [ (Database.idField, record.Id); (Database.documentTypeField, documentType) ]
         |> JObj.setValue Database.dateAddedField record.DateAdded
         |> JObj.setValue "name" record.Name
-        |> JObj.setValue "imagePaths" record.ImagePaths
+        |> JObj.setValue "contentType" record.ContentType
+
+    let fileExtension (record: ImageLibraryRecord) = Util.fileExtensionForContentType record.ContentType
+    
+    let getImagePaths record =
+        let fileExtension = fileExtension record 
+        {
+            Original = $"images\\%s{record.Id}\\size_original%s{fileExtension}"
+            Size1024 = $"images\\%s{record.Id}\\size_1024%s{fileExtension}"
+            Size512 = $"images\\%s{record.Id}\\size_512%s{fileExtension}"
+            Size256 = $"images\\%s{record.Id}\\size_256%s{fileExtension}"
+            Size128 = $"images\\%s{record.Id}\\size_128%s{fileExtension}" 
+            Size64 = $"images\\%s{record.Id}\\size_64%s{fileExtension}" 
+        }
+        
+    let toFileInfo record ctx =
+        let fileExtension = fileExtension record 
+        let path = $"images/%s{record.Id}/size_original%s{fileExtension}"
+        let path = System.IO.Path.Join((Util.dataPath ctx), path)
+        FileInfo.ofPath path
 
 type Icon =
     | FontAwesome of string
@@ -90,24 +109,76 @@ let private loadImageFromBytes (img: ImmutableArray<byte>) =
     with
     | ex -> Error (ex.Message)
 
-let private resizeImage size (original: ImmutableArray<byte>) = task {
+let private loadImageFromFileInfo (img: FileInfo) = task {
+    let! bytes = FileInfo.getBytes img
+    return loadImageFromBytes bytes
+}
+    
+let imageFormatFromContentType contentType =
+    match contentType with
+    | c when c = "image/jpeg" -> SixLabors.ImageSharp.Formats.Jpeg.JpegFormat.Instance :> IImageFormat
+    | c when c = "image/jpg" -> SixLabors.ImageSharp.Formats.Jpeg.JpegFormat.Instance
+    | c when c = "image/gif" -> SixLabors.ImageSharp.Formats.Gif.GifFormat.Instance
+    | c when c = "image/png" -> SixLabors.ImageSharp.Formats.Png.PngFormat.Instance
+    | c when c = "image/bmp" -> SixLabors.ImageSharp.Formats.Bmp.BmpFormat.Instance
+    | _ -> SixLabors.ImageSharp.Formats.Jpeg.JpegFormat.Instance
+
+let imageFormatFromFileName fileName = Util.contentTypeForFileName fileName |> Option.defaultValue "" |> imageFormatFromContentType
+
+let private resizeImage size outputFormat (original: ImmutableArray<byte>) = task {
     
     match loadImageFromBytes original with
     | Error msg -> return Error msg
-    | Ok (img, format) ->
-    
-        if size > 0 then
-            let newWidth = if img.Width >= img.Height then size else 0
-            let newHeight = if img.Height >= img.Width then size else 0
+    | Ok (img, inputFormat) ->
+        let outputFormat = outputFormat |> Option.defaultValue inputFormat
+        if outputFormat = inputFormat && size = 0 then
+            return Ok original // don't actually have to do any work if we want the original size and format
+        else
+            let size = Math.Min(Math.Abs(size), 2000) // cap size at something reasonable 
+            
+            if size > 0 then
+                let newWidth = if img.Width >= img.Height then size else 0
+                let newHeight = if img.Height >= img.Width then size else 0
 
-            img.Mutate(fun x -> x.Resize(newWidth, newHeight, KnownResamplers.Lanczos3) |> ignore)
+                img.Mutate(fun x -> x.Resize(newWidth, newHeight, KnownResamplers.Lanczos3) |> ignore)
 
-        let outputStream = new System.IO.MemoryStream(img.PixelType.BitsPerPixel * img.Width * img.Height)
-    
-        do! img.SaveAsync(outputStream, format)
+            let outputStream = new System.IO.MemoryStream(img.PixelType.BitsPerPixel * img.Width * img.Height)
+        
+            do! img.SaveAsync(outputStream, outputFormat)
 
-        return Ok (outputStream.ToArray().ToImmutableArray())
+            return Ok (outputStream.ToArray().ToImmutableArray())
 }
+
+let private createConvertedAndResizedFileInfo size outputFormat (original: FileInfo) =
+    let fileExtension = FileInfo.fileExtension original
+    let originalFormat =
+        fileExtension
+        |> Util.contentTypeForFileExtension
+        |> Option.map imageFormatFromContentType
+        
+    let requestedFormatIsOriginal =
+        match originalFormat, outputFormat with
+        | _, None -> true
+        | None, _ -> false
+        | Some originalFormat, Some outputFormat -> originalFormat = outputFormat
+
+    if requestedFormatIsOriginal && size = 0 then
+        original        
+    else
+        let provider = fun () -> task {
+            let! bytes = FileInfo.getBytes original
+            let! resizeResult = resizeImage size outputFormat bytes
+            match resizeResult with
+            | Error _ -> return ImmutableArray<byte>.Empty
+            | Ok newBytes -> return newBytes 
+        }
+        let extension =
+            match outputFormat with
+            | Some outputFormat -> outputFormat.FileExtensions |> Seq.tryHead |> Option.defaultValue (FileInfo.fileExtension original)
+            | _ -> (FileInfo.fileExtension original)
+        let extension = Util.addDotToFileExtension extension
+        
+        FileInfo.ofBytesProvider $"size_size%s{extension}" provider
 
 let saveImageToContainer (originalFile: FileInfo) (containerDirectory: string) ctx = task {
     let fullPathFromRelativePath relativePath = joinPath (dataPath ctx) relativePath
@@ -118,7 +189,7 @@ let saveImageToContainer (originalFile: FileInfo) (containerDirectory: string) c
         | Ok (path, (originalBytes: ImmutableArray<byte>)) -> 
             let fullPathToNew = fullPathFromRelativePath (relativePathGetter path)
 
-            let! resizedImage = resizeImage size originalBytes
+            let! resizedImage = resizeImage size None originalBytes
 
             match resizedImage with
             | Ok bytes -> 
@@ -190,7 +261,7 @@ let saveImageToLibrary (originalImage: FileInfo) (imageName: string option) ctx 
                     Id = id
                     DateAdded = DateTimeOffset.UtcNow
                     Name = imageName |> Option.defaultValue (FileInfo.fileName originalImage)
-                    ImagePaths = paths 
+                    ContentType = Util.contentTypeForFileInfo originalImage |> Option.defaultValue "application/octet-stream"
                 }
             do! Database.upsertDocument ctx (ImageLibraryRecord.toJObject record)
             return Ok record
@@ -209,51 +280,136 @@ let loadImageFromLibrary id ctx = task {
 
 module Handlers =
     open Microsoft.Extensions.Configuration
-    let GET_imageRouter (paths: string seq) =
-        fun next (ctx: HttpContext) -> task {
-            let components = paths |> Seq.skip 1 |> Seq.toArray
+    // /images/book/coverImage/65cffde48d5346b580420a7ba00f455e/size_256.gif
+    let oldRegex = System.Text.RegularExpressions.Regex("/images/(.*?)/(.*?)/(.*?)/(.*)")
+    let newRegex = System.Text.RegularExpressions.Regex("/images/([a-zA-Z0-9].+?)/size/(.+?)\\.(.+?)$")
+    type ImageRouteType =
+        | OldImageRoute of string array
+        | NewImageRoute of string*string*string
+        | ErrorRoute
+        
+    let getImageRoute (ctx: HttpContext) =
+        let path = string ctx.Request.Path
+        match (newRegex.Match(path)), (oldRegex.Match(path)) with
+        | (newMatch, _) when newMatch.Success -> NewImageRoute (newMatch.Groups[1].Value, newMatch.Groups[2].Value, newMatch.Groups[3].Value)
+        | (_, oldMatch) when oldMatch.Success -> OldImageRoute [|oldMatch.Groups[1].Value; oldMatch.Groups[2].Value; oldMatch.Groups[3].Value; oldMatch.Groups[4].Value|]
+        | _ -> ErrorRoute
 
-            if components.Length <> 4 then
-                return! setStatusCode 401 next ctx
-            else
-                let documentType = components.[0]
-                let imageKey = components.[1]
-                let idOrSlug = components.[2]
-                let fileName = components.[3]
-                
-                let! id = 
-                    if not (Id.isId idOrSlug) then task {
-                        let! id = Database.getIdForDocumentTypeAndSlug documentType idOrSlug ctx
-                        return id |> Option.map Id.compressId
-                    }
-                    else 
-                        Some (idOrSlug |> Id.compressId) |> Task.fromResult
-
-                match id with
-                | Some id ->
-                    let path = $"{documentType}/{imageKey}/{id}/{fileName}"
-                    let path = path.Replace("/", System.IO.Path.DirectorySeparatorChar.ToString())
-                    let path = System.IO.Path.Join((Util.dataPath ctx), path)
-                    let file = FileInfo.ofPath path
+    let GET_imageRouter next (ctx: HttpContext)  = task {
+            
+            match getImageRoute ctx with
+            | OldImageRoute components -> 
+                if components.Length <> 4 then
+                    return! setStatusCode 401 next ctx
+                else
+                    let documentType = components.[0]
+                    let imageKey = components.[1]
+                    let idOrSlug = components.[2]
+                    let fileName = components.[3]
                     
-                    match FileInfo.isValid file with
+                    let! id = 
+                        if not (Id.isId idOrSlug) then task {
+                            let! id = Database.getIdForDocumentTypeAndSlug documentType idOrSlug ctx
+                            return id |> Option.map Id.compressId
+                        }
+                        else 
+                            Some (idOrSlug |> Id.compressId) |> Task.fromResult
+
+                    match id with
+                    | Some id ->
+                        let path = $"{documentType}/{imageKey}/{id}/{fileName}"
+                        let path = path.Replace("/", System.IO.Path.DirectorySeparatorChar.ToString())
+                        let path = System.IO.Path.Join((Util.dataPath ctx), path)
+                        let file = FileInfo.ofPath path
+                        
+                        match FileInfo.isValid file with
+                        | true ->
+                            let config = ctx.GetService<IConfiguration>()
+                            let cacheEnabled = config.GetValue<bool>("webOptimizer:enableCaching", false)
+                            if cacheEnabled then
+                                let cacheAge = System.TimeSpan.FromDays(30).TotalSeconds |> int
+                                ctx.Response.Headers.Append("Cache-Control", $"max-age=%d{cacheAge}, public")
+
+                            let setContentType next ctx =
+                                match Util.contentTypeForFileInfo file with
+                                | Some contentType ->
+                                    setContentType contentType next ctx
+                                | None -> next ctx
+                                
+                            let fileInfo = FileInfo.ofPath path
+                            use! fileStream = FileInfo.toStream fileInfo
+                            return! (setContentType >=> streamData false fileStream None None) next ctx
+                        | false -> return! setStatusCode 404 next ctx
+                    | None -> return! setStatusCode 404 next ctx
+            | NewImageRoute (id, sizePart, extension) ->
+                // TODO actually pull the record from the database
+                let record = {
+                    Id = id
+                    DateAdded = DateTimeOffset.UtcNow
+                    Name = id
+                    ContentType = "image/jpeg"
+                }
+                let requestedExtension = Util.addDotToFileExtension extension
+
+                let originalFile = ImageLibraryRecord.toFileInfo record ctx
+                let outputContentType = requestedExtension |> Util.contentTypeForFileExtension
+                let outputFormat =  outputContentType |> Option.map imageFormatFromContentType
+                 
+                let isOriginalContentType =
+                    match outputContentType with
+                    | None -> true
+                    | Some ct when ct = record.ContentType -> true
+                    | _ -> false
+                    
+                let possibleCachedImage =
+                    match isOriginalContentType with
                     | true ->
+                        let possiblePath = $"images/%s{record.Id}/size_%s{sizePart}%s{requestedExtension}"
+                        let possiblePath = System.IO.Path.Join((Util.dataPath ctx), possiblePath)
+                        let image = FileInfo.ofPath possiblePath
+                        if FileInfo.isValid image then Some image else None 
+                    | false -> None
+
+                let outputImage =
+                    match possibleCachedImage with
+                    | Some image -> Some image
+                    | _ ->
+                        match FileInfo.isValid originalFile with
+                        | true ->
+                            let newSize =
+                                match sizePart with
+                                | s when s = "original" -> 0
+                                | s ->
+                                    match Int32.TryParse(s) with
+                                    | true, i -> i
+                                    | _ -> 0
+                            Some (createConvertedAndResizedFileInfo newSize outputFormat originalFile)
+                        | false -> None
+
+                match outputImage with
+                | Some outputImage ->
+                    use! fileStream = FileInfo.toStream outputImage
+                    let setContentType next ctx =
+                        match Util.contentTypeForFileInfo outputImage with
+                        | Some contentType ->
+                            setContentType contentType next ctx
+                        | None -> next ctx
+                        
+                    let setCache next (ctx: HttpContext) =
                         let config = ctx.GetService<IConfiguration>()
                         let cacheEnabled = config.GetValue<bool>("webOptimizer:enableCaching", false)
-                        if cacheEnabled then
-                            let cacheAge = System.TimeSpan.FromDays(30).TotalSeconds |> int
-                            ctx.Response.Headers.Append("Cache-Control", $"max-age=%d{cacheAge}, public")
 
-                        let setContentType next ctx =
-                            match Util.contentTypeForFileInfo file with
-                            | Some contentType ->
-                                setContentType contentType next ctx
-                            | None -> next ctx
-                            
-                        let fileInfo = FileInfo.ofPath path
-                        use! fileStream = FileInfo.toStream fileInfo
-                        return! (setContentType >=> streamData false fileStream None None) next ctx
-                    | false -> return! setStatusCode 401 next ctx
-                | None -> return! setStatusCode 401 next ctx
+                        if cacheEnabled then
+                            let cacheAge = TimeSpan.FromDays(2).TotalSeconds |> int
+                        
+                            ctx.Response.Headers.Append(
+                                "Cache-Control", $"max-age=%d{cacheAge}, public")
+
+                        next ctx
+                        
+                    return! (setCache >=> setContentType >=> streamData false fileStream None None) next ctx
+                | None -> return! setStatusCode 404 next ctx
+            | _ ->
+                return! setStatusCode 404 next ctx
         }
 

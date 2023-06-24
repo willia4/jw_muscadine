@@ -67,6 +67,20 @@ let joinUrlParts (a: string) (b: string) =
     let result = $"{a}{b}"
     result
 
+let addDotToFileExtension (extension: string) =
+    match extension with
+    | null -> ""
+    | s when s = "" -> ""
+    | s when s.StartsWith(".") -> s
+    | s -> $".{s}"
+    
+let removeDotFromFileExtension (extension: string) =
+    match extension with
+    | null -> ""
+    | s when s = "" -> ""
+    | s when s.StartsWith(".") -> s.Remove(0, 1)
+    | s -> s
+
 let saveFileBytes (filePath: string) (fileBytes: ImmutableArray<byte>) = task {
     let dir = System.IO.Path.GetDirectoryName(filePath)
     if not (System.IO.Directory.Exists(dir)) then
@@ -180,10 +194,22 @@ let contentTypeForFileName (fileName: string) =
     | f when f.EndsWith(".ico") -> Some "image/vnd.microsoft.icon"
     | f when f.EndsWith(".jpg") -> Some "image/jpeg"
     | f when f.EndsWith(".png") -> Some "image/png"
+    | f when f.EndsWith(".gif") -> Some "image/gif"
     | f when f.EndsWith(".css") -> Some "text/css; charset=UTF-8"
     | f when f.EndsWith(".scss") -> Some "text/css; charset=UTF-8"
     | f when f.EndsWith(".js") -> Some "application/javascript; charset=UTF-8"
     | _ -> None
+
+let contentTypeForFileExtension (extension: string) = extension |> addDotToFileExtension |> contentTypeForFileName // this works because contentTypeForFilename just uses .EndsWith
+ 
+let fileExtensionForContentType (contentType: string) =
+    match contentType.ToLowerInvariant() with
+    | f when f = "image/vnd.microsoft.icon" -> ".ico"
+    | f when f = "image/jpeg" -> ".jpg"
+    | f when f = "image/png" -> ".png"
+    | f when f.StartsWith("text/css") -> ".css"
+    | f when f.StartsWith("application/javascript") -> ".js"
+    | _ -> ".bin"
 
 let contentTypeForFileInfo (fileInfo: FileInfo) = fileInfo |> FileInfo.fileName |> contentTypeForFileName
 

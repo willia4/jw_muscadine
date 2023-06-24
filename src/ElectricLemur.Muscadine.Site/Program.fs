@@ -159,7 +159,8 @@ let webApp =
                     routef "/updates/%s/" (fun slug -> Frontend.AboutMe.Handlers.GET_allForItemType slug)
                     routef "/updates/%s" (fun slug -> redirectTo true $"/updates/%s{slug}/")
                     
-                    routexp "/images/(.*?)/(.*?)/(.*?)/(.*)" Image.Handlers.GET_imageRouter
+                    //routexp "/images/(.*?)/(.*?)/(.*?)/(.*)" Image.Handlers.GET_imageRouter
+                    routeStartsWith "/images/" >=> Image.Handlers.GET_imageRouter
                     
                     route "/feed/microblogs" >=> redirectTo true "/feed/microblogs/"
                     route "/feed/microblogs/" >=> (Microblog.Handlers.GET_atomFeed None "everything" (Util.makeUrl "/feed/microblogs/"))
