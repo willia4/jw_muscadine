@@ -327,7 +327,6 @@ module Handlers =
                         | false -> return! setStatusCode 404 next ctx
                     | None -> return! setStatusCode 404 next ctx
             | NewImageRoute (id, sizePart, extension) ->
-                // TODO actually pull the record from the database
                 let! record =
                     id
                     |> Id.expandId
@@ -336,14 +335,6 @@ module Handlers =
                     |> Task.map (function
                                  | Some obj -> imageLibraryRecordFromJObject obj
                                  | None -> None)
-                // //let id = Id.expandId id
-                // let record = {
-                //     Id = id
-                //     DateAdded = DateTimeOffset.UtcNow
-                //     Name = id
-                //     ContentType = "image/jpeg"
-                // }
-                // let record = Some record
                 
                 let requestedExtension = Util.addDotToFileExtension extension
 

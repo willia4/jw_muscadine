@@ -63,7 +63,7 @@ module Fields =
         Key = "imageData"
         Label = "Image"
         getValueFromModel = getImagePaths >> Some
-        getValueFromContext = (fun _ -> raise (new NotImplementedException("Cannot get imageData from form fields")))
+        getValueFromContext = (fun _ -> raise (new InvalidOperationException("Cannot get imageData from form fields")))
         getValueFromJObject = fromJObject >> (Option.map getImagePaths)
         isUnique = false})
     
