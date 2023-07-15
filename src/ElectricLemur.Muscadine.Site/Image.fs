@@ -13,75 +13,7 @@ open Giraffe
 open Giraffe.ViewEngine
 open ElectricLemur.Muscadine.Site
 open ImagePaths
-
-type ImageLibraryRecord = {
-    Id: string
-    DateAdded: DateTimeOffset
-    Name: string
-    ContentType: string
-}
-
-module ImageLibraryRecord =
-    let documentType = "imageLibraryRecord"
-    //
-    // module Fields =
-    //     open 
-    //     let _id = FormFields.FormField.RequiredStringField ({
-    //         Key = "_id"
-    //         Label = "Id"
-    //         getValueFromModel = (fun b -> Some b.Id)
-    //         getValueFromContext = (fun ctx -> None)
-    //         getValueFromJObject = (fun obj -> JObj.getter<string> obj "_id")
-    //         isUnique = true})
-    //
-    //     let _dateAdded = FormFields.FormField.RequiredDateTimeField ({
-    //         Key = "_dateAdded"
-    //         Label = "Date Added"
-    //         getValueFromModel = (fun b -> Some b.DateAdded)
-    //         getValueFromContext = (fun ctx -> None)
-    //         getValueFromJObject = (fun obj -> JObj.getter<System.DateTimeOffset> obj "_dateAdded")
-    //         isUnique = false})
-
-    let fromJObject (obj: JObject) =
-        let id = JObj.getter<string> obj Database.idField
-        let dateAdded = JObj.getter<DateTimeOffset> obj Database.dateAddedField
-        let name = JObj.getter<string> obj "name"
-        let paths = JObj.getter<ImagePaths> obj "imagePaths"
-        let contentType = JObj.getter<string> obj "contentType"
-        
-        match id, dateAdded, name, paths, contentType with
-        | Some id, Some dateAdded, Some name, Some paths, Some contentType->
-            Some {
-                    Id = id
-                    DateAdded = dateAdded
-                    Name = name
-                    ContentType = contentType }
-        | _ -> None
-        
-    let toJObject (record: ImageLibraryRecord) =
-        JObj.ofSeq [ (Database.idField, record.Id); (Database.documentTypeField, documentType) ]
-        |> JObj.setValue Database.dateAddedField record.DateAdded
-        |> JObj.setValue "name" record.Name
-        |> JObj.setValue "contentType" record.ContentType
-
-    let fileExtension (record: ImageLibraryRecord) = Util.fileExtensionForContentType record.ContentType
-    
-    let getImagePaths record =
-        let fileExtension = fileExtension record 
-        {
-            Original = $"images\\%s{record.Id}\\size_original%s{fileExtension}"
-            Size1024 = $"images\\%s{record.Id}\\size_1024%s{fileExtension}"
-            Size512 = $"images\\%s{record.Id}\\size_512%s{fileExtension}"
-            Size256 = $"images\\%s{record.Id}\\size_256%s{fileExtension}"
-            Size128 = $"images\\%s{record.Id}\\size_128%s{fileExtension}" 
-            Size64 = $"images\\%s{record.Id}\\size_64%s{fileExtension}" 
-        }
-        
-    let toFileInfo record ctx =
-        let fileExtension = fileExtension record 
-        let path = $"images/%s{record.Id}/size_original%s{fileExtension}"
-        let path = System.IO.Path.Join((Util.dataPath ctx), path)
-        FileInfo.ofPath path
+open ImageLibraryRecord
 
 type Icon =
     | FontAwesome of string
@@ -99,7 +31,6 @@ let rec xmlElementFromIcon icon sizeChooser ctx =
         |> Option.map makeUrl
         |> Option.map (fun path -> img [ _src (path.ToString()) ])
         |> Option.defaultValue (xmlElementFromIcon (FontAwesome "fa-solid fa-cloud-exclamation") sizeChooser ctx)
-
 
 let private loadImageFromBytes (img: ImmutableArray<byte>) = 
     try
