@@ -44,13 +44,13 @@
     <Compile Include="Login.fs" />
     <Compile Include="Database.fs" />
     <Compile Include="ImagePaths.fs" />
-    <Compile Include="ImageLibraryRecord.fs" />
     <Compile Include="Image.fs" />
     <Compile Include="AssociatedItem.fs" />
     <Compile Include="Tag.fs" />
     <Compile Include="Items.fs" />
     <Compile Include="Microblog.fs" />
     <Compile Include="FormFields.fs" />
+    <Compile Include="ImageLibraryRecord.fs" />
     <Compile Include="Game.fs" />
     <Compile Include="Book.fs" />
     <Compile Include="Project.fs" />

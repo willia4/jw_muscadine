@@ -16,6 +16,7 @@ let getItemCoverImage (item: ItemWrapper) =
     | Book x -> x.CoverImagePaths 
     | Project x -> x.IconImagePaths
     | Game x -> x.CoverImagePaths
+    | ItemWrapper.Image x -> ImageLibraryRecord.getImagePaths x |> Some
 
 let getItemCoverImageIcon (item: ItemWrapper) =
     item
@@ -86,6 +87,14 @@ module Views =
                 Active = (itemDocumentType |> Option.map(fun i -> i = GameDocumentType) |> Option.defaultValue false)
             }
             
+            {
+                LongTitle = "Admin: Images"
+                ShortTitle = "Images"
+                Icon = Some (i [ _class Constants.Icons.Image ] [])
+                Route = "/admin/images"
+                Active = (itemDocumentType |> Option.map(fun i -> i = ImageLibraryRecordDocumentType) |> Option.defaultValue false)
+            }
+
             {
                 LongTitle = "Exit Admin"
                 ShortTitle = "Exit"
@@ -243,6 +252,7 @@ module Handlers =
                 | GameDocumentType -> FormFields.View.addEditView None title slug (Game.Fields.name) (Game.Fields.allFields) allTags []
                 | ProjectDocumentType -> FormFields.View.addEditView None title slug (Project.Fields.name) (Project.Fields.allFields) allTags []
                 | BookDocumentType -> FormFields.View.addEditView None title slug (Book.Fields.title) (Book.Fields.allFields) allTags []
+                | ImageLibraryRecordDocumentType -> FormFields.View.addEditView None title slug (ImageLibraryRecord.Fields.name) (ImageLibraryRecord.Fields.allFields) allTags []
 
             return! htmlView (Views.adminLayout $"Add {title}" AddButtonDisplay.NotShown (makePageData itemDocumentType CancelToIndex None) (Some itemDocumentType) content ctx) next ctx
         }
@@ -268,6 +278,7 @@ module Handlers =
                         | Game m -> FormFields.View.addEditView (Some m) title slug (Game.Fields.name) (Game.Fields.allFields) allTags documentTags
                         | Project m -> FormFields.View.addEditView (Some m) title slug (Project.Fields.name) (Project.Fields.allFields) allTags documentTags
                         | Book m -> FormFields.View.addEditView (Some m) title slug (Book.Fields.title) (Book.Fields.allFields) allTags documentTags
+                        | ItemWrapper.Image m -> FormFields.View.addEditView (Some m) title slug (ImageLibraryRecord.Fields.name) (ImageLibraryRecord.Fields.allFields) allTags documentTags 
                     )
                 |> Option.defaultValue []
                 

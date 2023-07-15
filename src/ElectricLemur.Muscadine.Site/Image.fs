@@ -13,8 +13,46 @@ open Giraffe
 open Giraffe.ViewEngine
 open ElectricLemur.Muscadine.Site
 open ImagePaths
-open ImageLibraryRecord
 
+type ImageLibraryRecord = {
+    Id: string
+    DateAdded: DateTimeOffset
+    Name: string
+    ContentType: string
+}
+
+let imageLibraryRecordDocumentType = "imageLibraryRecord"
+
+let imageLibraryRecordFromJObject (obj: JObject) =
+    let id = JObj.getter<string> obj Database.idField
+    let documentType' = JObj.getter<string> obj Database.documentTypeField
+    let dateAdded = JObj.getter<DateTimeOffset> obj Database.dateAddedField
+    let name = JObj.getter<string> obj "name"
+    let contentType = JObj.getter<string> obj "contentType"
+    
+    match id, documentType', dateAdded, name, contentType with
+    | Some id, Some documentType', Some dateAdded, Some name, Some contentType when documentType' = imageLibraryRecordDocumentType ->
+        Some {
+                Id = id
+                DateAdded = dateAdded
+                Name = name
+                ContentType = contentType }
+    | _ -> None
+    
+let imageLibraryRecordToJObject (record: ImageLibraryRecord) =
+    JObj.ofSeq [ (Database.idField, record.Id); (Database.documentTypeField, imageLibraryRecordDocumentType) ]
+    |> JObj.setValue Database.dateAddedField record.DateAdded
+    |> JObj.setValue "name" record.Name
+    |> JObj.setValue "contentType" record.ContentType
+    
+let imageLibraryRecordFileExtension (record: ImageLibraryRecord) = Util.fileExtensionForContentType record.ContentType
+
+let imageLibraryRecordToFileInfo (record: ImageLibraryRecord) ctx =
+    let fileExtension = imageLibraryRecordFileExtension record 
+    let path = $"images/%s{record.Id}/size_original%s{fileExtension}"
+    let path = System.IO.Path.Join((Util.dataPath ctx), path)
+    FileInfo.ofPath path
+    
 type Icon =
     | FontAwesome of string
     | Image of ImagePaths
@@ -36,6 +74,7 @@ let private loadImageFromBytes (img: ImmutableArray<byte>) =
     try
         let mutable format: IImageFormat = null
         let img = Image.Load(img.AsSpan(), &format)
+
         Ok (img, format)
     with
     | ex -> Error (ex.Message)
@@ -55,6 +94,21 @@ let imageFormatFromContentType contentType =
     | _ -> SixLabors.ImageSharp.Formats.Jpeg.JpegFormat.Instance
 
 let imageFormatFromFileName fileName = Util.contentTypeForFileName fileName |> Option.defaultValue "" |> imageFormatFromContentType
+
+let detectContentTypeForFileInfo img = task {
+    let defaultContentType = "application/octet-stream"
+    let! loadedResult = loadImageFromFileInfo img
+    return
+        match loadedResult with
+        | Ok (_, format) ->
+            match format with
+            | :? SixLabors.ImageSharp.Formats.Jpeg.JpegFormat -> "image/jpeg"
+            | :? SixLabors.ImageSharp.Formats.Gif.GifFormat -> "image/gif"
+            | :? SixLabors.ImageSharp.Formats.Png.PngFormat -> "image/png"
+            | :? SixLabors.ImageSharp.Formats.Bmp.BmpFormat -> "image/bmp"
+            | _ -> defaultContentType
+        | Error _ -> defaultContentType
+}
 
 let private resizeImage size outputFormat (original: ImmutableArray<byte>) = task {
     
@@ -194,15 +248,15 @@ let saveImageToLibrary (originalImage: FileInfo) (imageName: string option) ctx 
                     Name = imageName |> Option.defaultValue (FileInfo.fileName originalImage)
                     ContentType = Util.contentTypeForFileInfo originalImage |> Option.defaultValue "application/octet-stream"
                 }
-            do! Database.upsertDocument ctx (ImageLibraryRecord.toJObject record)
+            do! Database.upsertDocument ctx (imageLibraryRecordToJObject record)
             return Ok record
             }
         | Error err -> Error err |> Task.fromResult
 }
 
 let loadImageFromLibrary id ctx = task {
-    let! record = Database.getDocumentByTypeAndId ImageLibraryRecord.documentType id ctx 
-    let record = record |> Option.bind ImageLibraryRecord.fromJObject
+    let! record = Database.getDocumentByTypeAndId imageLibraryRecordDocumentType id ctx 
+    let record = record |> Option.bind imageLibraryRecordFromJObject
     
     return match record with
            | Some record -> Ok record
@@ -274,37 +328,48 @@ module Handlers =
                     | None -> return! setStatusCode 404 next ctx
             | NewImageRoute (id, sizePart, extension) ->
                 // TODO actually pull the record from the database
-                let record = {
-                    Id = id
-                    DateAdded = DateTimeOffset.UtcNow
-                    Name = id
-                    ContentType = "image/jpeg"
-                }
+                let! record =
+                    id
+                    |> Id.expandId
+                    |> Option.map (fun id -> Database.getDocumentByTypeAndId imageLibraryRecordDocumentType id ctx)
+                    |> Option.defaultValue (Task.fromResult None)
+                    |> Task.map (function
+                                 | Some obj -> imageLibraryRecordFromJObject obj
+                                 | None -> None)
+                // //let id = Id.expandId id
+                // let record = {
+                //     Id = id
+                //     DateAdded = DateTimeOffset.UtcNow
+                //     Name = id
+                //     ContentType = "image/jpeg"
+                // }
+                // let record = Some record
+                
                 let requestedExtension = Util.addDotToFileExtension extension
 
-                let originalFile = ImageLibraryRecord.toFileInfo record ctx
+                let originalFile = record |> Option.map (fun record -> imageLibraryRecordToFileInfo record ctx)
                 let outputContentType = requestedExtension |> Util.contentTypeForFileExtension
                 let outputFormat =  outputContentType |> Option.map imageFormatFromContentType
                  
                 let isOriginalContentType =
-                    match outputContentType with
-                    | None -> true
-                    | Some ct when ct = record.ContentType -> true
+                    match outputContentType, record with
+                    | None, _ -> true
+                    | Some ct, Some record when ct = record.ContentType -> true
                     | _ -> false
                     
                 let possibleCachedImage =
-                    match isOriginalContentType with
-                    | true ->
-                        let possiblePath = $"images/%s{record.Id}/size_%s{sizePart}%s{requestedExtension}"
+                    match isOriginalContentType, record with
+                    | true, Some record ->
+                        let possiblePath = $"imageLibraryRecord/imageData/%s{Id.compressId record.Id}/size_%s{sizePart}%s{requestedExtension}"
                         let possiblePath = System.IO.Path.Join((Util.dataPath ctx), possiblePath)
                         let image = FileInfo.ofPath possiblePath
                         if FileInfo.isValid image then Some image else None 
-                    | false -> None
+                    | _, _ -> None
 
                 let outputImage =
-                    match possibleCachedImage with
-                    | Some image -> Some image
-                    | _ ->
+                    match possibleCachedImage, originalFile with
+                    | Some image, _ -> Some image
+                    | None, Some originalFile ->
                         match FileInfo.isValid originalFile with
                         | true ->
                             let newSize =
@@ -316,6 +381,7 @@ module Handlers =
                                     | _ -> 0
                             Some (createConvertedAndResizedFileInfo newSize outputFormat originalFile)
                         | false -> None
+                    | None, None -> None
 
                 match outputImage with
                 | Some outputImage ->

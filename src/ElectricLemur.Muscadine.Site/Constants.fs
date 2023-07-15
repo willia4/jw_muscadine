@@ -14,3 +14,4 @@ module Constants =
       let Game = "fa-solid fa-gamepad"
       let Colophon = "fa-solid fa-pen-nib"
       let QuestionMark = "fa-solid fa-circle-question"
+      let Image = "fa-solid fa-image"

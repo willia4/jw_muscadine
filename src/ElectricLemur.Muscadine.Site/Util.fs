@@ -207,6 +207,7 @@ let fileExtensionForContentType (contentType: string) =
     | f when f = "image/vnd.microsoft.icon" -> ".ico"
     | f when f = "image/jpeg" -> ".jpg"
     | f when f = "image/png" -> ".png"
+    | f when f = "image/gif" -> ".gif"
     | f when f.StartsWith("text/css") -> ".css"
     | f when f.StartsWith("application/javascript") -> ".js"
     | _ -> ".bin"

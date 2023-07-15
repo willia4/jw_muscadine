@@ -177,10 +177,12 @@ let webApp =
                     route "/admin/books" >=> Login.requiresAdminRedirect "/admin/books" >=> Admin.Handlers.GET_index ItemDocumentType.BookDocumentType
                     route "/admin/games" >=> Login.requiresAdminRedirect "/admin/games" >=> Admin.Handlers.GET_index ItemDocumentType.GameDocumentType
                     route "/admin/projects" >=> Login.requiresAdminRedirect "/admin/projects" >=> Admin.Handlers.GET_index ItemDocumentType.ProjectDocumentType
+                    route "/admin/images" >=> Login.requiresAdminRedirect "/admin/images" >=> Admin.Handlers.GET_index ItemDocumentType.ImageLibraryRecordDocumentType
                     
                     route "/admin/games/_new" >=> Login.requiresAdminRedirect "/admin/games/_new" >=> Admin.Handlers.GET_add ItemDocumentType.GameDocumentType
                     route "/admin/books/_new" >=> Login.requiresAdminRedirect "/admin/books/_new" >=> Admin.Handlers.GET_add ItemDocumentType.BookDocumentType
                     route "/admin/projects/_new" >=> Login.requiresAdminRedirect "/admin/projects/_new" >=> Admin.Handlers.GET_add ItemDocumentType.ProjectDocumentType
+                    route "/admin/images/_new" >=> Login.requiresAdminRedirect "/admin/images/_new" >=> Admin.Handlers.GET_add ItemDocumentType.ImageLibraryRecordDocumentType
                     
                     routef "/admin/games/%s" (fun id -> Login.requiresAdminRedirect $"/admin/games/%s{id} ">=> Admin.Handlers.GET_edit ItemDocumentType.GameDocumentType id)
                     routef "/admin/books/%s" (fun id -> Login.requiresAdminRedirect $"/admin/books/%s{id} ">=> Admin.Handlers.GET_edit ItemDocumentType.BookDocumentType id)
@@ -223,6 +225,9 @@ let webApp =
                     route "/admin/projects/_new" >=> Login.requiresAdminRedirect "/admin/projects/_new" >=> ItemHelper.AdminHandlers.POST_add ProjectDocumentType
                     routef "/admin/projects/%s" (fun id -> Login.requiresAdminRedirect $"/admin/projects/%s{id}" >=> ItemHelper.AdminHandlers.POST_edit ProjectDocumentType id)
 
+                    route "/admin/images/_new" >=> Login.requiresAdminRedirect "/admin/images/_new" >=> ItemHelper.AdminHandlers.POST_add ImageLibraryRecordDocumentType
+                    routef "/admin/images/%s" (fun id -> Login.requiresAdminRedirect $"/admin/images/%s{id}" >=> ItemHelper.AdminHandlers.POST_edit ImageLibraryRecordDocumentType id)
+                    
                     routef "/admin/microblog/%s" (fun id -> Login.requiresAdminRedirect $"/admin/microblog/%s{id}" >=> Microblog.Handlers.POST_edit id)
 
                 ]

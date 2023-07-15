@@ -145,6 +145,7 @@ module Handlers =
           | ItemHelper.ItemDocumentType.GameDocumentType -> FrontendHelpers.PageDefinitions.Games
           | ItemHelper.ItemDocumentType.ProjectDocumentType -> FrontendHelpers.PageDefinitions.Projects
           | ItemHelper.ItemDocumentType.BookDocumentType -> FrontendHelpers.PageDefinitions.Books
+          | ItemHelper.ItemDocumentType.ImageLibraryRecordDocumentType -> FrontendHelpers.PageDefinitions.Games
 
         let pageHtml = FrontendHelpers.layout
                          (FrontendHelpers.PageDefinitions.Custom ($"updates/%s{slugString}", longTitle, shortTitle, activeButtonPage, []))

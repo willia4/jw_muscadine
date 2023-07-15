@@ -7,11 +7,13 @@ type ItemWrapper =
   | Game of Game.Game
   | Project of Project.Project
   | Book of Book.Book
+  | Image of Image.ImageLibraryRecord
 
 type ItemDocumentType =
   | GameDocumentType
   | ProjectDocumentType
   | BookDocumentType
+  | ImageLibraryRecordDocumentType
 
 module ItemDocumentType =
   let fromString s =
@@ -19,6 +21,7 @@ module ItemDocumentType =
     | s when s = Game.documentType -> Some GameDocumentType
     | s when s = Project.documentType -> Some ProjectDocumentType
     | s when s = Book.documentType -> Some BookDocumentType
+    | s when s = ImageLibraryRecord.documentType -> Some ImageLibraryRecordDocumentType
     | _ -> None
 
   let fromSlug s =
@@ -26,6 +29,7 @@ module ItemDocumentType =
     | s when s = "games" -> Some GameDocumentType
     | s when s = "projects" -> Some ProjectDocumentType
     | s when s = "books" -> Some BookDocumentType
+    | s when s = "images" -> Some ImageLibraryRecordDocumentType
     | _ -> None
 
   let toDatabaseDocumentType itemDocumentType =
@@ -33,30 +37,35 @@ module ItemDocumentType =
     | GameDocumentType -> Game.documentType
     | ProjectDocumentType -> Project.documentType
     | BookDocumentType -> Book.documentType
+    | ImageLibraryRecordDocumentType -> ImageLibraryRecord.documentType
 
   let toSlug itemDocumentType =
     match itemDocumentType with
     | GameDocumentType -> "games"
     | ProjectDocumentType -> "projects"
     | BookDocumentType -> "books"
+    | ImageLibraryRecordDocumentType -> "images"
 
   let toPluralTitleString itemDocumentType =
     match itemDocumentType with
     | GameDocumentType -> "Games"
     | ProjectDocumentType -> "Projects"
     | BookDocumentType -> "Books"
+    | ImageLibraryRecordDocumentType -> "Images"
 
   let toSingularTitleString itemDocumentType =
     match itemDocumentType with
     | GameDocumentType -> "Game"
     | ProjectDocumentType -> "Project"
     | BookDocumentType -> "Book"
+    | ImageLibraryRecordDocumentType -> "Image"
     
 let tryWrapItem (item: obj) =
   match item with
   | :? Game.Game as g -> Some (Game g)
   | :? Project.Project as p -> Some (Project p)
   | :? Book.Book as b -> Some (Book b)
+  | :? Image.ImageLibraryRecord as i -> Some (Image i)
   | _ -> None
 
 let wrapItem (item: obj) =
@@ -79,15 +88,22 @@ let tryUnwrapBook (item) =
   | Book b -> Some b
   | _ -> None
 
+let tryUnwrapImage (item) =
+  match item with
+  | Image i -> Some i
+  | _ -> None
+  
 let unwrapGame = tryUnwrapGame >> Option.get
 let unwrapProject = tryUnwrapProject >> Option.get
 let unwrapBook = tryUnwrapBook >> Option.get
+let unwrapImage = tryUnwrapImage >> Option.get
 
 let fromJObject (obj: Newtonsoft.Json.Linq.JObject) =
     Some obj |> Option.choosef [
       Option.bind (Game.tryMakeModelFromJObject >> (Option.map Game))
       Option.bind (Project.tryMakeModelFromJObject >> (Option.map Project))
       Option.bind (Book.tryMakeModelFromJObject >> (Option.map Book))
+      Option.bind (ImageLibraryRecord.fromJObject >> (Option.map Image))
     ]
 
 let toJObject item =
@@ -95,6 +111,7 @@ let toJObject item =
   | Game g -> FormFields.makeJObjectFromModel g Game.documentType Game.Fields.allFields
   | Project p -> FormFields.makeJObjectFromModel p Project.documentType Project.Fields.allFields
   | Book b -> FormFields.makeJObjectFromModel b Book.documentType Book.Fields.allFields
+  | Image i -> ImageLibraryRecord.toJObject i
 
 let fromContextForm itemDocumentType existing ctx =
   match ItemDocumentType.fromString itemDocumentType with
@@ -110,6 +127,10 @@ let fromContextForm itemDocumentType existing ctx =
       let existing = existing |> Option.bind tryUnwrapBook
       Book.makeAndValidateModelFromContext existing ctx
       |> Task.map (Result.map wrapItem)
+  | Some ImageLibraryRecordDocumentType ->
+      let existing = existing |> Option.bind tryUnwrapImage
+      ImageLibraryRecord.makeAndValidateModelFromContext existing ctx
+      |> Task.map (Result.map wrapItem)
   | None -> Task.fromResult (Error $"Could not parse fields for document type %s{itemDocumentType}")
 
 let documentType item =
@@ -117,36 +138,42 @@ let documentType item =
   | Game _ -> Game.documentType
   | Project _ -> Project.documentType
   | Book _ -> Book.documentType
+  | Image _ -> ImageLibraryRecord.documentType
 
 let itemId item =
   match item with
   | Game g -> g.Id
   | Project p -> p.Id
   | Book b -> b.Id
+  | Image i -> i.Id
 
 let name item =
   match item with
   | Game g -> g.Name
   | Project p -> p.Name
   | Book b -> b.Title
+  | Image i -> i.Name
 
 let description item =
   match item with
   | Game g -> g.Description
   | Project p -> p.Description
   | Book b -> b.Description
+  | Image _ -> ""
 
 let dateAdded item =
   match item with
   | Game g -> g.DateAdded
   | Project p -> p.DateAdded
   | Book b -> b.DateAdded
+  | Image i -> i.DateAdded
 
 let coverImages item =
   match item with
   | Game g -> g.CoverImagePaths
   | Project p -> p.IconImagePaths
   | Book b -> b.CoverImagePaths
+  | Image i -> ImageLibraryRecord.getImagePaths i |> Some
 
 let icon item =
   match coverImages item with
@@ -158,6 +185,7 @@ let slug item =
   | Game g -> g.Slug
   | Project p -> p.Slug
   | Book b -> b.Slug
+  | Image i -> i.Id
 
 let githubLink item =
   match item with
@@ -178,12 +206,14 @@ let pageDefinition item =
   | Game _ -> FrontendHelpers.PageDefinitions.Games
   | Project _ -> FrontendHelpers.PageDefinitions.Projects
   | Book _ -> FrontendHelpers.PageDefinitions.Books
+  | Image _ -> failwith "There is no frontend page definition available for images"
 
 let pageDefinitionForDocumentType itemDocumentType =
   match itemDocumentType with
   | GameDocumentType ->FrontendHelpers.PageDefinitions.Games
   | ProjectDocumentType -> FrontendHelpers.PageDefinitions.Projects
   | BookDocumentType -> FrontendHelpers.PageDefinitions.Books
+  | ImageLibraryRecordDocumentType -> failwith "There is no frontend page definition available for images"
 
 let loadItemsContainingTags itemDocumentType tags ctx =
   Tag.itemIdsContainingTags (ItemDocumentType.toDatabaseDocumentType itemDocumentType) tags ctx
@@ -399,6 +429,7 @@ module AdminHandlers =
     | Game _ -> (FormFields.key Game.Fields.coverImagePaths)
     | Project _ -> (FormFields.key Project.Fields.coverImagePaths)
     | Book _ -> (FormFields.key Book.Fields.coverImagePaths)
+    | Image _ -> (FormFields.key ImageLibraryRecord.Fields.imageData)
 
   let private handleGameImageUpload item ctx =
     let unwrapped = (tryUnwrapGame >> Option.get) item
@@ -424,6 +455,14 @@ module AdminHandlers =
       (fun n -> { unwrapped with CoverImagePaths = n})
     |> Task.map (Result.map wrapItem)
 
+  let private handleImageLibraryImageUpload item ctx =
+    let unwrapped = (tryUnwrapImage >> Option.get) item
+    Items.handleImageUpload ctx
+      (documentType item) (itemId item)
+      (coverImageKey item) (coverImages item)
+      (fun _ -> unwrapped)
+    |> Task.map (Result.map wrapItem)
+
   let POST_add (itemDocumentType: ItemDocumentType) : HttpHandler =
     fun next ctx -> task {
       let! item = fromContextForm (ItemDocumentType.toDatabaseDocumentType itemDocumentType) None ctx
@@ -435,6 +474,7 @@ module AdminHandlers =
             | Game _ -> handleGameImageUpload item ctx
             | Project _ -> handleProjectImageUpload item ctx
             | Book _ -> handleBookImageUpload item ctx
+            | Image _ -> handleImageLibraryImageUpload item ctx
 
           match coverImageUploadResult with
           | Error msg -> return! (setStatusCode 400 >=> text msg) next ctx
@@ -468,6 +508,7 @@ module AdminHandlers =
                 | Game _ -> handleGameImageUpload newModel ctx
                 | Project _ -> handleProjectImageUpload newModel ctx
                 | Book _ -> handleBookImageUpload newModel ctx
+                | Image _ -> handleImageLibraryImageUpload newModel ctx
 
               match coverImageUploadResult with
               | Error msg -> return! (setStatusCode 400 >=> text msg) next ctx
