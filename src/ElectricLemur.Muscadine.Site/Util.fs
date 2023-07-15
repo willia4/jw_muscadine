@@ -140,12 +140,15 @@ let directoryIsEmpty (fullPath: string) =
 let deleteRelativePathIfExists (relativePath: string) ctx =
     try
         let realPath = joinPath (dataPath ctx) relativePath
-        if System.IO.File.Exists(realPath) then
+
+        if System.IO.Directory.Exists(realPath) then
+            System.IO.Directory.Delete(realPath, true)
+        elif System.IO.File.Exists(realPath) then
             System.IO.File.Delete(realPath)
 
-        let realPath = System.IO.Path.GetDirectoryName(realPath)
-        if directoryIsEmpty realPath then
-            System.IO.Directory.Delete(realPath)
+            let realPath = System.IO.Path.GetDirectoryName(realPath)
+            if directoryIsEmpty realPath then
+                System.IO.Directory.Delete(realPath)
     with
     | _ -> ()
 

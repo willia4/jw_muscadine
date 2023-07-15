@@ -528,11 +528,13 @@ module AdminHandlers =
         Database.getDocumentById id ctx
         |> Task.map (Option.bind fromJObject)
 
+      let existingLibraryImageRecord = existing |> Option.bind (tryUnwrapImage)
       let existingCoverImage = existing |> Option.bind coverImages
 
-      do! match existingCoverImage with
-          | Some existingCoverImage -> Image.deleteAllImages existingCoverImage ctx
-          | None -> Task.fromResult ()
+      do! match existingLibraryImageRecord, existingCoverImage with
+          | Some existingLibraryImageRecord, _ -> Image.deleteFileSystemRecordsForImageLibraryRecord existingLibraryImageRecord ctx
+          | _, Some existingCoverImage -> Image.deleteAllImagesForImagePaths existingCoverImage ctx
+          | _, None -> Task.fromResult ()
 
       do! match existing with
           | Some existing -> task {

@@ -224,7 +224,12 @@ let saveImageToDataStore (originalFile: FileInfo) documentType (documentId: stri
     return! saveImageToContainer originalFile containerDirectory ctx
 }
 
-let deleteAllImages coverImage ctx =
+let deleteFileSystemRecordsForImageLibraryRecord (record: ImageLibraryRecord) ctx =
+    let dirName = $"/imageLibraryRecord/imageData/{Id.compressId record.Id}"
+    deleteRelativePathIfExists dirName ctx
+    Task.fromResult ()
+    
+let deleteAllImagesForImagePaths coverImage ctx =
     deleteRelativePathIfExists coverImage.Original ctx
     deleteRelativePathIfExists coverImage.Size1024 ctx
     deleteRelativePathIfExists coverImage.Size512 ctx

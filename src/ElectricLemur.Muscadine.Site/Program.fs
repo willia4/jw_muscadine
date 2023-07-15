@@ -243,6 +243,7 @@ let webApp =
                     routef "/admin/games/%s" (fun id -> Login.requiresAdminRedirect $"/admin/game/%s{id}" >=> ItemHelper.AdminHandlers.DELETE id)
                     routef "/admin/books/%s" (fun id -> Login.requiresAdminRedirect $"/admin/book/%s{id}" >=> ItemHelper.AdminHandlers.DELETE id)
                     routef "/admin/projects/%s" (fun id -> Login.requiresAdminRedirect $"/admin/project/%s{id}" >=> ItemHelper.AdminHandlers.DELETE id)
+                    routef "/admin/images/%s" (fun id -> Login.requiresAdminRedirect $"/admin/images/%s{id}" >=> ItemHelper.AdminHandlers.DELETE id)
                 ]
             setStatusCode 404 >=> text "Not Found" ] next ctx
 
