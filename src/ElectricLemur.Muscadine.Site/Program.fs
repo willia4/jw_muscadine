@@ -187,6 +187,7 @@ let webApp =
                     routef "/admin/games/%s" (fun id -> Login.requiresAdminRedirect $"/admin/games/%s{id} ">=> Admin.Handlers.GET_edit ItemDocumentType.GameDocumentType id)
                     routef "/admin/books/%s" (fun id -> Login.requiresAdminRedirect $"/admin/books/%s{id} ">=> Admin.Handlers.GET_edit ItemDocumentType.BookDocumentType id)
                     routef "/admin/projects/%s" (fun id -> Login.requiresAdminRedirect $"/admin/projects/%s{id} ">=> Admin.Handlers.GET_edit ItemDocumentType.ProjectDocumentType id)
+                    routef "/admin/images/%s" (fun id -> Login.requiresAdminRedirect $"/admin/images/%s{id} ">=> Admin.Handlers.GET_edit ItemDocumentType.ImageLibraryRecordDocumentType id)
 
                     routef "/admin/microblog/%s" (fun id -> Login.requiresAdminRedirect $"/admin/microblog/%s{id}" >=> Admin.Handlers.GET_microblog_edit id)
                 ]

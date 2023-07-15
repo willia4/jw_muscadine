@@ -72,7 +72,8 @@ module Fields =
 let makeAndValidateModelFromContext (existing: ImageLibraryRecord option) (ctx: HttpContext): Task<Result<ImageLibraryRecord, string>> =
     let id = existing |> Option.map (fun i -> i.Id) |> Option.defaultValue (string (Util.newGuid ()))
     let dateAdded = existing |> Option.map (fun i -> i.DateAdded) |> Option.defaultValue System.DateTimeOffset.UtcNow
-
+    let existingContentType = existing |> Option.map (fun i -> i.ContentType) |> Option.defaultValue "application/octet-stream"
+    
     match FormFields.validateFieldsOnContext ctx documentType id Fields.allFields with
     | Ok _ ->
         let getFormStringValue f = FormFields.ContextValue.string f ctx |> Option.get
@@ -86,7 +87,7 @@ let makeAndValidateModelFromContext (existing: ImageLibraryRecord option) (ctx: 
             
         let contentTypeTask =
             match uploadedFile with
-            | None -> Task.fromResult "application/octet-stream"
+            | None -> Task.fromResult existingContentType
             | Some f -> Image.detectContentTypeForFileInfo f
             
         contentTypeTask

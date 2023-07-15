@@ -49,7 +49,7 @@ let imageLibraryRecordFileExtension (record: ImageLibraryRecord) = Util.fileExte
 
 let imageLibraryRecordToFileInfo (record: ImageLibraryRecord) ctx =
     let fileExtension = imageLibraryRecordFileExtension record 
-    let path = $"images/%s{record.Id}/size_original%s{fileExtension}"
+    let path = $"imageLibraryRecord/imageData/%s{Id.compressId record.Id}/size_original%s{fileExtension}"
     let path = System.IO.Path.Join((Util.dataPath ctx), path)
     FileInfo.ofPath path
     
