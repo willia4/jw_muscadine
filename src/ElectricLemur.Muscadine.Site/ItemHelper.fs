@@ -422,12 +422,20 @@ module Handlers =
                 ]
               ])
           | None -> None
-        let o : ItemWrapper option = None
+          
+         
+        // -4 hours is _roughly_ "my time" on the US East Coast and should broadly get the day right.
+        // since that's all we're formatting, that's probably all that matters. 
+        let openGraphDate =
+          microblog.Microblog.DateAdded
+            .ToOffset(System.TimeSpan.FromHours(-4))
+            .ToString("yyyy-MMM-dd")
+          
         let openGraphMetadata = { Title = Some ($"James Williams.me - {name item}")
                                   Description = (Some (Util.extractTextFromMarkdown microblog.Microblog.Text)) 
                                   ImageUrl = (coverImages item
                                               |> Option.bind (fun icon -> Image.uriFromIcon icon ImagePaths.choose256 ctx))
-                                  Labels = NoLabel }
+                                  Labels = OneLabel ("Posted On", openGraphDate) }
         
         let content = FrontendHelpers.makeItemPage (name item) itemLink subtitle microblog.Microblog.Text (icon item) [] tags None ctx
         let pageHtml = FrontendHelpers.layout (pageDefinition item) content [ PageExtra.CSS "frontend/item_page.scss" ] NoPageData openGraphMetadata None ctx
