@@ -183,18 +183,25 @@ module OpenGraphMetadata =
   
   let toMetaNodes md =[
       yield! match md.Title with
-               | Some t when (not (System.String.IsNullOrWhiteSpace(t))) -> [
-                  meta [(_property "og:title"); (_content t)]
-                  meta [(_name "twitter:title"); (_content t)]
-                ]
+               | Some t when (not (System.String.IsNullOrWhiteSpace(t))) ->
+                  let t = t.Trim()
+                  [
+                    meta [(_property "og:title"); (_content t)]
+                    meta [(_name "twitter:title"); (_content t)]
+                  ]
                | _ -> []
         
       yield! match md.Description with
               | Some d when (not (System.String.IsNullOrWhiteSpace(d))) ->
+                  let d = System.Text.RegularExpressions.Regex.Replace(input = d, pattern = "\n+", replacement = " ")
+                  let d = System.Text.RegularExpressions.Regex.Replace(input = d, pattern = @"\s+", replacement = " ")
+                  let d = d.Trim()
+                  
                   let d = if d.Length > 160 then
                             let d' = d.Substring(0, 156)
                             $"{d'}..."
                           else d
+
                   [
                     meta [(_property "og:description"); (_content d)]
                     meta [(_name "twitter:description"); (_content d)]
