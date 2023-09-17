@@ -184,8 +184,8 @@ module OpenGraphMetadata =
   let toMetaNodes md =[
       yield! match md.Title with
                | Some t when (not (System.String.IsNullOrWhiteSpace(t))) -> [
-                  meta [(_name "og:title"); (_content t)]
-                  meta [(_name "twitter:title"); (_value t)]
+                  meta [(_property "og:title"); (_content t)]
+                  meta [(_name "twitter:title"); (_content t)]
                 ]
                | _ -> []
         
@@ -196,14 +196,15 @@ module OpenGraphMetadata =
                             $"{d'}..."
                           else d
                   [
-                    meta [(_name "og:description"); (_content d)]
-                    meta [(_name "twitter:description"); (_value d)]
+                    meta [(_property "og:description"); (_content d)]
+                    meta [(_name "twitter:description"); (_content d)]
+                    meta [(_name "description"); (_content d)]
                   ]
               | _ -> []
               
       yield! match md.ImageUrl with
               | Some u -> [
-                  meta [(_name "og:image"); (_content (string u)) ]
+                  meta [(_property "og:image"); (_content (string u)) ]
                   meta [(_name "twitter:image"); (_content (string u))]
                 ]
               | None -> []
