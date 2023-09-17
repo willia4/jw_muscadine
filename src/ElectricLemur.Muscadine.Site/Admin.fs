@@ -103,7 +103,7 @@ module Views =
                 Active = false
             }
         ]
-        FrontendHelpers.layout pageDef content extra pageData (Some sidebar) ctx
+        FrontendHelpers.layout pageDef content extra pageData OpenGraphMetadata.empty (Some sidebar) ctx
 
     let makeItemIndexRow (itemDocumentType: ItemDocumentType) (item: ItemWrapper) (tags: Option<string seq>) =
         let itemImage =

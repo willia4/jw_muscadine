@@ -309,12 +309,19 @@ let GET : HttpHandler =
         // mark "About Me" as active
         let sidebar = PageDefinitions.SidebarButton.defaultSidebar (Some PageDefinitions.AboutMe)
 
+        let openGraphMetadata = {
+            Title = Some "Resume of James Williams"
+            Description = Some "The resume of James Williams, Software Architect"
+            Labels = TwoLabels (("Best Language", "C#"), ("Delight To Work With", "Extremely"))
+            ImageUrl = Some (System.Uri("https://jameswilliams.me/img/james_and_gary.jpg")) 
+        }
         let page = layout
                        (PageDefinitions.Page.Custom ("resume", "Resume of James Williams", "Resume", PageDefinitions.Page.AboutMe, customHeader))
                        resumeContent
                        [ PageExtra.CSS "frontend/resume.scss"
                          PageExtra.JavaScript "resume.js" ]
                        NoPageData
+                       openGraphMetadata
                        (Some sidebar)
                        ctx
                    

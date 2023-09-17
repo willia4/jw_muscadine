@@ -57,16 +57,19 @@ type Icon =
     | FontAwesome of string
     | Image of ImagePaths
 
+let uriFromIcon imagePaths sizeChooser ctx =
+    let makeUrl = (Util.flip Util.makeUrl) ctx
+    imagePaths
+    |> sizeChooser
+    |> Some
+    |> Util.addRootPath "/images"
+    |> Option.map makeUrl
+        
 let rec xmlElementFromIcon icon sizeChooser ctx =
     match icon with
     | FontAwesome iconClass -> i [ _class iconClass ] []
-    | Image imagePath ->
-        let makeUrl = (Util.flip Util.makeUrl) ctx
-        imagePath
-        |> sizeChooser
-        |> Some
-        |> Util.addRootPath "/images"
-        |> Option.map makeUrl
+    | Image imagePaths ->
+        uriFromIcon imagePaths sizeChooser ctx
         |> Option.map (fun path -> img [ _src (path.ToString()) ])
         |> Option.defaultValue (xmlElementFromIcon (FontAwesome "fa-solid fa-cloud-exclamation") sizeChooser ctx)
 

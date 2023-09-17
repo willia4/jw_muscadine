@@ -1,4 +1,5 @@
 module ElectricLemur.Muscadine.Site.Frontend.AboutMe
+open ElectricLemur.Muscadine.Site.FrontendHelpers
 open Giraffe
 open Giraffe.ViewEngine
 open Microsoft.AspNetCore.Http
@@ -44,7 +45,7 @@ let makeMicroblogsContent (recentMicroblogs: Microblog.EnrichedMicroblog seq) ct
 let aboutMeContent recentMicroblogs ctx =
   let biographyParagraphs = Util.extractEmbeddedTextFile "biography.html"
 
-  [
+  biographyParagraphs, [
     main [ _class "page-content about-me" ] [
       div [ _class "about-text-container" ]  [
         div [ _class "header" ] [
@@ -103,8 +104,16 @@ module Handlers =
     fun next (ctx: HttpContext) -> task {
       let! recentMicroblogs = Microblog.loadRecentMicroblogs (System.DateTimeOffset.UtcNow) (Database.Limit 7) ctx
 
-      let content = aboutMeContent recentMicroblogs ctx
-      let pageHtml = FrontendHelpers.layout FrontendHelpers.PageDefinitions.AboutMe content [ FrontendHelpers.PageExtra.CSS  "frontend/about_me.scss" ] FrontendHelpers.NoPageData None ctx
+      let (contentAsHtml, contentAsNodes) = aboutMeContent recentMicroblogs ctx
+      
+      let openGraphMetaData = {
+          Title = Some "James Williams.me - About Me"
+          Description = Some (Util.extractTextFromHtml contentAsHtml)
+          ImageUrl = Some (System.Uri("https://jameswilliams.me/img/james_and_gary.jpg"))
+          Labels = NoLabel 
+        }
+      
+      let pageHtml = FrontendHelpers.layout FrontendHelpers.PageDefinitions.AboutMe contentAsNodes [ FrontendHelpers.PageExtra.CSS  "frontend/about_me.scss" ] FrontendHelpers.NoPageData openGraphMetaData None ctx
 
       return! htmlView pageHtml next ctx
     }
@@ -118,6 +127,7 @@ module Handlers =
                        content
                        [ FrontendHelpers.PageExtra.CSS "frontend/about_me.scss" ]
                        FrontendHelpers.NoPageData
+                       OpenGraphMetadata.empty
                        None
                        ctx
 
@@ -152,6 +162,7 @@ module Handlers =
                          content
                          [ FrontendHelpers.PageExtra.CSS  "frontend/about_me.scss" ]
                          FrontendHelpers.NoPageData
+                         OpenGraphMetadata.empty
                          None
                          ctx
 

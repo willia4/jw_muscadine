@@ -138,8 +138,80 @@ type PageData =
   | PageData of Map<string, PageDataType>
   | NoPageData
   
+type OpenGraphLabels =
+  | NoLabel
+  | OneLabel of (string * string)
+  | TwoLabels of ((string * string) * (string * string))
+  
+module OpenGraphLabels =
+  let label1 = function | OneLabel t -> Some t | TwoLabels (t, _) -> Some t | _ -> None
+  let label2 = function | TwoLabels (_, t) -> Some t | _ -> None
+  
+  let label1Text l = l |> label1 |> Option.map fst
+  let label1Value l = l |> label1 |> Option.map fst
+  let label2Text l = l |> label2 |> Option.map fst
+  let label2Value l = l |> label2 |> Option.map fst
+ 
+  let toMetaNodes l =
+    match l with
+    | OneLabel (l1_text, l1_value) -> [
+        meta [(_name "twitter:label1"); (_value l1_text)]
+        meta [(_name "twitter:data1"); (_value l1_value)]
+      ]
+    | TwoLabels ((l1_text, l1_value), (l2_text, l2_value)) -> [
+        meta [(_name "twitter:label1"); (_value l1_text)]
+        meta [(_name "twitter:data1"); (_value l1_value)]
+        meta [(_name "twitter:label2"); (_value l2_text)]
+        meta [(_name "twitter:data2"); (_value l2_value)]
+      ]
+    | NoLabel -> []
+    
+type OpenGraphMetadata = {
+  Title: string option
+  Description: string option
+  ImageUrl: System.Uri option
+  Labels: OpenGraphLabels
+}
 
-let layout pageDefinition content extraCss (pageData: PageData) (sidebar: Option<PageDefinitions.SidebarButton list>) ctx =
+module OpenGraphMetadata =
+  let empty = {
+    Title = None
+    Description = None
+    ImageUrl = None
+    Labels =  NoLabel
+  }
+  
+  let toMetaNodes md =[
+      yield! match md.Title with
+               | Some t when (not (System.String.IsNullOrWhiteSpace(t))) -> [
+                  meta [(_name "og:title"); (_content t)]
+                  meta [(_name "twitter:title"); (_value t)]
+                ]
+               | _ -> []
+        
+      yield! match md.Description with
+              | Some d when (not (System.String.IsNullOrWhiteSpace(d))) ->
+                  let d = if d.Length > 160 then
+                            let d' = d.Substring(0, 156)
+                            $"{d'}..."
+                          else d
+                  [
+                    meta [(_name "og:description"); (_content d)]
+                    meta [(_name "twitter:description"); (_value d)]
+                  ]
+              | _ -> []
+              
+      yield! match md.ImageUrl with
+              | Some u -> [
+                  meta [(_name "og:image"); (_content (string u)) ]
+                  meta [(_name "twitter:image"); (_content (string u))]
+                ]
+              | None -> []
+                
+      yield! (OpenGraphLabels.toMetaNodes md.Labels)
+    ]
+
+let layout pageDefinition content extraCss (pageData: PageData) (openGraphMetadata: OpenGraphMetadata) (sidebar: Option<PageDefinitions.SidebarButton list>) ctx =
   let homeUrl = Util.baseUrl ctx
   let pageHeader = PageDefinitions.pageTitle pageDefinition
   let sidebarOrder = [ PageDefinitions.AboutMe; PageDefinitions.Projects; PageDefinitions.Books; PageDefinitions.Games; PageDefinitions.Colophon ]
@@ -195,6 +267,7 @@ let layout pageDefinition content extraCss (pageData: PageData) (sidebar: Option
                     match extra with
                     | CSS css -> Util.cssLinkTag css ctx
                     | JavaScript js -> Util.javascriptTag js ctx))
+    |> Seq.append (OpenGraphMetadata.toMetaNodes openGraphMetadata)
     |> Seq.toList
 
   html []

@@ -359,7 +359,7 @@ module Handlers =
         let! otherCards = others |> makeAndSortCards
 
         let content = Views.makeContentView itemDocumentType inProgressCards backlogCards finishedCards otherCards
-        let pageHtml = FrontendHelpers.layout (pageDefinitionForDocumentType itemDocumentType) content [ PageExtra.CSS "frontend/item_cards.scss" ] NoPageData None ctx
+        let pageHtml = FrontendHelpers.layout (pageDefinitionForDocumentType itemDocumentType) content [ PageExtra.CSS "frontend/item_cards.scss" ] NoPageData OpenGraphMetadata.empty None ctx
 
         return! htmlView pageHtml next ctx
       }
@@ -385,7 +385,13 @@ module Handlers =
 
       match processedContent with
       | Some (item, content) ->
-          let pageHtml = FrontendHelpers.layout (pageDefinition item) content [ PageExtra.CSS "frontend/item_page.scss" ] NoPageData None ctx
+          let openGraphMetadata = {
+            Title = Some ($"James Williams.me - {name item}")
+            Description = Some (description item)
+            ImageUrl = (coverImages item |> Option.bind (fun icon -> Image.uriFromIcon icon ImagePaths.choose256 ctx)) 
+            Labels = NoLabel 
+          }
+          let pageHtml = FrontendHelpers.layout (pageDefinition item) content [ PageExtra.CSS "frontend/item_page.scss" ] NoPageData openGraphMetadata None ctx
           return! (htmlView pageHtml next ctx)
       | _ -> return! (setStatusCode 404 >=> text "Page not found") next ctx
     }
@@ -416,9 +422,15 @@ module Handlers =
                 ]
               ])
           | None -> None
-
+        let o : ItemWrapper option = None
+        let openGraphMetadata = { Title = Some ($"James Williams.me - {name item}")
+                                  Description = (Some (Util.extractTextFromMarkdown microblog.Microblog.Text)) 
+                                  ImageUrl = (coverImages item
+                                              |> Option.bind (fun icon -> Image.uriFromIcon icon ImagePaths.choose256 ctx))
+                                  Labels = NoLabel }
+        
         let content = FrontendHelpers.makeItemPage (name item) itemLink subtitle microblog.Microblog.Text (icon item) [] tags None ctx
-        let pageHtml = FrontendHelpers.layout (pageDefinition item) content [ PageExtra.CSS "frontend/item_page.scss" ] NoPageData None ctx
+        let pageHtml = FrontendHelpers.layout (pageDefinition item) content [ PageExtra.CSS "frontend/item_page.scss" ] NoPageData openGraphMetadata None ctx
         return! (htmlView pageHtml next ctx)
       | _ -> return! (setStatusCode 404 >=> text "Page not found") next ctx
     }

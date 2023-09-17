@@ -1,4 +1,5 @@
 module ElectricLemur.Muscadine.Site.Frontend.Colophon
+open ElectricLemur.Muscadine.Site.FrontendHelpers
 open Giraffe
 open Giraffe.ViewEngine
 open Microsoft.AspNetCore.Http;
@@ -19,7 +20,7 @@ module Handlers =
     fun next (ctx: HttpContext) -> task {
 
       let content = colophonContent
-      let pageHtml = FrontendHelpers.layout FrontendHelpers.PageDefinitions.Colophon content [ FrontendHelpers.PageExtra.CSS "frontend/colophon.scss" ] FrontendHelpers.NoPageData None ctx
+      let pageHtml = FrontendHelpers.layout FrontendHelpers.PageDefinitions.Colophon content [ FrontendHelpers.PageExtra.CSS "frontend/colophon.scss" ] FrontendHelpers.NoPageData OpenGraphMetadata.empty None ctx
 
       return! htmlView pageHtml next ctx
     }

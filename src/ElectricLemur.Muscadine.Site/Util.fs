@@ -304,3 +304,14 @@ let textToParagraphs (text: string) =
 let makeId prefix =
     let id = System.Guid.NewGuid().ToString().Replace("-","").ToLowerInvariant()
     $"{prefix}-{id}"
+    
+let extractTextFromHtml (html: string) =
+    let doc = HtmlAgilityPack.HtmlDocument()
+    doc.LoadHtml(html)
+    doc.DocumentNode.SelectNodes("//text()")
+    |> Seq.fold (fun (sb: System.Text.StringBuilder) text -> sb.Append(text.InnerText)) (System.Text.StringBuilder())
+    |> string
+    
+let extractTextFromMarkdown (markdown: string) =
+    Markdig.Markdown.ToHtml(markdown)
+    |> extractTextFromHtml
