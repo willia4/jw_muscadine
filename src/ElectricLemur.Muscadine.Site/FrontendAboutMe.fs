@@ -65,6 +65,8 @@ let aboutMeContent recentMicroblogs ctx =
           a [ (_href "https://www.twitter.com/willia4"); ( attr "aria-label" "Twitter" )] [ i [ _class "fa-brands fa-twitter"] []]
           a [ (_href "https://photos.jameswilliams.me"); ( attr "aria-label" "Photos" )] [ i [ _class "fa-solid fa-camera"] []]
           a [ (_href "https://www.linkedin.com/in/jameswilliams-me/"); ( attr "aria-label" "Linked In" )] [ i [ _class "fa-brands fa-linkedin"] []]
+          a [ (_href "https://app.thestorygraph.com/profile/willia4"); ( attr "aria-label" "StoryGraph") ] [ i [ _class "fa-solid fa-book-open" ] []]
+          a [ (_href "https://www.backloggd.com/u/willia4/"); ( attr "aria-label" "Backloggd") ] [ i [ _class "fa-solid fa-gamepad" ] []]
         ]
         div [ _class "resume-link"] [
           a [ (_href "https://jameswilliams.me/resume/"); (attr "aria-label" "Resume link" )] [
