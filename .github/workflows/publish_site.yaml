@@ -63,6 +63,7 @@ jobs:
           CMD+="-e 'AZURE__DATAPROTECTION__KEYVAULT=${{ secrets.AZURE__DATAPROTECTION__KEYVAULT }}' "
           CMD+="-e 'AZURE__DATAPROTECTION__STORAGEACCOUNT__NAME=${{ secrets.AZURE__DATAPROTECTION__STORAGEACCOUNT__NAME }}' "
           CMD+="-e 'AZURE__DATAPROTECTION__STORAGEACCOUNT__KEY=${{ secrets.AZURE__DATAPROTECTION__STORAGEACCOUNT__KEY }}' "
+          CMD+="-e 'ASPNETCORE_HTTP_PORTS=80' "
           CMD+="--label 'traefik.enable=true' "
           CMD+="--label 'traefik.http.routers.jw_index.entrypoints=websecure' "
           CMD+="--label 'traefik.http.routers.jw_index.rule=Host(\`jameswilliams.me\`)' "
