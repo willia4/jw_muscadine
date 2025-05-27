@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/sdk:6.0-bullseye-slim AS build
+FROM mcr.microsoft.com/dotnet/sdk:8.0-bookworm-slim AS build
 
 WORKDIR /source
 
@@ -10,7 +10,7 @@ COPY src/ElectricLemur.Muscadine.Site/. ./src/ElectricLemur.Muscadine.Site/
 WORKDIR /source/src/ElectricLemur.Muscadine.Site
 RUN dotnet publish -c release -o /app --no-restore
 
-FROM mcr.microsoft.com/dotnet/aspnet:6.0-bullseye-slim
+FROM mcr.microsoft.com/dotnet/aspnet:8.0-bookworm-slim
 WORKDIR /app
 COPY --from=build /app ./
 
