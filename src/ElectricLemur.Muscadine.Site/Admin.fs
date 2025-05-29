@@ -326,7 +326,7 @@ module Handlers =
         fun (next: HttpFunc) (ctx: HttpContext) -> task {
             ctx.SetStatusCode 200
             ctx.SetContentType "application/tar"
-            ctx.SetHttpHeader ("Content-Disposition", "attachment=\"export.tar\"")
+            ctx.SetHttpHeader ("Content-Disposition", "attachment; filename=\"export.tar\"")
             
             // don't do this
             use client = new HttpClient()
@@ -348,6 +348,7 @@ module Handlers =
                                 let! downloadStream = client.GetStreamAsync(uri)
                                 use ms = new MemoryStream()
                                 do! downloadStream.CopyToAsync(ms)
+                                ms.Seek(0, SeekOrigin.Begin) |> ignore
                                 
                                 let fileName = uri.AbsolutePath.Replace("/", "_").Replace("\\", "_")
                                 let entry = new System.Formats.Tar.PaxTarEntry(TarEntryType.RegularFile, fileName)
