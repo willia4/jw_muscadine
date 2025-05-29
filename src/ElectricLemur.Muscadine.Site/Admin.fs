@@ -331,8 +331,7 @@ module Handlers =
             
             use tarWriter = new System.Formats.Tar.TarWriter(ctx.Response.Body, true)
             
-            let writeFile (fileName: string) (obj: Newtonsoft.Json.Linq.JObject) = task {
-                let json = Newtonsoft.Json.JsonConvert.SerializeObject(obj)
+            let writeFile (fileName: string) (json: string) = task {
                 let bytes = System.Text.Encoding.UTF8.GetBytes(json)
                 use ms = new MemoryStream(bytes)
                 ms.Seek(0, SeekOrigin.Begin) |> ignore
@@ -353,9 +352,9 @@ module Handlers =
                                 let! tags = Tag.loadTagsForDocument (ItemHelper.documentType wrappedItem) itemId ctx
                                 let! microblogEntries = Microblog.loadMicroblogsForDocument (ItemHelper.documentType wrappedItem) itemId ctx
                                 
-                                do! writeFile $"{itemId}.item.json" jObject
-                                do! writeFile $"{itemId}.tags.json" (JObject.FromObject(tags))
-                                do! writeFile $"{itemId}.blogs.json" (JObject.FromObject(microblogEntries |> List.map Microblog.microblogToJObject))
+                                do! writeFile $"{itemId}.item.json" (Newtonsoft.Json.JsonConvert.SerializeObject(jObject))
+                                do! writeFile $"{itemId}.tags.json" (Newtonsoft.Json.JsonConvert.SerializeObject(tags))
+                                do! writeFile $"{itemId}.blogs.json" (Newtonsoft.Json.JsonConvert.SerializeObject(microblogEntries |> List.map Microblog.microblogToJObject))
                                 return ()
                             }
                         | _ -> Task.fromResult()
