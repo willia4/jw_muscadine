@@ -13,6 +13,7 @@ open System.Security.Claims
 open ElectricLemur.Muscadine.Site
 open Game;
 open Book;
+open Newtonsoft.Json.Linq
 open Project
 
 let getItemCoverImage (item: ItemWrapper) =
@@ -322,11 +323,53 @@ module Handlers =
 
         }
         
+    let GET_export_items : HttpHandler =
+        fun (next: HttpFunc) (ctx: HttpContext) -> task {
+            ctx.SetStatusCode 200
+            ctx.SetContentType "application/tar"
+            ctx.SetHttpHeader ("Content-Disposition", "attachment; filename=\"export_items.tar\"")
+            
+            use tarWriter = new System.Formats.Tar.TarWriter(ctx.Response.Body, true)
+            
+            let writeFile (fileName: string) (obj: Newtonsoft.Json.Linq.JObject) = task {
+                let json = Newtonsoft.Json.JsonConvert.SerializeObject(obj)
+                let bytes = System.Text.Encoding.UTF8.GetBytes(json)
+                use ms = new MemoryStream(bytes)
+                ms.Seek(0, SeekOrigin.Begin) |> ignore
+                
+                let entry = new System.Formats.Tar.PaxTarEntry(TarEntryType.RegularFile, fileName)
+                entry.DataStream <- ms
+                do! tarWriter.WriteEntryAsync(entry)
+
+                return ()
+            }
+            
+            for documentType in [ ItemHelper.GameDocumentType; ItemHelper.ProjectDocumentType; ItemHelper.BookDocumentType; ItemHelper.ImageLibraryRecordDocumentType; ] do
+                
+                let! allDocuments = Database.getDocumentsByType (ItemDocumentType.toDatabaseDocumentType documentType) Some Database.NoLimit ctx
+                for jObject in allDocuments do
+                    
+                    do! match (ItemHelper.fromJObject jObject) with
+                        | Some wrappedItem -> task {
+                                let itemId = ItemHelper.itemId wrappedItem
+                                let! tags = Tag.loadTagsForDocument (ItemHelper.documentType wrappedItem) itemId ctx
+                                let! microblogEntries = Microblog.loadMicroblogsForDocument (ItemHelper.documentType wrappedItem) itemId ctx
+                                
+                                do! writeFile $"{itemId}.item.json" jObject
+                                do! writeFile $"{itemId}.tags.json" (JObject.FromObject(tags))
+                                do! writeFile $"{itemId}.blogs.json" (JObject.FromObject(microblogEntries))
+                                return ()
+                            }
+                        | _ -> Task.fromResult()
+                    ()
+                ()
+            return (Some ctx)
+        }
     let GET_export_images : HttpHandler =
         fun (next: HttpFunc) (ctx: HttpContext) -> task {
             ctx.SetStatusCode 200
             ctx.SetContentType "application/tar"
-            ctx.SetHttpHeader ("Content-Disposition", "attachment; filename=\"export.tar\"")
+            ctx.SetHttpHeader ("Content-Disposition", "attachment; filename=\"export_images.tar\"")
             
             // don't do this
             use client = new HttpClient()
