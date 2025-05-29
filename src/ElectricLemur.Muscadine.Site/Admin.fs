@@ -349,7 +349,7 @@ module Handlers =
                                 use ms = new MemoryStream()
                                 do! downloadStream.CopyToAsync(ms)
                                 
-                                let fileName = System.IO.Path.GetFileName(uri.AbsolutePath)
+                                let fileName = uri.AbsolutePath.Replace("/", "_").Replace("\\", "_")
                                 let entry = new System.Formats.Tar.PaxTarEntry(TarEntryType.RegularFile, fileName)
                                 entry.DataStream <- ms
                                 do! tarWriter.WriteEntryAsync(entry)
