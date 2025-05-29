@@ -1,5 +1,6 @@
 ﻿module ElectricLemur.Muscadine.Site.Admin
 open System.Formats.Tar
+open System.IO
 open System.Net.Http
 open ElectricLemur.Muscadine.Site.FrontendHelpers
 open ElectricLemur.Muscadine.Site.Image
@@ -344,10 +345,13 @@ module Handlers =
                     let streamTask =
                         match iconUri with
                         | Some uri -> task {
-                                let! sourceStream = client.GetStreamAsync(uri)
+                                let! downloadStream = client.GetStreamAsync(uri)
+                                use ms = new MemoryStream()
+                                do! downloadStream.CopyToAsync(ms)
+                                
                                 let fileName = System.IO.Path.GetFileName(uri.AbsolutePath)
                                 let entry = new System.Formats.Tar.PaxTarEntry(TarEntryType.RegularFile, fileName)
-                                entry.DataStream <- sourceStream
+                                entry.DataStream <- ms
                                 do! tarWriter.WriteEntryAsync(entry)
 
                                 return ()
