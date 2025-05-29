@@ -190,6 +190,7 @@ let webApp =
                     routef "/admin/images/%s" (fun id -> Login.requiresAdminRedirect $"/admin/images/%s{id} ">=> Admin.Handlers.GET_edit ItemDocumentType.ImageLibraryRecordDocumentType id)
 
                     routef "/admin/microblog/%s" (fun id -> Login.requiresAdminRedirect $"/admin/microblog/%s{id}" >=> Admin.Handlers.GET_microblog_edit id)
+                    route "/admin/export/images" >=> Login.requiresAdminRedirect "/admin/export/images" >=> Admin.Handlers.GET_export_images
                 ]
 
                 let debugRoutes = [

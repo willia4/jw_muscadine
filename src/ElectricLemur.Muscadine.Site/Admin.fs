@@ -1,5 +1,8 @@
 ﻿module ElectricLemur.Muscadine.Site.Admin
+open System.Formats.Tar
+open System.Net.Http
 open ElectricLemur.Muscadine.Site.FrontendHelpers
+open ElectricLemur.Muscadine.Site.Image
 open ElectricLemur.Muscadine.Site.ItemHelper
 open ElectricLemur.Muscadine.Site.Items
 open Giraffe
@@ -316,4 +319,43 @@ module Handlers =
                       ]
                       htmlView (Views.adminLayout "Edit microblog" AddButtonDisplay.NotShown (makePageData itemDocumentType (CancelToItem existing.ItemId) None) (Some itemDocumentType) content ctx) next ctx
 
+        }
+        
+    let GET_export_images : HttpHandler =
+        fun (next: HttpFunc) (ctx: HttpContext) -> task {
+            ctx.SetStatusCode 200
+            ctx.SetContentType "application/tar"
+            ctx.SetHttpHeader ("Content-Disposition", "attachment=\"export.tar\"")
+            
+            // don't do this
+            use client = new HttpClient()
+            use tarWriter = new System.Formats.Tar.TarWriter(ctx.Response.Body, true)
+            
+            for documentType in [ ItemHelper.GameDocumentType; ItemHelper.ProjectDocumentType; ItemHelper.BookDocumentType; ItemHelper.ImageLibraryRecordDocumentType; ] do
+                let! allItems = ItemHelper.loadAllItems (ItemDocumentType.toDatabaseDocumentType documentType) ctx
+                for item in allItems do
+                    let iconUri =
+                        match (ItemHelper.icon item) with
+                        | Image.Icon.Image imgPaths ->
+                            match (Image.uriFromIcon imgPaths (fun x -> x.Original) ctx) with
+                            | Some uri -> Some uri
+                            | _ -> None
+                        | _ -> None
+                    let streamTask =
+                        match iconUri with
+                        | Some uri -> task {
+                                let! sourceStream = client.GetStreamAsync(uri)
+                                let fileName = System.IO.Path.GetFileName(uri.AbsolutePath)
+                                let entry = new System.Formats.Tar.PaxTarEntry(TarEntryType.RegularFile, fileName)
+                                entry.DataStream <- sourceStream
+                                do! tarWriter.WriteEntryAsync(entry)
+
+                                return ()
+                            }
+                        | _ -> Task.fromResult()
+                    
+                    do! streamTask
+                    ()
+        
+            return (Some ctx)
         }
