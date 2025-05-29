@@ -62,7 +62,7 @@ let private JObjectToMicroblogAssignment obj =
     Text = s "text"
   }
 
-let private microblogToJObject (microblog: Microblog) =
+let microblogToJObject (microblog: Microblog) =
   new Newtonsoft.Json.Linq.JObject()
   |> JObj.setValue "_dateAdded" microblog.DateAdded
   |> JObj.setValue "id" microblog.Id

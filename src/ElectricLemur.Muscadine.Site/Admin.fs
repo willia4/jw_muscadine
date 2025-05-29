@@ -345,10 +345,8 @@ module Handlers =
             }
             
             for documentType in [ ItemHelper.GameDocumentType; ItemHelper.ProjectDocumentType; ItemHelper.BookDocumentType; ItemHelper.ImageLibraryRecordDocumentType; ] do
-                
                 let! allDocuments = Database.getDocumentsByType (ItemDocumentType.toDatabaseDocumentType documentType) Some Database.NoLimit ctx
                 for jObject in allDocuments do
-                    
                     do! match (ItemHelper.fromJObject jObject) with
                         | Some wrappedItem -> task {
                                 let itemId = ItemHelper.itemId wrappedItem
@@ -357,7 +355,7 @@ module Handlers =
                                 
                                 do! writeFile $"{itemId}.item.json" jObject
                                 do! writeFile $"{itemId}.tags.json" (JObject.FromObject(tags))
-                                do! writeFile $"{itemId}.blogs.json" (JObject.FromObject(microblogEntries))
+                                do! writeFile $"{itemId}.blogs.json" (JObject.FromObject(microblogEntries |> List.map Microblog.microblogToJObject))
                                 return ()
                             }
                         | _ -> Task.fromResult()
